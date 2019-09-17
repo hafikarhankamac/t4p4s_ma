@@ -86,7 +86,7 @@ WAITPROC_PROTOBUF="$!"
 WAITPROC_P4C="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_P4C"
 
-[ ! -d t4p4s ] && git clone --recursive https://github.com/P4ELTE/t4p4s &
+[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 

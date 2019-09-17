@@ -24,7 +24,7 @@ else
 fi
 
 # Note: recent versions of P4C introduced changes currently incompatible with T4P4S
-# P4C_COMMIT=${P4C_COMMIT-80f8970b5ec8e57c4a3611da343461b5b0a8dda3}
+P4C_COMMIT=${P4C_COMMIT-2f55fb522058af47eed17182a6a1697e09dc6b85}
 
 echo Determining newest DPDK version...
 

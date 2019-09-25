@@ -64,12 +64,27 @@ WAITPROC_DPDK="$!"
 WAITPROC_PROTOBUF="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_PROTOBUF"
 
-[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
-# [ "$P4C_COMMIT" == "" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
+#[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
+[ "$P4C_COMMIT" == "" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
 WAITPROC_P4C="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_P4C"
 
-[ ! -d t4p4s ] && git clone --recursive https://github.com/P4ELTE/t4p4s &
+# nothing to see here, move along...
+cat > privkey <<- EOM
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACARHwgmXbJ57Bn9pp9ykESzZjPi0BH6uRrU3vN3KDG8JgAAAJg8+iEEPPoh
+BAAAAAtzc2gtZWQyNTUxOQAAACARHwgmXbJ57Bn9pp9ykESzZjPi0BH6uRrU3vN3KDG8Jg
+AAAEDMfaHQsa+/vzDWx9MTtq5mhX90CdOSKagA0icBXh5Y0REfCCZdsnnsGf2mn3KQRLNm
+M+LQEfq5GtTe83coMbwmAAAAFXRvcHNlY3JldEBkb250dXNlLmNvbQ==
+-----END OPENSSH PRIVATE KEY-----
+EOM
+chmod 600 privkey
+eval "$(ssh-agent -s)" && ssh-add privkey
+
+ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
+# ...
+[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 
@@ -140,4 +155,4 @@ else
     echo -e "Environment variable config is ${cc}enabled on login$nn: your ${cc}~/.profile$nn will run `pwd`/t4p4s_environment_variables.sh"
 fi
 
-cd t4p4s
+cd t4p4s2

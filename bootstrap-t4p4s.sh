@@ -24,7 +24,9 @@ else
 fi
 
 # Note: recent versions of P4C introduced changes currently incompatible with T4P4S
-P4C_COMMIT=${P4C_COMMIT-2f55fb522058af47eed17182a6a1697e09dc6b85}
+# P4C_COMMIT=${P4C_COMMIT-2f55fb522058af47eed17182a6a1697e09dc6b85}
+P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
+P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
 
 echo Determining newest DPDK version...
 
@@ -123,6 +125,10 @@ cd ..
 export P4C=`pwd`/p4c
 
 cd p4c
+git checkout $P4C_COMMIT
+cd control-plane/p4runtime
+git checkout $P4RUNTIME_COMMIT
+cd ../..
 ./bootstrap.sh
 cd build
 cmake ..
@@ -156,3 +162,4 @@ else
 fi
 
 cd t4p4s2
+git checkout ma

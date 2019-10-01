@@ -86,7 +86,7 @@ eval "$(ssh-agent -s)" && ssh-add privkey
 
 ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
 # ...
-[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git &
+[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git && mv t4p4s2 t4p4s && cd t4p4s && git checkout ma && cd .. &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 
@@ -161,5 +161,4 @@ else
     echo -e "Environment variable config is ${cc}enabled on login$nn: your ${cc}~/.profile$nn will run `pwd`/t4p4s_environment_variables.sh"
 fi
 
-cd t4p4s2
-git checkout ma
+cd t4p4s

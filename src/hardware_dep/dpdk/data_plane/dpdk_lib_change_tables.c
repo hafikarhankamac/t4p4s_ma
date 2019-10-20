@@ -64,3 +64,28 @@ void ternary_add_promote(int tableid, uint8_t* key, uint8_t* mask, uint8_t* valu
 void table_setdefault_promote(int tableid, uint8_t* value) {
     FORALLNUMANODES(set default, on table, CHANGE_TABLE(table_set_default_action, value))
 }
+
+#define CHANGE_TABLE_SEQ(fun, par...) \
+{ \
+    { \
+        int current_replica = state[socketid].active_replica[tableid]; \
+        int next_replica = (current_replica+1)%NB_REPLICA; \
+        for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+            fun(state[socketid].tables[tableid][next_replica], par); \
+        } \
+        change_replica(socketid, tableid, next_replica); \
+        usleep(TABCHANGE_SLEEP_MICROS); \
+        for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
+            if (current_replica != next_replica) { \
+                for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+                    fun(state[socketid].tables[tableid][next_replica], par); \
+                } \
+            } \
+        } \
+    } \
+}
+
+void exact_add_promote_multiple(int tableid, uint8_t** keys, uint8_t* value, uint64_t nr_entries) 
+{
+    FORALLNUMANODES(add, to exact table, CHANGE_TABLE_SEQ(exact_add, keys[idx], value))
+}

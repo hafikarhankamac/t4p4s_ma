@@ -238,7 +238,7 @@ void print_rte_xstats(uint32_t port_id)
 
     printf("========== xstats for port = %u ==========\n", port_id);
     /* Get number of stats */
-    len = rte_eth_xstats_get_names_by_id(port_id, NULL, NULL, 0);
+    len = rte_eth_xstats_get_names_by_id(port_id, NULL, 0, NULL);
     printf("len=%d\n", len);
     if (len < 0) {
         printf("Cannot get xstats count\n");

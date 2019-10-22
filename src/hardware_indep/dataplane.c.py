@@ -103,11 +103,12 @@ for table in hlir16.tables:
 ################################################################################
 # Table application
 
-for smem in table.meters + table.counters:
-    for comp in smem.components:
-        type = comp['type']
-        name  = comp['name']
-        #[ void apply_direct_smem_$type(rte_atomic32_t (*smem)[1], uint32_t value, char* table_name, char* smem_type_name, char* smem_name);
+if len(hlir16.tables) > 0:
+    for smem in table.meters + table.counters:
+        for comp in smem.components:
+            type = comp['type']
+            name  = comp['name']
+            #[ void apply_direct_smem_$type(rte_atomic32_t (*smem)[1], uint32_t value, char* table_name, char* smem_type_name, char* smem_name);
 
 
 for table in hlir16.tables:

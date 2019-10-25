@@ -26,8 +26,8 @@ from hlir16.hlir16_attrs import get_main
 #[ #include "util_packet.h"
 #[ #include "tables.h"
 
-#[ uint8_t* emit_addr;
-#[ uint32_t ingress_pkt_len;
+#[ //uint8_t* emit_addr;
+#[ //uint32_t ingress_pkt_len;
 
 #[ extern ctrl_plane_backend bg;
 #[ extern char* action_names[];
@@ -405,7 +405,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[     parse_packet(${STDPARAMS_IN});
 #[     pd->payload_length = rte_pktmbuf_pkt_len(pd->wrapper) - pd->parsed_length;
 #[
-#[     emit_addr = pd->data;
+#[     //emit_addr = pd->data;
 #[     pd->emit_hdrinst_count = 0;
 #[     pd->is_emit_reordering = false;
 #[

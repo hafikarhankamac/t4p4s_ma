@@ -1,4 +1,3 @@
-
 # Highlight colours
 cc="\033[1;33m"     # yellow
 nn="\033[0m"
@@ -72,22 +71,10 @@ WAITPROC_PROTOBUF="$!"
 WAITPROC_P4C="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_P4C"
 
-# nothing to see here, move along...
-cat > privkey <<- EOM
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACARHwgmXbJ57Bn9pp9ykESzZjPi0BH6uRrU3vN3KDG8JgAAAJg8+iEEPPoh
-BAAAAAtzc2gtZWQyNTUxOQAAACARHwgmXbJ57Bn9pp9ykESzZjPi0BH6uRrU3vN3KDG8Jg
-AAAEDMfaHQsa+/vzDWx9MTtq5mhX90CdOSKagA0icBXh5Y0REfCCZdsnnsGf2mn3KQRLNm
-M+LQEfq5GtTe83coMbwmAAAAFXRvcHNlY3JldEBkb250dXNlLmNvbQ==
------END OPENSSH PRIVATE KEY-----
-EOM
-chmod 600 privkey
-eval "$(ssh-agent -s)" && ssh-add privkey
 
 ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
 # ...
-[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git && mv t4p4s2 t4p4s && cd t4p4s && git checkout ma && cd .. &
+[ ! -d t4p4s ] && git clone --recursive https://gitlab+deploy-token-247:-K1yHEhTvygwQsCiJ8tG@gitlab.lrz.de/p4/ma-endrass/t4p4s2.git && mv t4p4s2 t4p4s && cd t4p4s && git checkout ma && cd .. &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 

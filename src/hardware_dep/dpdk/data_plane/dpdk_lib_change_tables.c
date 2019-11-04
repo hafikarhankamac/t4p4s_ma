@@ -89,3 +89,8 @@ void exact_add_promote_multiple(int tableid, uint8_t** keys, uint8_t* value, uin
 {
     FORALLNUMANODES(add, to exact table, CHANGE_TABLE_SEQ(exact_add, keys[idx], value))
 }
+
+void ternary_add_promote_multiple(int tableid, uint8_t** keys, uint8_t** masks, uint8_t* value, uint64_t nr_entries)
+{
+    FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_SEQ(ternary_add, keys[idx], masks[idx], value))
+}

@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
     void**  entries;
     uint8_t keylen;
-    uint8_t size;
+    uint64_t size;
 } ternary_table;
 
 ternary_table* naive_ternary_create (uint8_t keylen, uint8_t max_size);

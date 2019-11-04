@@ -46,6 +46,14 @@ void change_replica(int socketid, int tid, int replica) {
     } \
 }
 
+#define CHANGE_TABLE_NOREPLICA(fun, par...) \
+{ \
+    { \
+        int current_replica = state[socketid].active_replica[tableid]; \
+        fun(state[socketid].tables[tableid][current_replica], par); \
+    } \
+}
+
 #define FORALLNUMANODES(txt1, txt2, b) \
     debug(" :::: Executing " T4LIT(txt1,action) " " #txt2 " " T4LIT(%s,table) " on all sockets\n", table_config[tableid].name); \
     for (int socketid = 0; socketid < NB_SOCKETS; socketid++) \
@@ -62,7 +70,17 @@ void ternary_add_promote(int tableid, uint8_t* key, uint8_t* mask, uint8_t* valu
     FORALLNUMANODES(add, to ternary table, CHANGE_TABLE(ternary_add, key, mask, value))
 }
 void table_setdefault_promote(int tableid, uint8_t* value) {
-    FORALLNUMANODES(set default, on table, CHANGE_TABLE(table_set_default_action, value))
+    FORALLNUMANODES(set default, on table, CHANGE_TABLE_NOREPLICA(table_set_default_action, value))
+}
+
+#define CHANGE_TABLE_NOREPLICA_SEQ(fun, par...) \
+{ \
+    { \
+        int current_replica = state[socketid].active_replica[tableid]; \
+        for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+            fun(state[socketid].tables[tableid][current_replica], par); \
+        } \
+    } \
 }
 
 #define CHANGE_TABLE_SEQ(fun, par...) \
@@ -92,5 +110,5 @@ void exact_add_promote_multiple(int tableid, uint8_t** keys, uint8_t* value, uin
 
 void ternary_add_promote_multiple(int tableid, uint8_t** keys, uint8_t** masks, uint8_t* value, uint64_t nr_entries)
 {
-    FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_SEQ(ternary_add, keys[idx], masks[idx], value))
+    FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_NOREPLICA_SEQ(ternary_add, keys[idx], masks[idx], value))
 }

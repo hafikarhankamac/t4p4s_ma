@@ -78,7 +78,7 @@ void table_setdefault_promote(int tableid, uint8_t* value) {
         for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
             if (current_replica != next_replica) { \
                 for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-                    fun(state[socketid].tables[tableid][next_replica], par); \
+                    fun(state[socketid].tables[tableid][current_replica], par); \
                 } \
             } \
         } \

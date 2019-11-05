@@ -70,7 +70,7 @@ void ternary_add_promote(int tableid, uint8_t* key, uint8_t* mask, uint8_t* valu
     FORALLNUMANODES(add, to ternary table, CHANGE_TABLE(ternary_add, key, mask, value))
 }
 void table_setdefault_promote(int tableid, uint8_t* value) {
-    FORALLNUMANODES(set default, on table, CHANGE_TABLE_NOREPLICA(table_set_default_action, value))
+    FORALLNUMANODES(set default, on table, CHANGE_TABLE(table_set_default_action, value))
 }
 
 #define CHANGE_TABLE_NOREPLICA_SEQ(fun, par...) \
@@ -110,5 +110,5 @@ void exact_add_promote_multiple(int tableid, uint8_t** keys, uint8_t* value, uin
 
 void ternary_add_promote_multiple(int tableid, uint8_t** keys, uint8_t** masks, uint8_t* value, uint64_t nr_entries)
 {
-    FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_NOREPLICA_SEQ(ternary_add, keys[idx], masks[idx], value))
+    FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_SEQ(ternary_add, keys[idx], masks[idx], value))
 }

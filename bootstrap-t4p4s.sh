@@ -24,7 +24,7 @@ fi
 
 # Note: recent versions of P4C introduced changes currently incompatible with T4P4S
 # P4C_COMMIT=${P4C_COMMIT-2f55fb522058af47eed17182a6a1697e09dc6b85}
-P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
+P4C_COMMIT=changes
 P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
 
 echo Determining newest DPDK version...
@@ -65,7 +65,7 @@ WAITPROC_DPDK="$!"
 WAITPROC_PROTOBUF="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_PROTOBUF"
 
-[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
+[ ! -d "p4c" ] && git clone --recursive https://gitlab+deploy-token-265:wnCdz_rZqesV4iYAGw9b@gitlab.lrz.de/p4/ma-endrass/p4c.git && cd p4c && git submodule update --init --recursive &
 #[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
 #[ "$P4C_COMMIT" == "" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
 WAITPROC_P4C="$!"

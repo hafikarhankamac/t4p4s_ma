@@ -836,6 +836,10 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                                       id, fld.expression.expr.header_ref.name, fld.expression.field_ref.name, bitsize));
 
                 #[ send_digest(bg, digest$id, $receiver)
+            elif mref.name == 'sheep':
+                fmt_params = format_method_parameters(e.arguments, method_params)
+                #[ extern void sheep(uint32_t duration);
+                #[ sheep($fmt_params)
             else:
                 fmt_params = format_method_parameters(e.arguments, method_params)
                 if "," not in fmt_params:

@@ -14,6 +14,7 @@
 
 #include "dpdkx_v1model.h"
 #include "util_packet.h"
+#include "sheep_precise_timer.h"
 
 #include <rte_ip.h>
 
@@ -89,6 +90,11 @@ void mark_to_drop(SHORT_STDPARAMS) {
     uint32_t res32;
     // pd->dropped = 1; // that doesn't work as it should...
     MODIFY_INT32_INT32_BITS_PACKET(pd, header_instance_standard_metadata, field_standard_metadata_t_drop, 1)
+}
+
+void sheep(uint32_t duration) {
+    debug(" :::: Called extern " T4LIT(sheep,extern) "\n");
+    wait_cycles(duration);
 }
 
 void verify(bool check, enum error_error toSignal, SHORT_STDPARAMS) {

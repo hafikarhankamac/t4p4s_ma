@@ -7,6 +7,7 @@ const bit<8>  IPPROTO_TCP   = 0x06;
 const bit<8>  IPPROTO_UDP   = 0x11;
 
 const bit<32> MAX_FLOWS = 1024;
+const bit<16> ZERO = 0;
 
 header ethernet_t {
     bit<48> dstAddr;
@@ -130,6 +131,18 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 
 	// determine flow identifier
 	flow_id = hdr.ip4.dstAddr % MAX_FLOWS;
+	//zero = 0;
+	//hash(
+	//	flow_id,
+	//	HashAlgorithm.crc32,
+	//	ZERO,
+	//	{ hdr.ip4.srcAddr,
+	//	  hdr.ip4.dstAddr,
+        //	  hdr.ip4.protocol,
+        //	  hdr.l4.srcPort,
+        //	  hdr.l4.dstPort },
+	//	MAX_FLOWS
+	//);
 
 	//// get state for flow
         //state.read(current_state,flow_id);

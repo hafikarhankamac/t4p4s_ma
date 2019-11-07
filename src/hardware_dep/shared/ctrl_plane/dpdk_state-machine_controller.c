@@ -70,6 +70,34 @@ void fill_dmac_table(uint8_t port, uint8_t mac[6])
         send_p4_msg(c, buffer, 2048);
 }
 
+void fill_state_table(uint16_t state, char *function)
+{
+        char buffer[2048];
+        struct p4_header* h;
+        struct p4_add_table_entry* te;
+        struct p4_action* a;
+        struct p4_field_match_exact* exact;
+
+        h = create_p4_header(buffer, 0, 2048);
+        te = create_p4_add_table_entry(buffer,0,2048);
+        strcpy(te->table_name, "switch_state_0");
+
+        exact = add_p4_field_match_exact(te, 2048);
+        strcpy(exact->header.name, "state_metadata.current_state");
+        memcpy(exact->bitmap, &state, 2);
+        exact->length = 2*8+0;
+
+        a = add_p4_action(h, 2048);
+        strcpy(a->description.name, function);
+
+        netconv_p4_header(h);
+        netconv_p4_add_table_entry(te);
+        netconv_p4_field_match_exact(exact);
+        netconv_p4_action(a);
+
+        send_p4_msg(c, buffer, 2048);
+}
+
 void dhf(void* b) {
     printf("Method is not implemented\n");
     return;
@@ -111,6 +139,13 @@ void init() {
         int i;
         printf("Set default actions.\n");
         set_default_action_dmac();
+
+        fill_state_table(0, "new_state");
+        fill_state_table(1, "state1");
+        fill_state_table(2, "state2");
+        fill_state_table(3, "state3");
+        fill_state_table(4, "state4");
+        fill_state_table(5, "state5");
 
         notify_controller_initialized();
 }

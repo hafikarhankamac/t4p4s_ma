@@ -115,6 +115,11 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     @name(".forward") action forward(bit<9> port) {
         standard_metadata.egress_port = port;
     }
+
+    @name(".new_state") action new_state() {
+        meta.state_metadata.current_state = 1;
+    }
+
     @name(".state1") action state1() {
         meta.state_metadata.current_state = 2;
     }
@@ -147,6 +152,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     }
     @name(".switch_state") table switch_state {
         actions = {
+            new_state;
             state1;
             state2;
             state3;

@@ -143,6 +143,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
             hdr.ethernet.dstAddr: exact;
         }
         size = 512;
+        default_action = forward(0);
     }
     @name(".switch_state") table switch_state {
         actions = {

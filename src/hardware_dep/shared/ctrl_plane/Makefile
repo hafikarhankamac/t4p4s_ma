@@ -7,7 +7,7 @@ CFLAGS += $(P4_GCC_OPTS)
 endif
 
 
-all: dpdk_portfwd_controller dpdk_l2fwd_controller dpdk_l3fwd_controller dpdk_smgw_controller dpdk_state-machine_controller
+all: dpdk_portfwd_controller dpdk_l2fwd_controller dpdk_l3fwd_controller dpdk_smgw_controller dpdk_state-machine-register_controller
 
 dpdk_portfwd_controller: handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_portfwd_controller.c
 	$(CC) $(CFLAGS) $(LIB) handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_portfwd_controller.c -o dpdk_portfwd_controller
@@ -21,9 +21,9 @@ dpdk_l3fwd_controller: handlers.c controller.c messages.c sock_helpers.c threadp
 dpdk_smgw_controller: handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_smgw_controller.c
 	$(CC) $(CFLAGS) $(LIB) handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_smgw_controller.c -o dpdk_smgw_controller
 
-dpdk_state-machine_controller: handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_state-machine_controller.c
-	$(CC) $(CFLAGS) $(LIB) handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_state-machine_controller.c -o dpdk_state-machine_controller
+dpdk_state-machine-register_controller: handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_state-machine-register_controller.c
+	$(CC) $(CFLAGS) $(LIB) handlers.c controller.c messages.c sock_helpers.c threadpool.c fifo.c dpdk_state-machine-register_controller.c -o dpdk_state-machine-register_controller
 
 clean:
-	rm -f dpdk_portfwd_controller dpdk_l2fwd_controller dpdk_l3fwd_controller dpdk_smgw_controller dpdk_state-machine_controller
+	rm -f dpdk_portfwd_controller dpdk_l2fwd_controller dpdk_l3fwd_controller dpdk_smgw_controller dpdk_state-machine-register_controller
 

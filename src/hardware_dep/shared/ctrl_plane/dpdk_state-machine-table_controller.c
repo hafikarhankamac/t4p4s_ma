@@ -135,9 +135,34 @@ void set_default_action_dmac()
         send_p4_msg(c, buffer, sizeof(buffer));
 }
 
+void set_default_action_map_flow_to_state()
+{
+        char buffer[2048];
+        struct p4_header* h;
+        struct p4_set_default_action* sda;
+        struct p4_action* a;
+
+        printf("Generate set_default_action message for table map_flow_to_state\n");
+
+        h = create_p4_header(buffer, 0, sizeof(buffer));
+
+        sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
+        strcpy(sda->table_name, "map_flow_to_state_0");
+
+        a = &(sda->action);
+        strcpy(a->description.name, "new_flow");
+
+        netconv_p4_header(h);
+        netconv_p4_set_default_action(sda);
+        netconv_p4_action(a);
+
+        send_p4_msg(c, buffer, sizeof(buffer));
+}
+
 void init() {
         printf("Set default actions.\n");
         set_default_action_dmac();
+        set_default_action_map_flow_to_state();
 
         printf("Fill tables.\n");
         fill_state_table(0, "new_state");

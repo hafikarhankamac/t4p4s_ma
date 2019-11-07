@@ -169,6 +169,8 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    // determine flow identifier
         // TODO: doesn't work because BAnd not implemented
 	    //meta.state_metadata.flow_id = hdr.ip4.dstAddr % MAX_FLOWS;
+        // TODO: doesn't work as the MODIFY_... works incorrectly (byte order)
+	    //meta.state_metadata.flow_id = 1;
         // TODO: doesn't work because hash() not implemented
 	    //zero = 0;
 	    //hash(

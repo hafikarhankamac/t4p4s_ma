@@ -6,7 +6,7 @@ const bit<16> ETHERTYPE_IP4 = 0x0800;
 const bit<8>  IPPROTO_TCP   = 0x06;
 const bit<8>  IPPROTO_UDP   = 0x11;
 
-const bit<32> MAX_FLOWS = 1024;
+const bit<32> MAX_FLOWS = 65536; // 2^16
 const bit<16> ZERO = 0;
 
 header ethernet_t {
@@ -159,6 +159,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     }
 
     register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
+    bit<32> var;
     apply {
         // simple forwarding
         dmac.apply();
@@ -181,22 +182,26 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         //	  hdr.l4.dstPort },
 	    //	MAX_FLOWS
 	    //);
-	    meta.state_metadata.flow_id = hdr.ip4.dstAddr;
+	    var = (bit<32>) hdr.ip4.hdrChecksum;
 
 	    // get state for flow
-        state.read(meta.state_metadata.current_state, meta.state_metadata.flow_id);
+        state.read(meta.state_metadata.current_state, var);
 
 	    // execute action depending on state
-	    //switch_state.apply();
+	    switch_state.apply();
 
 	    // write back new state for flow
-        state.write(meta.state_metadata.flow_id, meta.state_metadata.current_state);
+        state.write(var, meta.state_metadata.current_state);
     }
 }
 
 control DeparserImpl(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
+        packet.emit(hdr.ip4);
+        packet.emit(hdr.l4);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.tcp);
     }
 }
 

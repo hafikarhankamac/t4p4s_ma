@@ -51,7 +51,13 @@ header udp_t {
     bit<16> checksum;
 }
 
+struct state_metadata_t {
+    bit<16> current_state;
+	bit<32> flow_id;
+}
+
 struct metadata {
+    state_metadata_t state_metadata;
 }
 
 struct headers {
@@ -71,7 +77,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             ETHERTYPE_IP4: parse_ip4;
-            default: accept;
+            default: reject;
         }
     }
     state parse_ip4 {
@@ -79,7 +85,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         transition select(hdr.ip4.protocol) {
             IPPROTO_UDP  : parse_l4;
             IPPROTO_TCP  : parse_l4;
-            default      : accept;
+            default      : reject;
         }
     }
     state parse_l4 {
@@ -87,7 +93,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         transition select(hdr.ip4.protocol) {
             IPPROTO_UDP  : parse_udp;
             IPPROTO_TCP  : parse_tcp;
-            default      : accept;
+            default      : reject;
         }
     }
     state parse_udp {
@@ -109,8 +115,26 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     @name(".forward") action forward(bit<9> port) {
         standard_metadata.egress_port = port;
     }
-    @name("._nop") action _nop() {
+    @name(".state1") action state1() {
+        meta.state_metadata.current_state = 2;
     }
+
+    @name(".state2") action state2() {
+        meta.state_metadata.current_state = 3;
+    }
+
+    @name(".state3") action state3() {
+        meta.state_metadata.current_state = 4;
+    }
+
+    @name(".state4") action state4() {
+        meta.state_metadata.current_state = 5;
+    }
+
+    @name(".state5") action state5() {
+        meta.state_metadata.current_state = 1;
+    }
+
     @name(".dmac") table dmac {
         actions = {
             forward;
@@ -120,35 +144,53 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         }
         size = 512;
     }
+    @name(".switch_state") table switch_state {
+        actions = {
+            state1;
+            state2;
+            state3;
+            state4;
+            state5;
+        }
+        key = {
+            meta.state_metadata.current_state: exact;
+        }
+        size = 5;
+    }
+
     register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
-    bit<32> flow_id;
-    bit<16> current_state;
     apply {
-	// simple forwarding
+        // simple forwarding
         dmac.apply();
 
-	/* state machine */
+	    /* state machine */
 
-	// determine flow identifier
-	flow_id = hdr.ip4.dstAddr % MAX_FLOWS;
-	//zero = 0;
-	//hash(
-	//	flow_id,
-	//	HashAlgorithm.crc32,
-	//	ZERO,
-	//	{ hdr.ip4.srcAddr,
-	//	  hdr.ip4.dstAddr,
+	    // determine flow identifier
+        // TODO: doesn't work because BAnd not implemented
+	    //meta.state_metadata.flow_id = hdr.ip4.dstAddr % MAX_FLOWS;
+        // TODO: doesn't work because hash() not implemented
+	    //zero = 0;
+	    //hash(
+	    //	meta.state_metadata.flow_id,
+	    //	HashAlgorithm.crc32,
+	    //	ZERO,
+	    //	{ hdr.ip4.srcAddr,
+	    //	  hdr.ip4.dstAddr,
         //	  hdr.ip4.protocol,
         //	  hdr.l4.srcPort,
         //	  hdr.l4.dstPort },
-	//	MAX_FLOWS
-	//);
+	    //	MAX_FLOWS
+	    //);
+	    meta.state_metadata.flow_id = hdr.ip4.dstAddr;
 
-	//// get state for flow
-        //state.read(current_state,flow_id);
+	    // get state for flow
+        state.read(meta.state_metadata.current_state, meta.state_metadata.flow_id);
 
-	//// write back new state for flow
-        //state.write(flow_id, current_state);
+	    // execute action depending on state
+	    //switch_state.apply();
+
+	    // write back new state for flow
+        state.write(meta.state_metadata.flow_id, meta.state_metadata.current_state);
     }
 }
 

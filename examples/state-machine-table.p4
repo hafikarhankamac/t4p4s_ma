@@ -86,13 +86,20 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
     }
 }
 
+@name("state_update_digest") struct state_update_digest {
+    bit<1> new_flow;
+    bit<16> new_state;
+    // TODO: not possible with 32 bit values apparently
+    //bit<32> flow_id;
+}
+
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
     @name(".forward") action forward(bit<9> port) {
         standard_metadata.egress_port = port;
     }
 
     @name(".new_flow") action new_flow() {
-        meta.state_metadata.current_state = 1;
+        meta.state_metadata.current_state = 0;
         meta.state_metadata.new_flow = 1;
     }
 
@@ -160,7 +167,6 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 5;
     }
 
-    bit<32> var;
     apply {
         // simple forwarding
         dmac.apply();
@@ -177,7 +183,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    switch_state.apply();
 
         // set new state for flow
-        // digest
+        digest<state_update_digest>((bit<32>)1024, { meta.state_metadata.new_flow, meta.state_metadata.current_state }); //, meta.state_metadata.flow_id });
     }
 }
 

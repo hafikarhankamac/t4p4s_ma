@@ -35,22 +35,6 @@ header l4_t {
     bit<16> dstPort;
 }
 
-header tcp_t {
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4>  dataOffset;
-    bit<4>  res;
-    bit<8>  flags;
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
-}
-
-header udp_t {
-    bit<16> plength;
-    bit<16> checksum;
-}
-
 struct state_metadata_t {
     bit<16> current_state;
 	bit<32> flow_id;
@@ -65,8 +49,6 @@ struct headers {
     ethernet_t ethernet;
     ip4_t        ip4;
     l4_t         l4;
-    udp_t        udp;
-    tcp_t        tcp;
 }
 
 parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
@@ -91,18 +73,10 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
     state parse_l4 {
         packet.extract(hdr.l4);
         transition select(hdr.ip4.protocol) {
-            IPPROTO_UDP  : parse_udp;
-            IPPROTO_TCP  : parse_tcp;
+            IPPROTO_UDP  : accept;
+            IPPROTO_TCP  : accept;
             default      : reject;
         }
-    }
-    state parse_udp {
-        packet.extract(hdr.udp);
-        transition accept;
-    }
-    state parse_tcp {
-        packet.extract(hdr.tcp);
-        transition accept;
     }
 }
 
@@ -209,8 +183,6 @@ control DeparserImpl(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ip4);
         packet.emit(hdr.l4);
-        packet.emit(hdr.udp);
-        packet.emit(hdr.tcp);
     }
 }
 

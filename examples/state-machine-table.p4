@@ -90,7 +90,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
     bit<1> new_flow;
     bit<16> new_state;
     // TODO: not possible with 32 bit values apparently
-    //bit<32> flow_id;
+    bit<32> flow_id;
 }
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
@@ -174,7 +174,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    /* state machine */
 
 	    // determine flow identifier
-	    meta.state_metadata.flow_id = 1;
+	    meta.state_metadata.flow_id = hdr.ip4.dstAddr;
 
         // map flow to current state
         map_flow_to_state.apply();
@@ -183,7 +183,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    switch_state.apply();
 
         // set new state for flow
-        digest<state_update_digest>((bit<32>)1024, { meta.state_metadata.new_flow, meta.state_metadata.current_state }); //, meta.state_metadata.flow_id });
+        digest<state_update_digest>((bit<32>)1024, { meta.state_metadata.new_flow, meta.state_metadata.current_state, meta.state_metadata.flow_id });
     }
 }
 

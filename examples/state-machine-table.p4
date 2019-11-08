@@ -87,10 +87,9 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 }
 
 @name("state_update_digest") struct state_update_digest {
-    bit<1> new_flow;
     bit<16> new_state;
-    // TODO: not possible with 32 bit values apparently
     bit<32> flow_id;
+    bit<1> new_flow;
 }
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
@@ -183,7 +182,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    switch_state.apply();
 
         // set new state for flow
-        digest<state_update_digest>((bit<32>)1024, { meta.state_metadata.new_flow, meta.state_metadata.current_state, meta.state_metadata.flow_id });
+        digest<state_update_digest>((bit<32>)1024, { meta.state_metadata.current_state, meta.state_metadata.flow_id, meta.state_metadata.new_flow });
     }
 }
 

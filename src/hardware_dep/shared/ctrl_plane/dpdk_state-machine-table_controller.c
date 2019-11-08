@@ -98,9 +98,87 @@ void fill_state_table(uint16_t state, char *function)
         send_p4_msg(c, buffer, 2048);
 }
 
+void fill_map_flow_to_state_table(uint8_t flow_id[4], uint8_t state[2])
+{
+        char buffer[2048];
+        struct p4_header* h;
+        struct p4_add_table_entry* te;
+        struct p4_action* a;
+        struct p4_action_parameter* ap;
+        struct p4_field_match_exact* exact;
+
+        h = create_p4_header(buffer, 0, 2048);
+        te = create_p4_add_table_entry(buffer,0,2048);
+        strcpy(te->table_name, "map_flow_to_state_0");
+
+        exact = add_p4_field_match_exact(te, 2048);
+        strcpy(exact->header.name, "state_metadata.flow_id");
+        memcpy(exact->bitmap, flow_id, 4);
+        exact->length = 4*8+0;
+
+        a = add_p4_action(h, 2048);
+        strcpy(a->description.name, "existing_flow");
+
+        ap = add_p4_action_parameter(h, a, 2048);
+        strcpy(ap->name, "state");
+        memcpy(ap->bitmap, state, 2);
+        ap->length = 2*8+0;
+
+        netconv_p4_header(h);
+        netconv_p4_add_table_entry(te);
+        netconv_p4_field_match_exact(exact);
+        netconv_p4_action(a);
+        netconv_p4_action_parameter(ap);
+
+        send_p4_msg(c, buffer, 2048);
+}
+
+void modify_map_flow_to_state_table(uint8_t flow_id[4], uint8_t state[2])
+{
+    // modify NYI by t4p4s, simply overwrite
+    fill_map_flow_to_state_table(flow_id, state);
+}
+
+void state_update_digest(void* b) {
+    uint16_t state[1];
+    uint32_t flow_id[1];
+    uint8_t new_flow[1];
+    uint16_t offset=0;
+    offset = sizeof(struct p4_digest);
+    struct p4_digest_field* df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
+    memcpy(state, df->value, 2);
+    offset += sizeof(struct p4_digest_field);
+    df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
+    memcpy(flow_id, df->value, 4);
+    offset += sizeof(struct p4_digest_field);
+    df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
+    memcpy(new_flow, df->value, 1);
+
+    // new_flow is a 1 bit value
+    new_flow[0] = new_flow[0] >> 7;
+
+    printf("Ctrl: state_update_digest STATE: %d FLOW_ID: %d (%d.%d.%d.%d) NEW: %d\n", *state, flow_id[0], ((uint8_t *)flow_id)[0], ((uint8_t *)flow_id)[1], ((uint8_t *)flow_id)[2], ((uint8_t *)flow_id)[3], new_flow[0]);
+
+    if (*new_flow) {
+        fill_map_flow_to_state_table((uint8_t *)flow_id, (uint8_t *)state);
+    } else {
+        modify_map_flow_to_state_table((uint8_t *)flow_id, (uint8_t *)state);
+    }
+}
+
 void dhf(void* b) {
-    printf("Method is not implemented\n");
-    return;
+    struct p4_header* h = netconv_p4_header(unpack_p4_header(b, 0));
+    if (h->type != P4T_DIGEST) {
+        printf("Method is not implemented\n");
+        return;
+    }
+
+    struct p4_digest* d = unpack_p4_digest(b,0);
+    if (strcmp(d->field_list_name, "state_update_digest")==0) {
+        state_update_digest(b);
+    } else {
+        printf("Unknown digest received: X%sX\n", d->field_list_name);
+    }
 }
 
 void set_default_action_dmac()

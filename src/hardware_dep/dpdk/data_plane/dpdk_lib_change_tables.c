@@ -112,3 +112,8 @@ void ternary_add_promote_multiple(int tableid, uint8_t** keys, uint8_t** masks, 
 {
     FORALLNUMANODES(add, to ternary table, CHANGE_TABLE_SEQ(ternary_add, keys[idx], masks[idx], value))
 }
+
+void lpm_add_promote_multiple(int tableid, uint8_t** keys, uint8_t* depths, uint8_t* value, uint64_t nr_entries)
+{
+    FORALLNUMANODES(add, to lpm table, CHANGE_TABLE_SEQ(lpm_add, keys[idx], depths[idx], value))
+}

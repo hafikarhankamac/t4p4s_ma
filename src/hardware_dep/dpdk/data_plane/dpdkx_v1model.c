@@ -97,6 +97,10 @@ void sheep(uint32_t duration) {
     wait_cycles(duration);
 }
 
+void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint8_t **iv, uint8_t **key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
+    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) "\n");
+}
+
 void verify(bool check, enum error_error toSignal, SHORT_STDPARAMS) {
     // TODO implement call to extern
     debug(" :::: Called extern " T4LIT(verify,extern) "\n");

@@ -863,8 +863,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 #[ void encrypt_bytes(
                 #[    enum enum_EncryptionAlgorithm algorithm,
                 #[    enum enum_EncryptionMode mode,
-                #[    uint8_t **iv,
-                #[    uint8_t **key,
+                #[    uint32_t iv,
+                #[    uint32_t key,
                 #[    uint16_t start_byte,
                 #[    uint16_t length,
                 #[    packet_descriptor_t* pd, lookup_table_t** tables);

@@ -45,7 +45,7 @@ vsn=`curl -s "https://fast.dpdk.org/rel/" --list-only \
 vsn=($vsn)
 DPDK_VSN="${DPDK_VSN-vsn[1]}"
 DPDK_FILEVSN="$DPDK_VSN"
-[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
+#[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
 
 echo -e "Using DPDK version $cc${DPDK_VSN}$nn"
 

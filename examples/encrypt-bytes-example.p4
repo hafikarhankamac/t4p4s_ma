@@ -117,11 +117,11 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         ivs.read(meta.encrypt_metadata.iv, var);
 
         // encrypt data
-        encrypt_bytes<bit<32>>(EncryptionAlgorithm.aes, EncryptionMode.ctr, meta.encrypt_metadata.iv, meta.encrypt_metadata.key, 42, 13);
+        encrypt_bytes<bit<32>>(EncryptionAlgorithm.aes, EncryptionMode.ctr, meta.encrypt_metadata.iv, meta.encrypt_metadata.key, 22, 13);
 
 	    // write back new state for flow
-        ivs.write(var, meta.encrypt_metadata.iv);
-        keys.write(var, meta.encrypt_metadata.key);
+        ivs.write(var, 11);
+        keys.write(var, 11);
     }
 }
 

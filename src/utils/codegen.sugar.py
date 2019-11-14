@@ -368,7 +368,7 @@ def gen_format_statement(stmt):
         else:
             if m.get_attr('member') is not None:
                 def is_emit(m):
-                    return hasattr(m, 'expr') and hasattr(m.expr, 'path') and (m.expr.path.name, m.member) == ('packet', 'emit')
+                    return hasattr(m, 'expr') and hasattr(m.expr, 'path') and m.member == 'emit'
 
                 if is_emit(m) or is_emit(m.expr):
                     arg = stmt.methodCall.arguments[0]

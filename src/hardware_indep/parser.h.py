@@ -26,13 +26,15 @@ from hlir16.utils_hlir16 import *
 #{ typedef struct parsed_fields_s {
 
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        if hasattr(fld, 'expression'):
-            fld = fld.expression
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            if hasattr(fld, 'expression'):
+                fld = fld.expression
 
-        if not fld.preparsed and fld.type.size <= 32:
-            #[ uint32_t field_instance_${hdr.name}_${fld.name};
-            #[ uint8_t attr_field_instance_${hdr.name}_${fld.name};
+            if not fld.preparsed and fld.type.size <= 32:
+                #[ uint32_t field_instance_${hdr.name}_${fld.name};
+                #[ uint8_t attr_field_instance_${hdr.name}_${fld.name};
 #} } parsed_fields_t;
 
 
@@ -47,7 +49,9 @@ for hdr in hlir16.header_instances:
 
 #{ enum header_stack_e {
 for hi in hlir16.header_instances:
-    #[ header_stack_${hi.name},
+    # only do this for headers/structs - not for bitfields, etc
+    if hi.type.node_type == 'Type_Name':
+    	#[ header_stack_${hi.name},
 #[ header_stack_, // dummy to prevent warning for empty stack
 #} };
 
@@ -57,7 +61,8 @@ for hi in hlir16.header_instances:
 #[ // ---------------------
 
 #[ #define HEADER_INSTANCE_COUNT ${len(hlir16.header_instances)}
-hdrlens = "+".join([str(hi.type.type_ref.byte_width) for hi in hlir16.header_instances])
+#[ /**HERE hdrlens **/
+hdrlens = "+".join([str(hi.type.type_ref.byte_width) for hi in hlir16.header_instances if hasattr(hi.type, 'type_ref')])
 #[ #define HEADER_INSTANCE_TOTAL_LENGTH ($hdrlens)
 
 
@@ -65,13 +70,17 @@ hdrlens = "+".join([str(hi.type.type_ref.byte_width) for hi in hlir16.header_ins
 
 #{ typedef enum header_instance_e {
 for hdr in hlir16.header_instances:
-    #[   header_instance_${hdr.name},
+    # only do this for headers/structs - not for bitfields, etc
+    if hdr.type.node_type == 'Type_Name':
+    	#[   header_instance_${hdr.name},
 #} } header_instance_t;
 
 
 #{ static const int header_instance_byte_width[HEADER_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    #[   ${hdr.type.type_ref.byte_width}, // header_instance_${hdr.name}, ${hdr.type.type_ref.bit_width} bits, ${hdr.type.type_ref.bit_width/8.0} bytes
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        #[   ${hdr.type.type_ref.byte_width}, // header_instance_${hdr.name}, ${hdr.type.type_ref.bit_width} bits, ${hdr.type.type_ref.bit_width/8.0} bytes
 #} };
 
 
@@ -79,22 +88,26 @@ for hdr in hlir16.header_instances:
 #[     0,
 byte_widths = []
 for hdr in hlir16.header_instances:
-    byte_widths += [str(hdr.type.type_ref.byte_width)]
-    joined = "+".join(byte_widths)
-    #[   $joined,
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        byte_widths += [str(hdr.type.type_ref.byte_width)]
+        joined = "+".join(byte_widths)
+        #[   $joined,
 #} };
 
 
 #{ static const int header_instance_is_metadata[HEADER_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    #[   ${1 if hdr.type.type_ref.is_metadata else 0}, // header_instance_${hdr.name}
+    #[ /**HERE ${hdr.id} **/
+    #[   ${1 if hasattr(hdr.type, 'type_ref') and hdr.type.type_ref.is_metadata else 0}, // header_instance_${hdr.name}
 #} };
 
 
 
 # TODO move to hlir16.py/set_additional_attrs?
 def all_field_instances():
-    return [fld for hdr in hlir16.header_instances for fld in hdr.type.type_ref.valid_fields]
+    data =  [fld for hdr in hlir16.header_instances if hasattr(hdr.type, 'type_ref') for fld in hdr.type.type_ref.valid_fields]
+    return data
 
 
 #[ // Field instance infos
@@ -106,15 +119,19 @@ def all_field_instances():
 
 #{ typedef enum field_instance_e {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        #[   field_instance_${hdr.name}_${fld.name},
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            #[   field_instance_${hdr.name}_${fld.name},
 #} } field_instance_t;
 
 #[ #define FIXED_WIDTH_FIELD -1
 #{ static const int header_instance_var_width_field[HEADER_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
     field_id_pattern = 'field_instance_{}_{}'
-    #[   ${reduce((lambda x, f: field_id_pattern.format(hdr.name, f.name) if hasattr(f, 'is_vw') and f.is_vw else x), hdr.type.type_ref.valid_fields, 'FIXED_WIDTH_FIELD')}, // header_instance_${hdr.name}
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        #[   ${reduce((lambda x, f: field_id_pattern.format(hdr.name, f.name) if hasattr(f, 'is_vw') and f.is_vw else x), hdr.type.type_ref.valid_fields, 'FIXED_WIDTH_FIELD')}, // header_instance_${hdr.name}
 #} };
 
 
@@ -124,16 +141,20 @@ def get_real_type(typenode):
 
 #{ static const int field_instance_bit_width[FIELD_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        fldtype = get_real_type(fld.type)
-        #[   ${fldtype.size}, // field_instance_${hdr.name}_${fld.name}
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            fldtype = get_real_type(fld.type)
+            #[   ${fldtype.size}, // field_instance_${hdr.name}_${fld.name}
 #} };
 
 
 #{ static const int field_instance_bit_offset[FIELD_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        #[   (${fld.offset} % 8), // field_instance_${hdr.name}_${fld.name}
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            #[   (${fld.offset} % 8), // field_instance_${hdr.name}_${fld.name}
 #} };
 
 
@@ -141,8 +162,10 @@ for hdr in hlir16.header_instances:
 
 #{ static const int field_instance_byte_offset_hdr[FIELD_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        #[   (${fld.offset} / 8), // field_instance_${hdr.name}_${fld.name}
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            #[   (${fld.offset} / 8), // field_instance_${hdr.name}_${fld.name}
 #} };
 
 
@@ -155,27 +178,33 @@ for hdr in hlir16.header_instances:
 
 #{ static const int field_instance_mask[FIELD_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        fldtype = get_real_type(fld.type)
-        #[  __bswap_constant_32(uint32_top_bits(${fldtype.size}) >> (${fld.offset}%8)), // field_instance_${hdr.name}_${fld.name},
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            fldtype = get_real_type(fld.type)
+            #[  __bswap_constant_32(uint32_top_bits(${fldtype.size}) >> (${fld.offset}%8)), // field_instance_${hdr.name}_${fld.name},
 #} };
 
 
 #{ static const header_instance_t field_instance_header[FIELD_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    for fld in hdr.type.type_ref.valid_fields:
-        #[   header_instance_${hdr.name}, // field_instance_${hdr.name}_${fld.name}
+    #[ /**HERE ${hdr.id} **/
+    if hasattr(hdr.type, 'type_ref'):
+        for fld in hdr.type.type_ref.valid_fields:
+            #[   header_instance_${hdr.name}, // field_instance_${hdr.name}_${fld.name}
 #} };
 
 
 #[ // TODO current stacks are exactly 1 element deep 
 #{ static const header_instance_t header_stack_elements[HEADER_STACK_COUNT][10] = {
 for hi in hlir16.header_instances:
-    #[ // header_instance_${hi.name}
-    #{ {
-    for stack_elem in [hi.name]:
-        #[ header_instance_${stack_elem},
-    #} },
+    # only do this for headers/structs - not for bitfields, etc
+    if hi.type.node_type == 'Type_Name':
+        #[ // header_instance_${hi.name}
+        #{ {
+        for stack_elem in [hi.name]:
+            #[ header_instance_${stack_elem},
+        #} },
 #} };
 
 #{ static const unsigned header_stack_size[HEADER_STACK_COUNT] = {

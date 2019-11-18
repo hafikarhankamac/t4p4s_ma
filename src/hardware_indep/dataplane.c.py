@@ -180,35 +180,31 @@ for table in hlir16.tables:
 
 #{ void reset_headers(SHORT_STDPARAMS) {
 for h in hlir16.header_instances:
-    #[ /**HERE ${h.id} **/
-    if hasattr(h.type, 'type_ref'):
-        if not h.type.type_ref.is_metadata:
-            #[ pd->headers[${h.id}].pointer = NULL;
-        else:
-            #[ memset(pd->headers[${h.id}].pointer, 0, header_info(${h.id}).bytewidth * sizeof(uint8_t));
+    if not h.type.type_ref.is_metadata:
+        #[ pd->headers[${h.id}].pointer = NULL;
+    else:
+        #[ memset(pd->headers[${h.id}].pointer, 0, header_info(${h.id}).bytewidth * sizeof(uint8_t));
 #} }
 
 #{ void init_headers(SHORT_STDPARAMS) {
 for h in hlir16.header_instances:
-    #[ /**HERE ${h.id} **/
-    if hasattr(h.type, 'type_ref'):
-        if not h.type.type_ref.is_metadata:
-            #[ pd->headers[${h.id}] = (header_descriptor_t)
-            #{ {
-            #[     .type = ${h.id},
-            #[     .length = header_info(${h.id}).bytewidth,
-            #[     .pointer = NULL,
-            #[     .var_width_field_bitwidth = 0,
-            #[     .name = "${h.name}",
-            #} };
-        else:
-            #[ pd->headers[${h.id}] = (header_descriptor_t)
-            #{ {
-            #[     .type = ${h.id},
-            #[     .length = header_info(${h.id}).bytewidth,
-            #[     .pointer = malloc(header_info(${h.id}).bytewidth * sizeof(uint8_t)),
-            #[     .var_width_field_bitwidth = 0
-            #} };
+    if not h.type.type_ref.is_metadata:
+        #[ pd->headers[${h.id}] = (header_descriptor_t)
+        #{ {
+        #[     .type = ${h.id},
+        #[     .length = header_info(${h.id}).bytewidth,
+        #[     .pointer = NULL,
+        #[     .var_width_field_bitwidth = 0,
+        #[     .name = "${h.name}",
+        #} };
+    else:
+        #[ pd->headers[${h.id}] = (header_descriptor_t)
+        #{ {
+        #[     .type = ${h.id},
+        #[     .length = header_info(${h.id}).bytewidth,
+        #[     .pointer = malloc(header_info(${h.id}).bytewidth * sizeof(uint8_t)),
+        #[     .var_width_field_bitwidth = 0
+        #} };
 #} }
 
 ################################################################################
@@ -242,22 +238,16 @@ for table in hlir16.tables:
 #[     uint32_t value32, res32;
 #[     (void)value32, (void)res32;
 for hdr in hlir16.header_instances:
-    print('header')
-    print(hdr)
-    print('type')
-    print(hdr.type)
-    print(hasattr(hdr.type, 'type_ref'))
     #[ 
     #[ // updating header instance ${hdr.name}
-    #[ /**HERE ${hdr.id} **/
-    if hasattr(hdr.type, 'type_ref'):
-        for fld in hdr.type.type_ref.valid_fields:
-            if not fld.preparsed and fld.type.size <= 32:
-                #{ if(pd->fields.attr_field_instance_${hdr.name}_${fld.name} == MODIFIED) {
-                #[     value32 = pd->fields.field_instance_${hdr.name}_${fld.name};
-                #[     MODIFY_INT32_INT32_AUTO_PACKET(pd, header_instance_${hdr.name}, field_instance_${hdr.name}_${fld.name}, value32);
-                #[     // set_field((fldT[]){{pd, header_instance_${hdr.name}, field_${hdr.type.type_ref.name}_${fld.name}}}, 0, value32, ${fld.type.size});
-                #} }
+
+    for fld in hdr.type.type_ref.valid_fields:
+        if not fld.preparsed and fld.type.size <= 32:
+            #{ if(pd->fields.attr_field_instance_${hdr.name}_${fld.name} == MODIFIED) {
+            #[     value32 = pd->fields.field_instance_${hdr.name}_${fld.name};
+            #[     MODIFY_INT32_INT32_AUTO_PACKET(pd, header_instance_${hdr.name}, field_instance_${hdr.name}_${fld.name}, value32);
+            #[     // set_field((fldT[]){{pd, header_instance_${hdr.name}, field_${hdr.type.type_ref.name}_${fld.name}}}, 0, value32, ${fld.type.size});
+            #} }
 #} }
 
 ################################################################################
@@ -326,8 +316,7 @@ for pe in pipeline_elements:
 
 ################################################################################
 
-#[ /**HERE metadatanames **/
-metadata_names = {hi.name for hi in hlir16.header_instances if hasattr(hi.type, 'type_ref') and hi.type.type_ref.is_metadata}
+metadata_names = {hi.name for hi in hlir16.header_instances if hi.type.type_ref.is_metadata}
 longest_hdr_name_len = max({len(h.name) for h in hlir16.header_instances if h.name not in metadata_names})
 
 pkt_name_indent = " " * longest_hdr_name_len
@@ -410,7 +399,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[     reset_headers(SHORT_STDPARAMS_IN);
 #[     set_metadata_inport(pd, portid);
 #[
-#[     dbg_bytes(pd->data, rte_pktmbuf_pkt_len(pd->wrapper), "Handling packet (port %" PRIu32 ", $${}{%02d} bytes)        : ", EXTRACT_INGRESSPORT(pd), rte_pktmbuf_pkt_len(pd->wrapper));
+#[     dbg_bytes(pd->data, rte_pktmbuf_pkt_len(pd->wrapper), "Handling packet (port %" PRIu32 ", $${}{%02d} bytes)  : ", EXTRACT_INGRESSPORT(pd), rte_pktmbuf_pkt_len(pd->wrapper));
 #[
 #[     pd->parsed_length = 0;
 #[     parse_packet(${STDPARAMS_IN});

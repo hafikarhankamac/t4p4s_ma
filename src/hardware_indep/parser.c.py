@@ -172,9 +172,7 @@ for s in parser.states:
 
 #{ const char* header_instance_names[HEADER_INSTANCE_COUNT] = {
 for hdr in hlir16.header_instances:
-    # only do this for headers/structs - not for bitfields, etc
-    if hdr.type.node_type == 'Type_Name':
-        #[ "${hdr.name}", // header_instance_${hdr.name}
+    #[ "${hdr.name}", // header_instance_${hdr.name}
 #} };
 
 #{ const char* field_names[FIELD_COUNT] = {

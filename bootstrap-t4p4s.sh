@@ -45,9 +45,10 @@ fi
 ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
 
 echo Setting software versions...
+# defaults are current official versions t4p4s uses
 # Note: recent versions of official P4C introduced changes currently incompatible with T4P4S
-[ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=ma
-[ -z "$P4C_COMMIT" ] && P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
+[ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=c29f2cae5fb84cf5696096084594181a61f4c20e
+[ -z "$P4C_COMMIT" ] && P4C_COMMIT=2f55fb522058af47eed17182a6a1697e09dc6b85
 P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
 
 echo t4p4s: $TAPAS_COMMIT
@@ -174,3 +175,6 @@ else
 fi
 
 cd t4p4s
+
+# set hlir version
+[ -z "$HLIR_COMMIT" ] && cd src/hlir16 && git checkout $HLIR_COMMIT && cd ../..

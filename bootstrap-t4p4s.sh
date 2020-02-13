@@ -5,12 +5,29 @@ set -x
 cc="\033[1;33m"     # yellow
 nn="\033[0m"
 
+APPROX_INSTALL_MB="2500"
+FREE_MB="`df --output=avail -m . | tail -1 | tr -d '[:space:]'`"
+
+if [ "$SKIP_CHECK" != "1" ] && [ "$FREE_MB" -lt "$APPROX_INSTALL_MB" ]; then
+    echo -e "Bootstrapping requires approximately $cc$APPROX_INSTALL_MB MB$nn of free space"
+    echo -e "You seem to have $cc$FREE_MB MB$nn of free space on the current drive"
+    echo -e "To force installation, run ${cc}SKIP_CHECK=1 $0$nn"
+    exit
+else
+    echo -e "Installation will use approximately $cc$APPROX_INSTALL_MB MB$nn of space"
+fi
+
 MAX_MAKE_JOBS=${MAX_MAKE_JOBS-`nproc --all`}
 
 echo -e "System has $cc`nproc --all`$nn cores; will use $cc$MAX_MAKE_JOBS$nn jobs"
 echo Requesting root access...
 sudo echo -n ""
 echo Root access granted, starting...
+
+if [ ! `which curl` ] || [ ! `which git` ]; then
+    echo -e "Installing ${cc}curl$nn and ${cc}git$nn"
+    sudo apt-get -y install curl git
+fi
 
 # Set sensible defaults
 export PARALLEL_INSTALL=${PARALLEL_INSTALL-1}
@@ -53,7 +70,7 @@ vsn=`curl -s "https://fast.dpdk.org/rel/" --list-only \
     | head -1`
 
 vsn=($vsn)
-DPDK_VSN="${DPDK_VSN-vsn[1]}"
+DPDK_VSN="${DPDK_VSN-${vsn[1]}}"
 DPDK_FILEVSN="$DPDK_VSN"
 #[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
 
@@ -63,7 +80,7 @@ echo -e "Using DPDK version $cc${DPDK_VSN}$nn"
 echo
 
 # Download libraries
-sudo apt-get update && sudo apt-get -y install g++ git automake libtool libgc-dev bison flex libfl-dev libgmp-dev libboost-dev libboost-iostreams-dev pkg-config python python-scapy python-ipaddr tcpdump cmake python-setuptools libprotobuf-dev libnuma-dev curl &
+sudo apt-get update && sudo apt-get -y install g++ automake libtool libgc-dev bison flex libfl-dev libgmp-dev libboost-dev libboost-iostreams-dev pkg-config python python-scapy python-ipaddr tcpdump cmake python-setuptools libprotobuf-dev libnuma-dev &
 WAITPROC_APTGET="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_APTGET"
 

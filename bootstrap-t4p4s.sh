@@ -22,9 +22,11 @@ else
     export RTE_TARGET=${RTE_TARGET-x86_64-native-linuxapp-gcc}
 fi
 
-# Note: recent versions of P4C introduced changes currently incompatible with T4P4S
-# P4C_COMMIT=${P4C_COMMIT-2f55fb522058af47eed17182a6a1697e09dc6b85}
-P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
+ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
+
+# Note: recent versions of official P4C introduced changes currently incompatible with T4P4S
+[ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=ma
+[ -z "$P4C_COMMIT" ] && P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
 P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
 
 echo Determining newest DPDK version...
@@ -65,16 +67,13 @@ WAITPROC_DPDK="$!"
 WAITPROC_PROTOBUF="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_PROTOBUF"
 
-[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
-#[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
-#[ "$P4C_COMMIT" == "" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
+[ ! -d "p4c" ] && git clone https://gitlab+deploy-token-265:wnCdz_rZqesV4iYAGw9b@gitlab.lrz.de/p4/tapas/p4c.git && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
 WAITPROC_P4C="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_P4C"
 
 
-ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
 # ...
-[ ! -d t4p4s ] && git clone --recursive https://gitlab+deploy-token-247:-K1yHEhTvygwQsCiJ8tG@gitlab.lrz.de/p4/ma-endrass/t4p4s2.git && mv t4p4s2 t4p4s && cd t4p4s && git checkout ma && cd .. &
+[ ! -d t4p4s ] && git clone https://gitlab+deploy-token-247:-K1yHEhTvygwQsCiJ8tG@gitlab.lrz.de/p4/tapas/t4p4s.git && cd t4p4s && git checkout $TAPAS_COMMIT && git submodule update --init --recursive && cd .. &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 

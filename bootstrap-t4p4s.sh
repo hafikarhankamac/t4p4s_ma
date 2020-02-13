@@ -1,4 +1,7 @@
 # Highlight colours
+
+set -x
+
 cc="\033[1;33m"     # yellow
 nn="\033[0m"
 
@@ -24,10 +27,15 @@ fi
 
 ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
 
+echo Setting software versions...
 # Note: recent versions of official P4C introduced changes currently incompatible with T4P4S
 [ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=ma
 [ -z "$P4C_COMMIT" ] && P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
 P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
+
+echo t4p4s: $TAPAS_COMMIT
+echo p4c: $P4C_COMMIT
+echo p4runtime: $P4RUNTIME_COMMIT
 
 echo Determining newest DPDK version...
 

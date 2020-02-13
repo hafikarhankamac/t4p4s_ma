@@ -52,6 +52,8 @@ def gen_extract_header(hdrinst, hdrtype):
     for f in hdrtype.valid_fields:
         # TODO get rid of "f.get_attr('preparsed') is not None"
         # TODO (f must always have a preparsed attribute)
+        if f.size <= 32: # that appears to be important...
+            #[ pd->fields.attr_field_instance_${hdrinst.name}_${f.name} = 0;
         if f.get_attr('preparsed') is not None and f.preparsed and f.size <= 32:
             #[ EXTRACT_INT32_AUTO_PACKET(pd, ${hdrinst.id}, ${f.id}, value32)
             #[ pd->fields.${f.id} = value32;

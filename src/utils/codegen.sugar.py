@@ -776,8 +776,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                     return var_name
 
                 # TODO this looks like it should be the proper result
-                # return 'handle(header_desc_ins(pd, {}), {})'.format(e.expr.header_ref.id, e.field_ref.id)
-                return '(GET_INT32_AUTO_PACKET(pd, {}, {}))'.format(e.expr.header_ref.id, e.field_ref.id)
+                return 'handle(header_desc_ins(pd, {}), {})'.format(e.expr.header_ref.id, e.field_ref.id)
+                # return '(GET_INT32_AUTO_PACKET(pd, {}, {}))'.format(e.expr.header_ref.id, e.field_ref.id)
         elif hasattr(e, 'header_ref'):
             return e.header_ref.id
         elif e.expr.node_type == 'PathExpression':
@@ -841,7 +841,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 if "," not in fmt_params:
                     all_params = ", ".join(["STDPARAMS_IN"])
                 else:
-                    all_params = ", ".join([fmt_params, "STDPARAMS_IN"])
+                    all_params = ", ".join([fmt_params, "STDPARAMS_IN" if not mref.name == "verify_checksum" else "SHORT_STDPARAMS_IN"])
 
                 #[ ${mref.name}($all_params)
 

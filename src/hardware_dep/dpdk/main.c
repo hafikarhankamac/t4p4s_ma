@@ -189,12 +189,20 @@ bool dpdk_main_loop()
     packet_descriptor_t pd;
     init_dataplane(&pd, lcdata.conf->state.tables);
 
+    //uint64_t rx_cnt = 0;
     while (core_is_working(&lcdata)) {
         main_loop_pre_rx(&lcdata);
 
         do_rx(&lcdata, &pd);
 
         main_loop_post_rx(&lcdata);
+
+        /*rx_cnt++;
+        if (unlikely(rx_cnt % 1000000 == 0))
+        {
+            print_rte_xstats(1);
+            print_rte_xstats(2);
+        }*/
     }
 
     return lcdata.is_valid;
@@ -219,6 +227,51 @@ int launch_dpdk()
     }
 
     return 0;
+}
+
+// https://doc.dpdk.org/guides/prog_guide/poll_mode_drv.html
+void print_rte_xstats(uint32_t port_id)
+{
+    struct rte_eth_xstat_name *xstats_names;
+    uint64_t *values;
+    int len, i;
+
+    printf("========== xstats for port = %u ==========\n", port_id);
+    /* Get number of stats */
+    len = rte_eth_xstats_get_names_by_id(port_id, NULL, 0, NULL);
+    printf("len=%d\n", len);
+    if (len < 0) {
+        printf("Cannot get xstats count\n");
+    }
+
+    xstats_names = malloc(sizeof(struct rte_eth_xstat_name) * len);
+    if (xstats_names == NULL) {
+        printf("Cannot allocate memory for xstat names\n");
+    }
+
+    /* Retrieve xstats names, passing NULL for IDs to return all statistics */
+    int xstatsnamelen = rte_eth_xstats_get_names_by_id(port_id, xstats_names, len, NULL);// NULL, len);
+    printf("rte_eth_xstats_get_names_by_id(port_id, xstats_names, NULL, len) =%d\n", xstatsnamelen);
+    if (len != xstatsnamelen) {
+        printf("Cannot get xstat names\n");
+    }
+
+    values = malloc(sizeof(values) * len);
+    if (values == NULL) {
+        printf("Cannot allocate memory for xstats\n");
+    }
+
+    /* Getting xstats values */
+    if (len != rte_eth_xstats_get_by_id(port_id, NULL, values, len)) {
+        printf("Cannot get xstat values\n");
+    }
+
+    /* Print all xstats names and values */
+    for (i = 0; i < len; i++) {
+        printf("%s: %"PRIu64"\n", xstats_names[i].name, values[i]);
+    }
+    printf("==========================================\n");
+    fflush(stdout);
 }
 
 int main(int argc, char** argv)
@@ -252,6 +305,8 @@ int main(int argc, char** argv)
 
         flush_tables();
     }
+    /*print_rte_xstats(1);
+    print_rte_xstats(2);*/
 
     t4p4s_normal_exit();
     return 0;

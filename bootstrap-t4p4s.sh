@@ -1,5 +1,7 @@
-
 # Highlight colours
+
+set -x
+
 cc="\033[1;33m"     # yellow
 nn="\033[0m"
 
@@ -40,8 +42,17 @@ else
     export RTE_TARGET=${RTE_TARGET-x86_64-native-linuxapp-gcc}
 fi
 
-# Note: recent versions of P4C introduced changes currently incompatible with T4P4S
-# P4C_COMMIT=${P4C_COMMIT-80f8970b5ec8e57c4a3611da343461b5b0a8dda3}
+ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts
+
+echo Setting software versions...
+# Note: recent versions of official P4C introduced changes currently incompatible with T4P4S
+[ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=ma
+[ -z "$P4C_COMMIT" ] && P4C_COMMIT=4a6670196d6f138e0a3b3c7bab560b8f7587360e
+P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
+
+echo t4p4s: $TAPAS_COMMIT
+echo p4c: $P4C_COMMIT
+echo p4runtime: $P4RUNTIME_COMMIT
 
 echo Determining newest DPDK version...
 
@@ -61,7 +72,7 @@ vsn=`curl -s "https://fast.dpdk.org/rel/" --list-only \
 vsn=($vsn)
 DPDK_VSN="${DPDK_VSN-${vsn[1]}}"
 DPDK_FILEVSN="$DPDK_VSN"
-[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
+#[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
 
 echo -e "Using DPDK version $cc${DPDK_VSN}$nn"
 
@@ -81,12 +92,13 @@ WAITPROC_DPDK="$!"
 WAITPROC_PROTOBUF="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_PROTOBUF"
 
-[ ! -d "p4c" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
-# [ "$P4C_COMMIT" == "" ] && git clone --recursive https://github.com/p4lang/p4c && cd p4c && git submodule update --init --recursive &
+[ ! -d "p4c" ] && git clone https://gitlab+deploy-token-265:wnCdz_rZqesV4iYAGw9b@gitlab.lrz.de/p4/tapas/p4c.git && cd p4c && git checkout $P4C_COMMIT && git submodule update --init --recursive &
 WAITPROC_P4C="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_P4C"
 
-[ ! -d t4p4s ] && git clone --recursive git@gitlab.lrz.de:p4/ma-endrass/t4p4s2.git &
+
+# ...
+[ ! -d t4p4s ] && git clone https://gitlab+deploy-token-247:-K1yHEhTvygwQsCiJ8tG@gitlab.lrz.de/p4/tapas/t4p4s.git && cd t4p4s && git checkout $TAPAS_COMMIT && git submodule update --init --recursive && cd .. &
 WAITPROC_T4P4S="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_T4P4S"
 
@@ -125,6 +137,10 @@ cd ..
 export P4C=`pwd`/p4c
 
 cd p4c
+git checkout $P4C_COMMIT
+cd control-plane/p4runtime
+git checkout $P4RUNTIME_COMMIT
+cd ../..
 ./bootstrap.sh
 cd build
 cmake ..

@@ -306,7 +306,7 @@ for m in hlir16.objects['Method']:
     }):
         t = m.type
         ret_type = format_type(t.returnType)
-        args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + [STDPARAMS if not m.name == "verify_checksum" else SHORT_STDPARAMS])
+        args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['STDPARAMS' if not m.name == "verify_checksum" else 'SHORT_STDPARAMS'])
 
         #[ extern ${ret_type} ${m.name}(${args});
 

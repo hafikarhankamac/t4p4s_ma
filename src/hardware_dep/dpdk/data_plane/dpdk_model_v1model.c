@@ -112,15 +112,15 @@ void sheep(uint32_t duration) {
     wait_cycles(duration);
 }
 
-void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
-    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) " (" T4LIT(%d) "-" T4LIT(%d) ") [" T4LIT(IV, field) " " T4LIT(%x) " " T4LIT(key, field) " " T4LIT(%x) "] starting at byte " T4LIT(%d) " (" T4LIT(%d) " bytes)\n", algorithm, mode, iv, key, start_byte, length);
-
-    for (uint16_t i = 0 ; i < length; i++) {
-        uint16_t idx = start_byte + i;
-        pd->data[idx] = pd->data[idx] + key + iv;
-    }
-    sheep((uint32_t) length);
-}
+//void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
+//    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) " (" T4LIT(%d) "-" T4LIT(%d) ") [" T4LIT(IV, field) " " T4LIT(%x) " " T4LIT(key, field) " " T4LIT(%x) "] starting at byte " T4LIT(%d) " (" T4LIT(%d) " bytes)\n", algorithm, mode, iv, key, start_byte, length);
+//
+//    for (uint16_t i = 0 ; i < length; i++) {
+//        uint16_t idx = start_byte + i;
+//        pd->data[idx] = pd->data[idx] + key + iv;
+//    }
+//    sheep((uint32_t) length);
+//}
 
 void verify(bool check, enum error_error toSignal, SHORT_STDPARAMS) {
     // TODO implement call to extern

@@ -240,7 +240,9 @@ inline struct p4_action* unpack_p4_action(char* buffer, uint16_t offset) {
 
 struct p4_action_parameter* add_p4_action_parameter(struct p4_header* header, struct p4_action* action, uint16_t maxlength) {
         struct p4_action_parameter* action_p;
-        if (header->length + sizeof(struct p4_action_parameter) > maxlength) return 0; /* buffer overflow */
+        if (header->length + sizeof(struct p4_action_parameter) > maxlength) {
+                fprintf(stderr, "       BUFFER OVERFLOW!\n");
+                return 0;} /* buffer overflow */
         action_p = (struct p4_action_parameter*)( ( (char*)header ) + header->length);
         header->length += sizeof(struct p4_action_parameter);
         action->param_size += 1;

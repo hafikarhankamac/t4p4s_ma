@@ -368,7 +368,7 @@ def gen_format_statement(stmt):
         else:
             if m.get_attr('member') is not None:
                 def is_emit(m):
-                    return hasattr(m, 'expr') and hasattr(m.expr, 'path') and (m.expr.path.name, m.member) == ('packet', 'emit')
+                    return hasattr(m, 'expr') and hasattr(m.expr, 'path') and m.member == 'emit'
 
                 if is_emit(m) or is_emit(m.expr):
                     arg = stmt.methodCall.arguments[0]
@@ -819,7 +819,14 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 #[ #error "Generating digest when T4P4S_NO_CONTROL_PLANE is defined"
                 #[ #endif
 
-                fields = ", ".join(["\"T4LIT({},field)\"/\"T4LIT({})\"".format(c.expression.field_ref.name, c.expression.field_ref.type.size) for c in e.arguments[1].expression.components])
+                fields = []
+                for c in e.arguments[1].expression.components:
+                    if c.expression.has_attr("field_ref"):
+                        fld = "\"T4LIT({},field)\"/\"T4LIT({})\"".format(c.expression.field_ref.name, c.expression.field_ref.type.size)
+                    else:
+                        fld = "\"T4LIT({})\"/\"T4LIT({})\"".format(c.expression.value, c.expression.type.size)
+                    fields.append(fld)
+                fields = ", ".join(fields)
 
                 prepend_statement("debug(\"    : Sending digest to port \"T4LIT(%d,port)\" (fields: {})\\n\", {});\n".format(fields, e.arguments[0].expression.value))
                 append_statement("sleep_millis(300);")
@@ -832,10 +839,38 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 for fld in e.arguments[1].expression.components:
                     bitsize = fld.expression.type.size
 
-                    prepend_statement('add_digest_field(digest{}, field_desc(pd, field_instance_{}_{}).byte_addr, {});\n'.format(
-                                      id, fld.expression.expr.header_ref.name, fld.expression.field_ref.name, bitsize));
+                    if fld.expression.has_attr("field_ref"):
+                        prepend_statement('add_digest_field(digest{}, field_desc(pd, field_instance_{}_{}).byte_addr, {});\n'.format(
+                                          id, fld.expression.expr.header_ref.name, fld.expression.field_ref.name, bitsize));
+                    else:
+                        # likely a constant, need to store in variable to get pointer
+                        if bitsize <= 32:
+                            expr_unit = bit_bounding_unit(fld.expression.type)
+                            prepend_statement( "uint{}_t value_{} = {};".format(expr_unit, fld.expression.id, fld.expression.value) )
+                            prepend_statement('add_digest_field(digest{}, &value_{}, {});\n'.format(
+                                              id, fld.expression.id, bitsize));
+                        else:
+                            # TODO similar to extern_format_parameter?
+                            addError("formatting an digest", "Digest with Constant > 32 bit is not supported yet!")
 
                 #[ send_digest(bg, digest$id, $receiver)
+            elif mref.name == 'sheep':
+                fmt_params = format_method_parameters(e.arguments, method_params)
+                #[ extern void sheep(uint32_t duration);
+                #[ sheep($fmt_params)
+            elif mref.name == 'encrypt_bytes':
+                fmt_params = format_method_parameters(e.arguments, method_params)
+                #[ void encrypt_bytes(
+                #[    enum enum_EncryptionAlgorithm algorithm,
+                #[    enum enum_EncryptionMode mode,
+                #[    uint32_t iv,
+                #[    uint32_t key,
+                #[    uint16_t start_byte,
+                #[    uint16_t length,
+                #[    packet_descriptor_t* pd, lookup_table_t** tables);
+                #[ encrypt_bytes(
+                #[    $fmt_params,
+                #[    SHORT_STDPARAMS_IN)
             else:
                 fmt_params = format_method_parameters(e.arguments, method_params)
                 if "," not in fmt_params:

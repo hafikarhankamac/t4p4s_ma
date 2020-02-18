@@ -35,6 +35,7 @@ def is_cache_file_loadable(path):
 def import_modules(required_modules):
     for modname in required_modules:
         if not pkgutil.find_loader(modname):
+            print('ERROR: Unable to find module {}'.format(modname), file=sys.stderr)
             return None
 
     return [importlib.import_module(modname) for modname in required_modules]

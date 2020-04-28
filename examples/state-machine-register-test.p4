@@ -36,12 +36,12 @@ header l4_t {
 }
 
 struct state_metadata_t {
+	bit<16> current_state;
+	bit<32> flow_id;
 }
 
 struct metadata {
-#    state_metadata_t state_metadata;
-	bit<16> current_state;
-	bit<32> flow_id;
+    state_metadata_t state_metadata;
 }
 
 
@@ -95,13 +95,13 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	standard_metadata.egress_port = 9w100;
     }
 
-    @name(".state1") action state1() {
-        meta.current_state = 2;
-    }
+#    @name(".state1") action state1() {
+#        meta.state_metadata.current_state = 2;
+#    }
 
-    @name(".state2") action state2() {
-        meta.current_state = 1;
-    }
+#    @name(".state2") action state2() {
+#        meta.state_metadata.current_state = 1;
+#    }
 
 
     @name(".dmac") table dmac {
@@ -134,11 +134,14 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         dmac.apply();
 
 	bit<16> var;
+	bit<16> test;
 
 	var = hdr.ip4.hdrChecksum;
-	state.read(meta.current_state, (bit<32>) var);
+	state.read(test, (bit<32>) var);
+	meta.state_metadata.current_state = test;
 #	switch_state.apply();
-	state.write((bit<32>) var, meta.current_state);
+	test = meta.state_metadata.current_state;
+	state.write((bit<32>) var, test);
 
 
     }

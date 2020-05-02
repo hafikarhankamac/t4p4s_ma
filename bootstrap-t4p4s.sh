@@ -214,4 +214,4 @@ fi
 cd ${T4P4S_DIR}
 
 # set hlir version
-[ -z "$HLIR_COMMIT" ] && cd src/hlir16 && git checkout $HLIR_COMMIT && cd ../..
+[ -n "$HLIR_COMMIT" ] && cd src/hlir16 && git checkout $HLIR_COMMIT && cd ../..

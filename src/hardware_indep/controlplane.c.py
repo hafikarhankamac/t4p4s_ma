@@ -73,7 +73,7 @@ for table in hlir16_tables_with_keys:
         
         # TODO have keys' and tables' match_type the same case (currently: LPM vs lpm)
         if k.match_type == "ternary":
-            #[ uint8_t ${k.field_name}_mask[$byte_width],
+            #[ uint8_t field_instance_${k.header.name}_${k.field_name}_mask[$byte_width],
         if k.match_type == "lpm":
             #[ uint8_t field_instance_${k.header.name}_${k.field_name}_prefix_length,
 
@@ -81,6 +81,8 @@ for table in hlir16_tables_with_keys:
     #{ {
 
     #[     uint8_t key[${table.key_length_bytes}];
+    if table.match_type == "TERNARY":
+        #[     uint8_t mymask[${table.key_length_bytes}];
 
     byte_idx = 0
     for k in sorted((k for k in table.key.keyElements if k.get_attr('match_type') is not None), key = lambda k: match_type_order(k.match_type)):
@@ -90,6 +92,8 @@ for table in hlir16_tables_with_keys:
 
         byte_width = get_key_byte_width(k)
         #[ memcpy(key+$byte_idx, field_instance_${k.header.name}_${k.field_name}, $byte_width);
+        if k.match_type == "ternary":
+            #[ memcpy(mymask+$byte_idx, field_instance_${k.header.name}_${k.field_name}_mask, $byte_width);
         byte_idx += byte_width
 
     if table.match_type == "LPM":
@@ -110,6 +114,9 @@ for table in hlir16_tables_with_keys:
 
     if table.match_type == "EXACT":
         #[ exact_add_promote(TABLE_${table.name}, (uint8_t*)key, (uint8_t*)&action);
+
+    if table.match_type == "TERNARY":
+        #[ ternary_add_promote(TABLE_${table.name}, (uint8_t*)key, (uint8_t*)mymask, (uint8_t*)&action);
 
     #} }
 
@@ -140,8 +147,8 @@ for table in hlir16_tables_with_keys:
             #[ uint16_t field_instance_${k.header.name}_${k.field_name}_prefix_length = ((struct p4_field_match_lpm*)ctrl_m->field_matches[${i}])->prefix_length;
         if k.match_type == "ternary":
             # TODO are these right?
-            #[ uint8_t* field_instance_${k.header.name}_${k.field_name} = (uint8_t*)(((struct p4_field_match_lpm*)ctrl_m->field_matches[${i}])->bitmap);
-            #[ uint16_t field_instance_${k.header.name}_${k.field_name}_prefix_length = ((struct p4_field_match_lpm*)ctrl_m->field_matches[${i}])->prefix_length;
+            #[ uint8_t* field_instance_${k.header.name}_${k.field_name} = (uint8_t*)(((struct p4_field_match_ternary*)ctrl_m->field_matches[${i}])->bitmap);
+            #[ uint8_t* field_instance_${k.header.name}_${k.field_name}_mask = (uint8_t*)(((struct p4_field_match_ternary*)ctrl_m->field_matches[${i}])->mask);
 
     for action in table.actions:
         # TODO is there a more appropriate source for this than the annotation?
@@ -163,7 +170,8 @@ for table in hlir16_tables_with_keys:
             if k.match_type == "lpm":
                 #[ field_instance_${k.header.name}_${k.field_name}_prefix_length,
             if k.match_type == "ternary":
-                #[ 0 /* TODO dstPort_mask */,
+                #[ field_instance_${k.header.name}_${k.field_name}_mask,
+                ###[ 0 /* TODO dstPort_mask */,
         #[     action);
         #}
 

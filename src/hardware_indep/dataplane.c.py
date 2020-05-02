@@ -25,8 +25,8 @@ from utils.misc import addError, addWarning
 #[ #include "util_packet.h"
 #[ #include "tables.h"
 
-#[ uint8_t* emit_addr;
-#[ uint32_t ingress_pkt_len;
+#[ //uint8_t* emit_addr;
+#[ //uint32_t ingress_pkt_len;
 
 #[ extern ctrl_plane_backend bg;
 #[ extern char* action_names[];
@@ -301,12 +301,12 @@ for m in hlir16.objects['Method']:
     # TODO temporary fix for l3-routing-full, this will be computed later on
     with types({
         "T": "struct uint8_buffer_s",
-        "O": "unsigned",
+        "O": "unsigned" if not m.name == "verify_checksum" else "bitfield_handle_t",
         "HashAlgorithm": "int",
     }):
         t = m.type
         ret_type = format_type(t.returnType)
-        args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['SHORT_STDPARAMS'])
+        args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['STDPARAMS' if not m.name == "verify_checksum" else 'SHORT_STDPARAMS'])
 
         #[ extern ${ret_type} ${m.name}(${args});
 
@@ -421,7 +421,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[     parse_packet(STDPARAMS_IN);
 #[     pd->payload_length = rte_pktmbuf_pkt_len(pd->wrapper) - pd->parsed_length;
 #[
-#[     emit_addr = pd->data;
+#[     //emit_addr = pd->data;
 #[     pd->emit_hdrinst_count = 0;
 #[     pd->is_emit_reordering = false;
 #[

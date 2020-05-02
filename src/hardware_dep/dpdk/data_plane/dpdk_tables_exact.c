@@ -60,8 +60,10 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     extended_table_t* ext = (extended_table_t*)t->table;
     uint32_t index = rte_hash_add_key(ext->rte_table, (void*) key);
 
-    if (unlikely(index < 0))
+    if (unlikely((int32_t)index < 0)) {
+        fprintf(stderr, "!!!!!!!!! HASH: add failed. hash=%d\n", index);
         rte_exit(EXIT_FAILURE, "HASH: add failed\n");
+    }
 
     ext->content[index%t->max_size] = make_table_entry_on_socket(t, value);
 

@@ -238,6 +238,27 @@ uint32_t get_portid(struct lcore_data* lcdata, unsigned queue_idx) {
 void main_loop_rx_group(struct lcore_data* lcdata, unsigned queue_idx) {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[queue_idx].queue_id;
     lcdata->nb_rx = rte_eth_rx_burst((uint8_t) get_portid(lcdata, queue_idx), queue_id, lcdata->pkts_burst, MAX_PKT_BURST);
+    /*
+    static uint64_t main_loop_count = 0;
+    main_loop_count++;
+    if (unlikely(main_loop_count % 10000000 == 0)) {
+        struct rte_eth_stats stats;
+        uint32_t port_id = 1;//get_portid(lcdata, queue_idx);
+        rte_eth_stats_get(port_id, &stats);
+        printf("-------------------- [%u for port %u]\n", main_loop_count / 10000000, port_id);
+        printf("ipackets = %u\n", stats.ipackets);
+        printf("opackets = %u\n", stats.opackets);
+        printf("ibytes = %u\n", stats.obytes);
+        printf("imissed = %u\n", stats.imissed);
+        printf("ierrors = %u\n", stats.oerrors);
+        printf("rx_nombuf = %u\n", stats.rx_nombuf);
+        printf("q_errors[0] = %u\n", stats.q_errors[0]);
+        printf("q_ipackets[0] = %u\n", stats.q_ipackets[0]);
+        printf("q_opackets[0] = %u\n", stats.q_opackets[0]);
+        printf("q_ibytes[0] = %u\n", stats.q_ibytes[0]);
+        printf("q_obytes[0] = %u\n", stats.q_obytes[0]);
+        fflush(stdout);
+    }*/
 }
 
 unsigned get_pkt_count_in_group(struct lcore_data* lcdata) {

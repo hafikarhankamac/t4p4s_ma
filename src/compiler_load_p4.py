@@ -35,6 +35,7 @@ def is_cache_file_loadable(path):
 def import_modules(required_modules):
     for modname in required_modules:
         if not pkgutil.find_loader(modname):
+            print('ERROR: Unable to find module {}'.format(modname), file=sys.stderr)
             return None
 
     return [importlib.import_module(modname) for modname in required_modules]
@@ -88,9 +89,9 @@ def load_ujson(file, data):
         return ujson.load(f)
 
 
-def load_json(file, data):
-    if file is not None:
-        return json.load(file)
+def load_json(filename, data):
+    if filename is not None:
+        return json.load(filename)
 
     with open(data, 'r') as f:
         return json.load(f)

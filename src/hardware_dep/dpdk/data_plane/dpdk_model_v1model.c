@@ -113,7 +113,7 @@ void mark_to_drop(SHORT_STDPARAMS) {
     debug("       : " T4LIT(standard_metadata,header) "." T4LIT(drop,field) " = " T4LIT(1,bytes) "\n");
 }
 
-void sheep(uint32_t duration) {
+void sheep(uint32_t duration, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(sheep,extern) " waiting " T4LIT(%d) " cycles\n", duration);
     wait_cycles(duration);
 }

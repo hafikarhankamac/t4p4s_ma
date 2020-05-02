@@ -994,8 +994,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 return gen_format_call_digest(e)
             elif mref.name == 'sheep':
                 fmt_params = format_method_parameters(e.arguments, method_params)
-                #[ extern void sheep(uint32_t duration);
-                #[ sheep($fmt_params)
+                #[ extern void sheep(uint32_t duration, SHORT_STDPARAMS);
+                #[ sheep($fmt_params, SHORT_STDPARAMS_IN)
             #elif mref.name == 'encrypt_bytes':
             #    fmt_params = format_method_parameters(e.arguments, method_params)
             #    #[ void encrypt_bytes(

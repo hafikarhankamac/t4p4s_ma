@@ -114,7 +114,7 @@ T4P4S_DIR=t4p4s
 echo
 
 # Download libraries
-sudo apt-get update && sudo apt-get -y install g++ automake libtool libgc-dev bison flex libfl-dev libgmp-dev libboost-dev libboost-iostreams-dev pkg-config python python-scapy python-ipaddr python-dill tcpdump cmake python-setuptools libprotobuf-dev libnuma-dev ccache $OPT_PACKAGES &
+sudo apt-get update && sudo apt-get -y install g++ automake libtool libgc-dev bison flex libfl-dev libgmp-dev libboost-dev libboost-iostreams-dev pkg-config python python-scapy python-ipaddr python-dill python-ujson tcpdump cmake python-setuptools libprotobuf-dev libnuma-dev ccache $OPT_PACKAGES &
 WAITPROC_APTGET="$!"
 [ $PARALLEL_INSTALL -ne 0 ] || wait "$WAITPROC_APTGET"
 
@@ -214,4 +214,4 @@ fi
 cd ${T4P4S_DIR}
 
 # set hlir version
-[ -z "$HLIR_COMMIT" ] && cd src/hlir16 && git checkout $HLIR_COMMIT && cd ../..
+[ -n "$HLIR_COMMIT" ] && cd src/hlir16 && git checkout $HLIR_COMMIT && cd ../..

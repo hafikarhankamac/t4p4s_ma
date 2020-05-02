@@ -462,8 +462,12 @@ def main():
         sys.exit(1)
     except:
         global current_compilation
-        print("Error during the compilation of {}".format(current_compilation))
-        print_with_backtrace(sys.exc_info(), current_compilation['from'] if current_compilation else "(no compiled file)")
+        if current_compilation:
+            print("Error during the compilation of {}".format(current_compilation))
+            print_with_backtrace(sys.exc_info(), current_compilation['from'])
+        else:
+            print("Error during loading of P4")
+            print_with_backtrace(sys.exc_info(), "(no compiled file)")
         sys.exit(1)
 
 

@@ -59,7 +59,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             16w0x800: parse_ipv4;
-            //16w0x806: parse_arp;
+            16w0x806: parse_arp;
             default: accept;
         }
     }
@@ -133,7 +133,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 control DeparserImpl(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
-        //packet.emit(hdr.arp);
+        packet.emit(hdr.arp);
         packet.emit(hdr.ipv4);
     }
 }

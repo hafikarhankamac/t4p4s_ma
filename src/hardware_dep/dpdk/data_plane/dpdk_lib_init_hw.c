@@ -38,7 +38,7 @@ struct lcore_params lcore_params[MAX_LCORE_PARAMS];
 
 struct rte_mempool* pktmbuf_pool[NB_SOCKETS];
 
-struct ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];
+rte_eth_addr_t ports_eth_addr[RTE_MAX_ETHPORT_COUNT];
 
 uint16_t t4p4s_nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t t4p4s_nb_txd = RTE_TEST_TX_DESC_DEFAULT;
@@ -47,7 +47,7 @@ uint16_t t4p4s_nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 struct rte_eth_conf port_conf = {
     .rxmode = {
         .mq_mode = ETH_MQ_RX_RSS,
-        .max_rx_pkt_len = ETHER_MAX_LEN,
+        .max_rx_pkt_len = RTE_ETH_MAX_LEN,
         .split_hdr_size = 0,
 #if RTE_VERSION >= RTE_VERSION_NUM(18,11,0,0)
         .offloads = DEV_RX_OFFLOAD_CHECKSUM,
@@ -172,11 +172,10 @@ uint32_t min(uint32_t val1, uint32_t val2) {
     return val1 < val2 ? val1 : val2;
 }
 
-int init_tx_on_lcore(unsigned lcore_id, uint8_t portid, uint16_t queueid)
+bool init_tx_on_lcore(unsigned lcore_id, uint8_t portid, uint16_t queueid)
 {
-    if (rte_lcore_is_enabled(lcore_id) == 0) {
-        return -1;
-    }
+    if (rte_lcore_is_enabled(lcore_id) == 0)
+        return false;
 
     uint8_t socketid = get_socketid(lcore_id);
 
@@ -194,7 +193,7 @@ int init_tx_on_lcore(unsigned lcore_id, uint8_t portid, uint16_t queueid)
 
     struct lcore_conf* qconf = &lcore_conf[lcore_id];
     qconf->hw.tx_queue_id[portid] = queueid;
-    return 0;
+    return true;
 }
 
 // We have to initialize all ports - create membufs, tx/rx queues, etc.
@@ -223,12 +222,9 @@ void dpdk_init_port(uint8_t nb_ports, uint32_t nb_lcores, uint8_t portid) {
     print_port_mac((unsigned)portid, ports_eth_addr[portid].addr_bytes);
 
     uint16_t queueid = 0;
-    for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++/*, queueid++*/) {
-        int ret = init_tx_on_lcore(lcore_id, portid, queueid);
-        if (ret == 0)
-        {
-            queueid++;
-        }
+    for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
+        if (init_tx_on_lcore(lcore_id, portid, queueid))
+		++queueid;
     }
 
     debug("\n");

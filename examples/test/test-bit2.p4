@@ -1,21 +1,13 @@
 #include <core.p4>
 #include <psa.p4>
 
-// In: 00000000000000000000000000000000
-// Out: 1111100000000000
-
-struct data {
-	bit<1> first;
-        bit<1> second;
-        bit<1> third;
-        bit<1> fourth;
-}
-
-header empty_t { }
+// In: 00000000
+// Out: 11111000
 
 header dummy_t {
-    bit<1> f1;
-    data f2;
+    bit<1> f11;
+    bit<1> f12;
+    bit<3> f14;
     bit<3> padding;
 }
 
@@ -26,11 +18,7 @@ struct metadata {
 }
 
 struct headers {
-    empty_t empty;
     dummy_t dummy;
-    dummy_t dummy2;
-    dummy_t dummy3;
-    dummy_t dummy4;
 }
 parser IngressParserImpl(packet_in packet,
                          out headers hdr,
@@ -39,11 +27,7 @@ parser IngressParserImpl(packet_in packet,
                          in empty_metadata_t resubmit_meta,
                          in empty_metadata_t recirculate_meta) {
     state parse_ethernet {
-        packet.extract(hdr.empty);
         packet.extract(hdr.dummy);
-        packet.extract(hdr.dummy2);
-        packet.extract(hdr.dummy3);
-        packet.extract(hdr.dummy4);
         transition accept;
     }
     state start {
@@ -56,17 +40,21 @@ control egress(inout headers hdr,
                in    psa_egress_input_metadata_t  istd,
                inout psa_egress_output_metadata_t ostd)
 {
+    bit tmp_bit = 1;
+    bit<2> tmp_bit2 = 2w3;
+    
     apply {
-       //Version 1: working
-       //data d = {~hdr.dummy.f2.first, ~hdr.dummy.f2.second, ~hdr.dummy.f2.third, ~hdr.dummy.f2.fourth};
-       //Version 2: working
-       //data d = {1,1,1,1};
-       //Version 3: C compile error
-       data d = {~hdr.dummy.f2.fourth, ~hdr.dummy.f2.third, ~hdr.dummy.f2.second, ~hdr.dummy.f2.first};
-       hdr.dummy.f1 = (bit<1>)hdr.empty.isValid();
-       hdr.dummy.f2 = d;
-       hdr.dummy3.setInvalid();
-       hdr.dummy4.setInvalid();
+       
+       //note: saturating arithmetic is recognized by T4P4S but treated as regular arithmetic
+       hdr.dummy.f11 = (hdr.dummy.f11 |-| tmp_bit) + tmp_bit;
+       hdr.dummy.f12 = (hdr.dummy.f12 + tmp_bit) |+| tmp_bit;
+       
+       // note: shifting by 123 does not make sense, as it is longer than f14 (the spec defines this special case)
+       hdr.dummy.f14[0:0] = (bit<1>)((hdr.dummy.f14 >> 123) == (bit<3>)0);
+
+       // note: currently the partial update of a field is not supported
+       hdr.dummy.f14[0:0] = (bit<1>)((hdr.dummy.f14 >> 1) == (bit<3>)0);
+       hdr.dummy.f14[2:1] = (((hdr.dummy.f14 ++ (bit<3>)7) >> 1) << 2)[3:2];
     }
 }
 
@@ -76,7 +64,9 @@ control ingress(inout headers hdr,
                 in    psa_ingress_input_metadata_t  istd,
                 inout psa_ingress_output_metadata_t ostd)
 {
-    apply { }
+    apply {
+        ostd.egress_port = (PortId_t)12345;
+    }
 }
 
 parser EgressParserImpl(packet_in buffer,
@@ -101,10 +91,7 @@ control IngressDeparserImpl(packet_out buffer,
                             in psa_ingress_output_metadata_t istd)
 {
     apply {
-       buffer.emit(hdr.dummy);
-       buffer.emit(hdr.dummy2);
-       buffer.emit(hdr.dummy3);
-       buffer.emit(hdr.dummy4);
+        buffer.emit(hdr.dummy);
     }
 }
 

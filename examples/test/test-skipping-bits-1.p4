@@ -1,22 +1,11 @@
 #include <core.p4>
 #include <psa.p4>
 
-// In: 00000000000000000000000000000000
-// Out: 1111100000000000
-
-struct data {
-	bit<1> first;
-        bit<1> second;
-        bit<1> third;
-        bit<1> fourth;
-}
-
-header empty_t { }
+// In: 0000000000000000
+// Out: 00000001
 
 header dummy_t {
-    bit<1> f1;
-    data f2;
-    bit<3> padding;
+    bit<8> f1;
 }
 
 struct empty_metadata_t {
@@ -26,11 +15,7 @@ struct metadata {
 }
 
 struct headers {
-    empty_t empty;
     dummy_t dummy;
-    dummy_t dummy2;
-    dummy_t dummy3;
-    dummy_t dummy4;
 }
 parser IngressParserImpl(packet_in packet,
                          out headers hdr,
@@ -39,11 +24,10 @@ parser IngressParserImpl(packet_in packet,
                          in empty_metadata_t resubmit_meta,
                          in empty_metadata_t recirculate_meta) {
     state parse_ethernet {
-        packet.extract(hdr.empty);
+        packet.extract<dummy_t>(_);
+        // packet.advance is not supported currently
+        //packet.advance(2);
         packet.extract(hdr.dummy);
-        packet.extract(hdr.dummy2);
-        packet.extract(hdr.dummy3);
-        packet.extract(hdr.dummy4);
         transition accept;
     }
     state start {
@@ -57,16 +41,7 @@ control egress(inout headers hdr,
                inout psa_egress_output_metadata_t ostd)
 {
     apply {
-       //Version 1: working
-       //data d = {~hdr.dummy.f2.first, ~hdr.dummy.f2.second, ~hdr.dummy.f2.third, ~hdr.dummy.f2.fourth};
-       //Version 2: working
-       //data d = {1,1,1,1};
-       //Version 3: C compile error
-       data d = {~hdr.dummy.f2.fourth, ~hdr.dummy.f2.third, ~hdr.dummy.f2.second, ~hdr.dummy.f2.first};
-       hdr.dummy.f1 = (bit<1>)hdr.empty.isValid();
-       hdr.dummy.f2 = d;
-       hdr.dummy3.setInvalid();
-       hdr.dummy4.setInvalid();
+       hdr.dummy.f1 = hdr.dummy.f1 + 1;
     }
 }
 
@@ -101,10 +76,7 @@ control IngressDeparserImpl(packet_out buffer,
                             in psa_ingress_output_metadata_t istd)
 {
     apply {
-       buffer.emit(hdr.dummy);
-       buffer.emit(hdr.dummy2);
-       buffer.emit(hdr.dummy3);
-       buffer.emit(hdr.dummy4);
+        buffer.emit(hdr.dummy);
     }
 }
 

@@ -1,8 +1,8 @@
 #include <core.p4>
 #include <psa.p4>
 
-// In: 0000000000000000000
-// Out: 1111111111111111111
+// In: 0000000000000000
+// Out: 1111111111111100
 
 header dummy_t {
     bit<1> f1;
@@ -15,10 +15,8 @@ header dummy_t {
     bit<2> f8;
     bit<2> f9;
     bit<2> f10;
-    bit<1> f11;
-    bit<1> f12;
     bit<1> f13;
-    bit<3> f14;
+    bit<2> padding;
 }
 
 struct empty_metadata_t {
@@ -64,16 +62,7 @@ control egress(inout headers hdr,
        hdr.dummy.f8 = hdr.dummy.f8 | tmp_bit2;
        hdr.dummy.f9 = ~(hdr.dummy.f9 & tmp_bit2);
        hdr.dummy.f10 = hdr.dummy.f10 ^ tmp_bit2;
-       hdr.dummy.f11 = (hdr.dummy.f11 |-| tmp_bit) + tmp_bit;
-       hdr.dummy.f12 = (hdr.dummy.f12 + tmp_bit) |+| tmp_bit;
        hdr.dummy.f13 = (hdr.dummy.f13 ++ (hdr.dummy.f13 + 1))[0:0];
-
-       // note: shifting by 123 does not make sense, as it is longer than f14
-       // hdr.dummy.f14[0:0] = (bit<1>)((hdr.dummy.f14 >> 123) == (bit<3>)0);
-
-       // note: currently the partial update of a field is not supported
-       // hdr.dummy.f14[0:0] = (bit<1>)((hdr.dummy.f14 >> 1) == (bit<3>)0);
-       // hdr.dummy.f14[2:1] = (((hdr.dummy.f14 ++ (bit<3>)7) >> 1) << 2)[3:2];
     }
 }
 

@@ -133,15 +133,15 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
  	// simple forwarding
         dmac.apply();
 
-	bit<16> var;
-	bit<16> test;
+	bit<16> index;
+	bit<16> value;
 
-	var = hdr.ip4.hdrChecksum;
-	state.read(test, (bit<32>) var);
-	meta.state_metadata.current_state = test;
+        index = hdr.ip4.hdrChecksum;
+	state.read(value, (bit<32>) index);
+	meta.state_metadata.current_state = value;
 #	switch_state.apply();
-	test = meta.state_metadata.current_state;
-	state.write((bit<32>) var, test);
+	value = meta.state_metadata.current_state;
+	state.write((bit<32>) index, value);
 
 
     }

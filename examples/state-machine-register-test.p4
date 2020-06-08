@@ -9,6 +9,8 @@ const bit<8>  IPPROTO_UDP   = 0x11;
 const bit<32> MAX_FLOWS = 0xFFFF; // 2^16
 const bit<16> ZERO = 0;
 
+register<bit<16>>(MAX_FLOWS) state;
+
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -88,22 +90,22 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
     @name(".forward") action forward(bit<9> port) {
-        standard_metadata.egress_port = port;
+        standard_metadata.egress_spec = port;
     }
 
     @name(".bcast") action bcast(){
-	standard_metadata.egress_port = 9w100;
+	standard_metadata.egress_spec = 9w100;
     }
 
-#    @name(".state1") action state1() {
-#        meta.state_metadata.current_state = 2;
-#    }
+   @name(".test") action test(){}
 
-#    @name(".state2") action state2() {
-#        meta.state_metadata.current_state = 1;
-#    }
+   @name(".state1") action state1() {
+        meta.state_metadata.current_state = 2;
+    }
 
-
+    @name(".state2") action state2() {
+        meta.state_metadata.current_state = 1;
+    }
     @name(".dmac") table dmac {
         actions = {
             forward;
@@ -113,35 +115,35 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
             hdr.ethernet.dstAddr: exact;
         }
         size = 512;
-        default_action = forward(0);
+#        default_action = forward(0);
     }
 
-#    @name(".switch_state") table switch_state {
-#	actions = {
-#		state1;
-#		state2;
-#	}
-#	key = {
-#		meta.current_state: exact;
-#	}
-#	size = 5;
-#    }
+    @name(".switch_state") table switch_state {
+	actions = {
+		test;
+		state1;
+		state2;
+	}
+	key = {
+		meta.state_metadata.current_state: exact;
+	}
+	size = 5;
+    }
 
-    register<bit<16>>(MAX_FLOWS) state;
+
+#    register<bit<16>>(MAX_FLOWS) state;
+ 
     apply {
  
  	// simple forwarding
         dmac.apply();
 
 	bit<16> index;
-	bit<16> value;
 
-        index = hdr.ip4.hdrChecksum;
-	state.read(value, (bit<32>) index);
-	meta.state_metadata.current_state = value;
-#	switch_state.apply();
-	value = meta.state_metadata.current_state;
-	state.write((bit<32>) index, value);
+        index = 0;
+	state.read(meta.state_metadata.current_state, (bit<32>) index);
+	switch_state.apply();
+	state.write((bit<32>) index, meta.state_metadata.current_state);
 
 
     }

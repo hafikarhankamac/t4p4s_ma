@@ -9,6 +9,9 @@ const bit<8>  IPPROTO_UDP   = 0x11;
 const bit<32> MAX_FLOWS = 65536; // 2^16
 const bit<16> ZERO = 0;
 
+register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
+
+
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -139,8 +142,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 5;
     }
 
-    register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
-    bit<32> var;
+   bit<32> var;
     apply {
         // simple forwarding
         dmac.apply();
@@ -165,7 +167,8 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         //	  hdr.l4.dstPort },
 	    //	MAX_FLOWS
 	    //);
-	    var = (bit<32>) hdr.ip4.hdrChecksum;
+#	    var = (bit<32>) hdr.ip4.hdrChecksum;
+	    var = 0;
 
 	    // get state for flow
         state.read(meta.state_metadata.current_state, var);

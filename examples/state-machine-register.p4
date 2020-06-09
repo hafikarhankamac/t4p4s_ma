@@ -38,13 +38,14 @@ header l4_t {
     bit<16> dstPort;
 }
 
-struct state_metadata_t {
-    bit<16> current_state;
-	bit<32> flow_id;
-}
+//struct state_metadata_t {
+//    bit<16> current_state;
+//	bit<32> flow_id;
+//}
 
 struct metadata {
-    state_metadata_t state_metadata;
+//    state_metadata_t state_metadata;
+	bit<16> current_state;
 }
 
 struct headers {
@@ -94,27 +95,33 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     }
 
     @name(".new_state") action new_state() {
-        meta.state_metadata.current_state = 1;
+//        meta.state_metadata.current_state = 1;
+	meta.current_state = 1;
     }
 
     @name(".state1") action state1() {
-        meta.state_metadata.current_state = 2;
+//        meta.state_metadata.current_state = 2;
+	meta.current_state = 2;
     }
 
     @name(".state2") action state2() {
-        meta.state_metadata.current_state = 3;
+//        meta.state_metadata.current_state = 3;
+	meta.current_state = 3;
     }
 
     @name(".state3") action state3() {
-        meta.state_metadata.current_state = 4;
+//        meta.state_metadata.current_state = 4;
+	meta.current_state = 4;
     }
 
     @name(".state4") action state4() {
-        meta.state_metadata.current_state = 5;
+//        meta.state_metadata.current_state = 5;
+	meta.current_state = 5;
     }
 
     @name(".state5") action state5() {
-        meta.state_metadata.current_state = 1;
+//        meta.state_metadata.current_state = 1;
+	meta.current_state = 1;
     }
 
     @name(".dmac") table dmac {
@@ -137,12 +144,15 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
             state5;
         }
         key = {
-            meta.state_metadata.current_state: exact;
-        }
+//            meta.state_metadata.current_state: exact;
+		meta.current_state: exact;
+	}
         size = 5;
     }
 
-   bit<32> var;
+//    register<bit<16>>(MAX_FLOWS) state;
+    bit<32> var;
+    bit<16> test;
     apply {
         // simple forwarding
         dmac.apply();
@@ -167,17 +177,22 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         //	  hdr.l4.dstPort },
 	    //	MAX_FLOWS
 	    //);
-#	    var = (bit<32>) hdr.ip4.hdrChecksum;
-	    var = 0;
-
+//	    var = (bit<32>) hdr.ip4.hdrChecksum;
+        var = 0;
 	    // get state for flow
-        state.read(meta.state_metadata.current_state, var);
+        state.read(test, var);
 
-	    // execute action depending on state
-	    switch_state.apply();
+//	meta.state_metadata.current_state = test; 
+	meta.current_state = test;
 
-	    // write back new state for flow
-        state.write(var, meta.state_metadata.current_state);
+       // execute action depending on state
+        switch_state.apply();
+
+//	test = meta.state_metadata.current_state;
+	test = meta.current_state;
+
+        // write back new state for flow
+        state.write(var, (bit<16>) test);
     }
 }
 

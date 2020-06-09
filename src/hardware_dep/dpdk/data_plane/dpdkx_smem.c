@@ -61,34 +61,42 @@ void extern_direct_meter_read_uint32_t(uint32_t* result, uint32_t index) {
 
 void init_register_int8_t(register_int8_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_int8_t");
 }
 
 void init_register_int16_t(register_int16_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_int16_t");
 }
 
 void init_register_int32_t(register_int32_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_int32_t");
 }
 
 void init_register_int64_t(register_int64_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_int64_t");
 }
 
 void init_register_uint8_t(register_uint8_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_uint8_t");
 }
 
 void init_register_uint16_t(register_uint16_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_uint16_t");
 }
 
 void init_register_uint32_t(register_uint32_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_uint32t");
 }
 
 void init_register_uint64_t(register_uint64_t* reg, uint32_t size)  { 
     for (uint32_t i=0;i<size;++i) reg[i].value = 0; 
+    debug("    :: Executing init_register_uint64_t");
 }
 
 
@@ -96,22 +104,27 @@ void init_register_uint64_t(register_uint64_t* reg, uint32_t size)  {
 
 void extern_register_read_int8_t(register_int8_t* reg, int8_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_int8_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_int16_t(register_int16_t* reg, int16_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_int16_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_int32_t(register_int32_t* reg, int32_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_int32_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_int64_t(register_int64_t* reg, int64_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_int64_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_uint8_t(register_uint8_t* reg, uint8_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_uint8_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_uint16_t(register_uint16_t* reg, uint16_t* value_result, uint32_t idx) { 
@@ -121,10 +134,12 @@ void extern_register_read_uint16_t(register_uint16_t* reg, uint16_t* value_resul
 
 void extern_register_read_uint32_t(register_uint32_t* reg, uint32_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_uint32_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 void extern_register_read_uint64_t(register_uint64_t* reg, uint64_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value; 
+    debug("    :: Executing extern_register_read_uint64_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 
 
@@ -151,6 +166,7 @@ void extern_register_write_uint16_t(register_uint16_t* reg, uint32_t idx, uint16
 }
 void extern_register_write_uint32_t(register_uint32_t* reg, uint32_t idx, uint32_t value) { 
     reg[idx].value = value; 
+    debug("    :: Executing extern_register_write_uint32_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
 }
 void extern_register_write_uint64_t(register_uint64_t* reg, uint32_t idx, uint64_t value) { 
     reg[idx].value = value; 

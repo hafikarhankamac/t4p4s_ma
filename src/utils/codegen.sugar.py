@@ -238,8 +238,6 @@ def gen_extern_format_parameter(expr, par):
     def member_to_field_id(member):
         return 'field_{}_{}'.format(member.expr.type.name, member.member)
 
-    print('expr.node_type: {}'.format(expr.node_type))
-
     if (par.direction=="in") or (expr.node_type!="Member"):
         prefix = "&" if par.direction != "in" and par.type.node_type != 'Type_Bits' else ""
         #[ $prefix${format_expr(expr, format_as_value=True, expand_parameters=True)}
@@ -518,16 +516,11 @@ def gen_format_expr_methodcall_extern(stmt, m):
 
     method_args = zip(stmt.methodCall.arguments, parameters)
 
-#    for i in parameters:
-#	print('parameters: {}'.format(i.type))
-#    print('method_args: {}'.format(method_args))
 
     # TODO is this condition OK?
     mprefix = "local_vars->" if m.expr.ref.node_type == 'Declaration_Instance' else "global_smem."
     mname = mprefix + m.expr.path.name
     mparname = mname
-
-#    print('m.expr.type.node_type: {}'.format(m.expr.type.node_type))
 
 
     if m.expr.type.node_type == "Type_Extern":
@@ -555,8 +548,6 @@ def gen_format_expr_methodcall_extern(stmt, m):
             paramtype = "int/*temporarily inserted for unknown type*/"
             addWarning('generating method call statement', 'Unexpected type {} in {}'.format(m.expr.type, stmt.methodCall))
 
-#        print('paramtype: {}'.format(paramtype))
-
         tmpvar = generate_var_name()
         #[ $paramtype $tmpvar = ${gen_extern_format_parameter(expr, par)};
         if hasattr(expr.expression.type, 'fields'):
@@ -574,7 +565,6 @@ def gen_format_expr_methodcall_extern(stmt, m):
         #[ memcpy(&($mname), &$tmpvar, sizeof($paramtype));
         mparname = "&({})".format(mname)
 
-	print('mparname: {}'.format(mparname))
 
     # the indexes of the parameters which originate from a type parameter
     # TODO generalize and move to hlir16_attrs
@@ -583,18 +573,16 @@ def gen_format_expr_methodcall_extern(stmt, m):
         ('meter',        'execute_meter'): ( True, [1], [], None),
         ('direct_meter', 'read'):          ( True, [0], [], None),
         ('register',     'read'):          ( True, [0], ["&({})"], ["register_{0}*", "{1}*", "{2}"]),
-	('register',     'write'):          ( True, [0], [], ["register_{0}*", "{1}", "{0}"]),
+	('register',     'write'):          ( True, [1], [], ["register_{2}*", "{1}", "{2}"]),
         ('Digest',       'pack'):          (False, [0], [], ["{1}*"]),
     }
 
     base_type = m.expr.ref.type
     if hasattr(base_type, 'baseType'):
         base_type = base_type.baseType
-#	print('base_type: {}'.format(base_type))
 
     extern_type = base_type.type_ref.name
 
-    #print('extern_type: {}'.format(extern_type))
 
     def resolve_type(t, type_params):
         if t.node_type == 'Type_Var':
@@ -605,19 +593,10 @@ def gen_format_expr_methodcall_extern(stmt, m):
     type_param_names = [t.name for t in stmt.methodCall.method.type.typeParameters.parameters]
     type_params = dict(zip(type_param_names, stmt.methodCall.typeArguments))
 
-    #print('type_param_names: {}'.format(type_param_names))
-    #print('type_params: {}'.format(type_params))
 
     type_args_in_fun_name, pars, expr_args, par_reformat = externs[(extern_type, m.member)] if (extern_type, m.member) in externs else default_extern_opts
     types = [m.type.parameters.parameters[par].type for par in pars]
     type_args = "".join(["_" + format_type(resolve_type(t, type_params)) for t in types])
-
-
-    #print('type_args_in_fun_name: {}\npars: {}\nexpr_args: {}\npar_reformat :{}'.format(type_args_in_fun_name, pars, expr_args, par_reformat))
-    #print('types: {}'.format(types))
-    #print('type_args: {}'.format(type_args))
-
-    #print('expr_args: {}'.format(expr_args))
 
 
     if expr_args != []:
@@ -627,23 +606,15 @@ def gen_format_expr_methodcall_extern(stmt, m):
     else:
 	method_args = zip(stmt.methodCall.arguments, parameters)
 
-   # print('expr_args: {}'.format(expr_args))
 
     type_params = ([paramtype] if paramtype is not None else []) + [format_type(resolve_type(par.type, type_params)) for par in parameters]
-    #print('type_params: {}'.format(type_params))
     if par_reformat is not None:
         type_params = [fmt.format(*type_params) for fmt in par_reformat]
-    #    print('type_params: {}'.format(type_params))
     type_params_str = ", ".join(type_params)
 
-    #print('type_params_str: {}'.format(type_params_str))
-    #print('method_args: {}'.format(method_args))
 
     param_args = [gen_extern_format_parameter(arg.expression, par) for (arg, par) in method_args]
     all_args = ", ".join([arg for arg in [mparname] + expr_args + param_args])
-
-    #print('param_args: {}'.format(param_args))
-    #print('all_args: {}'.format(all_args))
 
     funname_postfix = type_args if type_args_in_fun_name else ""
 

@@ -9,7 +9,7 @@ const bit<8>  IPPROTO_UDP   = 0x11;
 const bit<32> MAX_FLOWS = 0xFFFF; // 2^16
 const bit<16> ZERO = 0;
 
-register<bit<16>>(MAX_FLOWS) state;
+#register<bit<16>>(MAX_FLOWS) reg;
 
 header ethernet_t {
     bit<48> dstAddr;
@@ -97,8 +97,6 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	standard_metadata.egress_spec = 9w100;
     }
 
-   @name(".test") action test(){}
-
    @name(".state1") action state1() {
         meta.state_metadata.current_state = 2;
     }
@@ -120,7 +118,6 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 
     @name(".switch_state") table switch_state {
 	actions = {
-		test;
 		state1;
 		state2;
 	}
@@ -131,7 +128,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     }
 
 
-#    register<bit<16>>(MAX_FLOWS) state;
+    register<bit<16>>(MAX_FLOWS) reg;
  
     apply {
  
@@ -141,9 +138,9 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	bit<16> index;
 
         index = 0;
-	state.read(meta.state_metadata.current_state, (bit<32>) index);
+	reg.read(meta.state_metadata.current_state, (bit<32>) index);
 	switch_state.apply();
-	state.write((bit<32>) index, meta.state_metadata.current_state);
+	reg.write((bit<32>) index, meta.state_metadata.current_state);
 
 
     }

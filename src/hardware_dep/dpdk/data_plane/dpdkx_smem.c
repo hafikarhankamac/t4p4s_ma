@@ -130,6 +130,7 @@ void extern_register_read_uint8_t(register_uint8_t* reg, uint8_t* value_result, 
 void extern_register_read_uint16_t(register_uint16_t* reg, uint16_t* value_result, uint32_t idx) { 
     *value_result =  reg[idx].value;
     debug("    :: Executing extern_register_read_uint16_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
+    debug("    :: Register address " T4LIT(%d) "\n", reg)
 }
 
 void extern_register_read_uint32_t(register_uint32_t* reg, uint32_t* value_result, uint32_t idx) { 
@@ -163,6 +164,7 @@ void extern_register_write_uint8_t(register_uint8_t* reg, uint32_t idx, uint8_t 
 void extern_register_write_uint16_t(register_uint16_t* reg, uint32_t idx, uint16_t value) { 
     reg[idx].value = value;
     debug("    :: Executing extern_register_write_uint16_t#" T4LIT(%d) " value:" T4LIT(%d) "\n", idx, reg[idx].value);
+    debug("    :: Register address " T4LIT(%d) "\n", reg);
 }
 void extern_register_write_uint32_t(register_uint32_t* reg, uint32_t idx, uint32_t value) { 
     reg[idx].value = value; 

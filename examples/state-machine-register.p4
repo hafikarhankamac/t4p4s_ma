@@ -66,7 +66,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             ETHERTYPE_IP4: parse_ip4;
-            default: reject;
+            default: accept;
         }
     }
     state parse_ip4 {
@@ -154,7 +154,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	default_action = new_state();
     }
 
-    bit<32> var;
+    bit<32> index;
     bit<16> test;
     apply {
         // simple forwarding
@@ -181,9 +181,9 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    //	MAX_FLOWS
 	    //);
 //	    var = (bit<32>) hdr.ip4.hdrChecksum;
-        var = 0;
+        index = 0;
 	    // get state for flow
-        state_storage.read(test, var);
+	state_storage.read(test, index);
 
 //	meta.state_metadata.current_state = test; 
 //	meta.current = (bit<3>) test;
@@ -192,12 +192,19 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 //        switch_state.apply();
 
 //	test = meta.state_metadata.current_state;
-	test = test + 1;
+	test = (bit<16>) (((int<16>) test) + 1);
 
         // write back new state for flow
-        state_storage.write(var, test);
-	test = test - 1;
-	state_storage.read(test, var);
+        state_storage.write(index, test);
+//	test = (bit<16>) (((int<16>) test) - 1);
+	test = test + 1;
+	bit<16> testx = 0;
+	state_storage.read(testx, index);
+//	testx = (bit<16>) (((int<16>) testx) + 1);
+	testx = testx + 1;
+	state_storage.write(index, testx);
+
+
     }
 }
 

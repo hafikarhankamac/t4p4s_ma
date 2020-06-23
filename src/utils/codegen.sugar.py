@@ -516,9 +516,9 @@ def gen_format_expr_methodcall_extern(stmt, m):
 
     method_args = zip(stmt.methodCall.arguments, parameters)
 
-
-    # TODO is this condition OK?
-    mprefix = "local_vars->" if m.expr.ref.node_type == 'Declaration_Instance' else "global_smem."
+    print(m.expr.ref.__dict__)
+    # TODO is this condition OK? ADJUST CONDITION such that variables get local_vars and register gets global_smem
+    mprefix = "local_vars->" if m.expr.ref.node_type == 'Declaration_Instance' and (m.expr.ref.type.baseType.type_ref.name if hasattr(m.expr.ref.type, 'baseType') else m.expr.ref.type.type_ref.name) != 'register' else "global_smem."
     mname = mprefix + m.expr.path.name
     mparname = mname
 
@@ -562,8 +562,8 @@ def gen_format_expr_methodcall_extern(stmt, m):
 
                 #[ EXTRACT_BYTEBUF_PACKET(pd, header_instance_$hdr, field_instance_${hdr}_${ce.field_ref.name}, &($tmpvar.${fld.name}));
                 #[ dbg_bytes(&($tmpvar.${fld.name}), (${fld.type.size}+7)/8, "       : " T4LIT(${hdr},header) "." T4LIT(${ce.field_ref.name},field) " = ");
-        #[ memcpy(&($mname), &$tmpvar, sizeof($paramtype));
         mparname = "&({})".format(mname)
+
 
 
     # the indexes of the parameters which originate from a type parameter

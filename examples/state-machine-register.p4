@@ -46,7 +46,7 @@ header l4_t {
 
 struct metadata {
 //	bit<16> CURRENTSTATE;
-	bit<3> current;
+	bit<8> current;
 }
 
 //    state_metadata_t state_metadata;
@@ -186,23 +186,23 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	state_storage.read(test, index);
 
 //	meta.state_metadata.current_state = test; 
-//	meta.current = (bit<3>) test;
+	meta.current = (bit<8>) test;
 
        // execute action depending on state
-//        switch_state.apply();
+        switch_state.apply();
 
-//	test = meta.state_metadata.current_state;
-	test = (bit<16>) (((int<16>) test) + 1);
+	test = (bit<16>) meta.current;
+//	test = (bit<16>) (((int<16>) test) + 1);
 
         // write back new state for flow
         state_storage.write(index, test);
 //	test = (bit<16>) (((int<16>) test) - 1);
-	test = test + 1;
-	bit<16> testx = 0;
-	state_storage.read(testx, index);
+//	test = test + 1;
+//	bit<16> testx = 0;
+//	state_storage.read(testx, index);
 //	testx = (bit<16>) (((int<16>) testx) + 1);
-	testx = testx + 1;
-	state_storage.write(index, testx);
+//	testx = testx + 1;
+//	state_storage.write(index, testx);
 
 
     }

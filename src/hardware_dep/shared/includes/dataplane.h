@@ -64,6 +64,9 @@ typedef struct lookup_table_s {
     int instance;
 
     lookup_table_entry_info_t entry;
+#ifdef T4P4S_DEBUG
+    int init_entry_count;
+#endif
 } lookup_table_t;
 
 typedef struct field_reference_s {
@@ -117,7 +120,10 @@ typedef struct header_descriptor_s {
     void *              pointer;
     uint32_t            length;
     int                 var_width_field_bitwidth;
+    bool                was_enabled_at_initial_parse;
+#ifdef T4P4S_DEBUG
     char*               name;
+#endif
 } header_descriptor_t;
 
 typedef struct packet_descriptor_s {

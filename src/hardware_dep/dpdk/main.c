@@ -298,22 +298,21 @@ void print_rte_xstats(uint32_t port_id)
 
 int main(int argc, char** argv)
 {
-    debug("Initializing switch\n");
+    debug("Init switch\n");
 
     initialize_args(argc, argv);
     initialize_nic();
 
     int launch_count2 = launch_count();
     for (int i = 0; i < launch_count2; ++i) {
-        debug("Initializing execution\n");
+        debug("Init execution\n");
 
         init_tables();
         init_storage();
 
         init_memories();
-        debug(" " T4LIT(::::,incoming) " Initializing control plane connection\n");
+        debug(" " T4LIT(::::,incoming) " Init control plane connection\n");
         init_control_plane();
-        debug(" :::: Initializing storage\n");
 
         t4p4s_pre_launch(i);
 

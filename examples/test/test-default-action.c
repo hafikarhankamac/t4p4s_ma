@@ -4,12 +4,12 @@
 #include "test.h"
 
 fake_cmd_t t4p4s_testcase_test[][RTE_MAX_LCORE] = {
-    {
-        {FAKE_PKT, 0, 1, {"00000000", ""}, 200, 12345, {"01FFACDC", ""}},
-        FEND,
+    {		         
+        {FAKE_PKT, 0, 1, {"00", ""}, 200, 12345, {"01", ""}},
+	FEND,
     },
     {
-        FEND,
+	FEND,
     },
 };
 

@@ -1,22 +1,8 @@
 #include <core.p4>
 #include <psa.p4>
 
-// In: 00000000000000010000001000000011
-// Out: 00000011
-
-header option_A_t {
-  bit<8> a;
-}
-header option_B_t {
-  bit<8> b;
-}
-header option_C_t {
-  bit<8> c;
-}
-header_union options_t {
-  option_A_t a;
-  option_B_t b;
-  option_C_t c;
+header dummy_t {
+    bit<8> f;
 }
 
 struct empty_metadata_t {
@@ -26,37 +12,20 @@ struct metadata {
 }
 
 struct headers {
-    options_t[10] option_stack;
+    dummy_t dummy;
 }
-
 parser IngressParserImpl(packet_in packet,
                          out headers hdr,
                          inout metadata meta,
                          in psa_ingress_parser_input_metadata_t istd,
                          in empty_metadata_t resubmit_meta,
                          in empty_metadata_t recirculate_meta) {
-    state parse_option_a {
-        packet.extract(hdr.option_stack.next.a);
-        transition start;
-    }
-    state parse_option_b {
-        packet.extract(hdr.option_stack.next.b);
-        transition start;
-    }
-    state parse_option_c {
-        packet.extract(hdr.option_stack.next.c);
-        transition start;
-    }
-    state end {
+    state parse_dummy {
+        packet.extract(hdr.dummy);
         transition accept;
     }
     state start {
-        transition select(packet.lookahead<bit<2>>()) {
-            2w0x0 : parse_option_a;
-            2w0x1 : parse_option_b;
-            2w0x2 : parse_option_c;
-            2w0x3 : end;
-        }
+        transition parse_dummy;
     }
 }
 
@@ -65,17 +34,31 @@ control egress(inout headers hdr,
                in    psa_egress_input_metadata_t  istd,
                inout psa_egress_output_metadata_t ostd)
 {
-    apply {
-    }
+    apply { }
 }
-
 
 control ingress(inout headers hdr,
                 inout metadata meta,
                 in    psa_ingress_input_metadata_t  istd,
                 inout psa_ingress_output_metadata_t ostd)
 {
-    apply { }
+    action def_act() {
+        hdr.dummy.f = (bit<8>)1;
+    }
+    table t {
+        actions = {
+            def_act;
+        }
+        key = {
+            hdr.dummy.f: exact;
+        }
+        size = 512;
+        default_action = def_act;
+    }
+    apply {
+        t.apply();
+        ostd.egress_port = (PortId_t)12345;
+    }
 }
 
 parser EgressParserImpl(packet_in buffer,
@@ -100,10 +83,7 @@ control IngressDeparserImpl(packet_out buffer,
                             in psa_ingress_output_metadata_t istd)
 {
     apply {
-        option_A_t tmp = { 8w3 };
-        if (hdr.option_stack[0].isValid() && hdr.option_stack[1].isValid() && hdr.option_stack[2].isValid() && !hdr.option_stack[3].isValid()) {
-            buffer.emit(tmp);
-        }
+        buffer.emit(hdr.dummy);
     }
 }
 

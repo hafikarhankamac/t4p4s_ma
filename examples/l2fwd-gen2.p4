@@ -36,7 +36,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 }
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
-    @name(".forward") action forward(bit<9> port) {
+    @name(".forward") action forward(@__ref bit<9> port) {
         standard_metadata.egress_spec = port;
     }
     @name(".bcast") action bcast() {

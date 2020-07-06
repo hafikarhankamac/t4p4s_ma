@@ -22,6 +22,9 @@ dpdk_portfwd_controller: controllers_common dpdk_portfwd_controller.c
 dpdk_l2fwd_controller: controllers_common dpdk_l2fwd_controller.c
 	$(CC) $(CFLAGS) $(LIB) dpdk_ctrl.o dpdk_l2fwd_controller.c -o dpdk_l2fwd_controller
 
+dpdk_test_controller: controllers_common dpdk_test_controller.c
+	$(CC) $(CFLAGS) $(LIB) dpdk_ctrl.o dpdk_test_controller.c -o dpdk_test_controller
+
 dpdk_psa_l2fwd_controller: controllers_common dpdk_psa_l2fwd_controller.c
 	$(CC) $(CFLAGS) $(LIB) dpdk_ctrl.o dpdk_psa_l2fwd_controller.c -o dpdk_psa_l2fwd_controller
 

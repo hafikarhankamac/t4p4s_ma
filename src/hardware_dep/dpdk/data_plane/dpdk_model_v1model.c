@@ -126,6 +126,12 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
     wait_cycles(duration);
 }
 
+// TODO: Add hash functionality
+void hash(uint16_t* hash_value, enum enum_HashAlgorithm algorithm, ipv4_5_tuple_t 5_tuple, uint16_t upper_border) {
+    *hash_value = 0
+
+}
+
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
 //    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) " (" T4LIT(%d) "-" T4LIT(%d) ") [" T4LIT(IV, field) " " T4LIT(%x) " " T4LIT(key, field) " " T4LIT(%x) "] starting at byte " T4LIT(%d) " (" T4LIT(%d) " bytes)\n", algorithm, mode, iv, key, start_byte, length);
 //

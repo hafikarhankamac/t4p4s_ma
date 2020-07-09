@@ -127,7 +127,7 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 }
 
 // TODO: Add hash functionality
-void hash(uint16_t* hash_value, enum enum_HashAlgorithm algorithm, ipv4_5_tuple_t 5_tuple, uint16_t upper_border) {
+void hash<O, T, D, M>(O* hash_value, enum enum_Hashalgorithm algorithm, T base, D data, M max) {
     *hash_value = 0
 
 }

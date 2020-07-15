@@ -1079,12 +1079,10 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 fmt_params = format_method_parameters(e.arguments, method_params)
                 #[ extern void sheep(uint32_t duration, SHORT_STDPARAMS);
                 #[ sheep($fmt_params, SHORT_STDPARAMS_IN)
-	    elif mref.name == 'hash' and False:
+	    elif mref.name == 'hash':
 		    #TODO: Add hashing functionality
-		    print(format_method_parameters(e.arguments, method_params))
-		    hash_value_type, _, base_type, data_type, max_type  = tuple(map(lambda x: x.type.type_ref.name , method_params.parameters))
-		    # #[ extern void hash<$hash_value_type,$base_type,$data_type,$max_type>($hash_value_type* hash_value, enum enum_HashAlgorithm algorithm, $base_type base, $data_type data, $max_type max);
-		    # #[ extern void hash($hash_value_type* hash_value, enum enum_HashAlgorithm algorithm, $base_type base, $data_type data, $base_type max)
+		    print(e.arguments)
+		    #[ extern void hash<O, T, D, M>(O* hash_value, enum enum_HashAlgorithm algorithm, T base, D data, M max)
 		    pass
             #elif mref.name == 'encrypt_bytes':
             #    fmt_params = format_method_parameters(e.arguments, method_params)
@@ -1175,22 +1173,17 @@ class types:
 def gen_format_call_extern(e, mref, method_params):
     # TODO temporary fix, this will be computed later on
     with types({
-        "T": "struct uint8_buffer_s" if mref.name != "hash" else "unsigned",
+        "T": "struct uint8_buffer_s",
         "O": "unsigned",
         "HashAlgorithm": "int",
-	"M": "unsigned",
-	"D": "struct ipv4_5_tuple_s",
     }):
         fmt_params = format_method_parameters(e.arguments, method_params)
         all_params = ", ".join([p for p in [fmt_params, "SHORT_STDPARAMS_IN"] if p != ''])
 
-	print("sugar -> ", all_params)
-
         return_type = format_type(mref.type.returnType)
         param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
 
-        print("sugar -> extern {} {}({})".format(format_type(e.type), mref.name, param_types))
-	#pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
+        #pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
         #[ ${mref.name}($all_params)
 
 def gen_format_call_digest(e):

@@ -314,17 +314,14 @@ class types:
 for m in hlir16.objects['Method']:
     # TODO temporary fix for l3-routing-full, this will be computed later on
     with types({
-        "T": "struct uint8_buffer_s" if m.name !="hash" else "unsigned",
+        "T": "struct uint8_buffer_s",
         "O": "unsigned" if not m.name == "verify_checksum" else "bitfield_handle_t",
         "HashAlgorithm": "int",
-	"M": "unsigned",
-	"D": "struct ipv4_5_tuple_s",
     }):
         t = m.type
         ret_type = format_type(t.returnType)
         args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['STDPARAMS' if not m.name == "verify_checksum" else 'SHORT_STDPARAMS'])
 
-	print("extern {} {}({})".format(ret_type, m.name, args))
         #[ extern ${ret_type} ${m.name}(${args});
 
 for ctl in p4_ctls:

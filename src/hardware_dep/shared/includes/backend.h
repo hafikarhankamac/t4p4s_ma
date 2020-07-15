@@ -53,14 +53,6 @@ struct uint8_buffer_s {
        uint8_t* buffer;
 };
 
-struct ipv4_5_tuple_s {
-	uint32_t srcAddr;
-	uint32_t dstAddr;
-	uint8_t prot;
-	uint16_t srcPort;
-	uint16_t dstPort;
-};
-
 //=============================================================================
 // General
 

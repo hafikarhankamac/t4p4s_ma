@@ -127,7 +127,7 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 }
 
 // TODO: Add hash functionality
-void hash<O, T, D, M>(O* hash_value, enum enum_Hashalgorithm algorithm, T base, D data, M max) {
+void hash<O,T,D,M>(O* hash_value, enum enum_Hashalgorithm algorithm, T base, D data, M max) {
     *hash_value = 0
 
 }

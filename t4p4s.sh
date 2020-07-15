@@ -42,7 +42,7 @@ exit_program() {
 }
 
 verbosemsg() {
-    [ "$(optvalue verbose)" != off ] && msg "$@"
+    msg "$@"
     return 0
 }
 
@@ -481,8 +481,8 @@ mkdir -p $T4P4S_SRCGEN_DIR
 verbosemsg "Options: $(print_opts)"
 
 # Phase 0a: Check for required programs
-if [ "$(optvalue c)" != off -a ! -f "$P4C/build/p4test" ]; then
-    exit_program "cannot find P4C compiler at $(cc 1)\$P4C/build/p4test$nn"
+if [ "$(optvalue c)" != off -a ! -f "$P4C/build/backends/p4test/p4test" ]; then
+    exit_program "cannot find P4C compiler at $(cc 1)\$P4C/build/backends/p4test/p4test$nn"
 fi
 
 
@@ -618,7 +618,6 @@ if [ "$(optvalue run)" != off ]; then
     fi
 fi
 
-
 # Phase 3B: Execution (switch)
 if [ "$(optvalue run)" != off ]; then
     msg "[$(cc 0)RUN SWITCH$nn] $(cc 1)${OPTS[executable]}$nn"
@@ -639,6 +638,7 @@ if [ "$(optvalue run)" != off ]; then
     mkdir -p ${T4P4S_LOG_DIR}
     echo "Executed at $(date +"%Y%m%d %H:%M:%S")" >${T4P4S_LOG_DIR}/last.txt
     echo >>${T4P4S_LOG_DIR}/last.txt
+    set -x
     if [ "${OPTS[eal]}" == "off" ]; then
         sudo -E "${OPTS[executable]}" ${EXEC_OPTS} 2>&1 | egrep -v "^EAL: " \
             |& tee >( tee -a ${T4P4S_LOG_DIR}/last.lit.txt | sed 's/\x1B\[[0-9;]*[JKmsu]//g' >> ${T4P4S_LOG_DIR}/last.txt ) \
@@ -646,11 +646,10 @@ if [ "$(optvalue run)" != off ]; then
         # note: PIPESTATUS is bash specific
         ERROR_CODE=${PIPESTATUS[0]}
     else
-        sudo -E "${OPTS[executable]}" ${EXEC_OPTS} \
-            |& tee >( tee -a ${T4P4S_LOG_DIR}/last.lit.txt | sed 's/\x1B\[[0-9;]*[JKmsu]//g' >> ${T4P4S_LOG_DIR}/last.txt ) \
-            |& tee >( tee ${T4P4S_LOG_DIR}/$(date +"%Y%m%d_%H%M%S")_${OPTS[choice]}.lit.txt | sed 's/\x1B\[[0-9;]*[JKmsu]//g' > ${T4P4S_LOG_DIR}/$(date +"%Y%m%d_%H%M%S")_${OPTS[choice]}.txt )
+        gdbserver :1234 "${OPTS[executable]}" ${EXEC_OPTS}
         ERROR_CODE=${PIPESTATUS[0]}
     fi
+    set +x
 
     command -v errno >&2>/dev/null
     ERRNO_EXISTS=$?

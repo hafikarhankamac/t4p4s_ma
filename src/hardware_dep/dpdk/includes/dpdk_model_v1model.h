@@ -38,9 +38,6 @@ void set_handle_packet_metadata(packet_descriptor_t* pd, uint32_t portid);
 
 void sheep(uint32_t duration, packet_descriptor_t* pd, lookup_table_t** tables);
 
-//TODO: Add hash signature
-void hash();
-
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length,
 //                     packet_descriptor_t* pd, lookup_table_t** tables);
 

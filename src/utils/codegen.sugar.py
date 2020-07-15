@@ -1079,11 +1079,6 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
                 fmt_params = format_method_parameters(e.arguments, method_params)
                 #[ extern void sheep(uint32_t duration, SHORT_STDPARAMS);
                 #[ sheep($fmt_params, SHORT_STDPARAMS_IN)
-	    elif mref.name == 'hash':
-		    #TODO: Add hashing functionality
-		    print(e.arguments)
-		    #[ extern void hash<O, T, D, M>(O* hash_value, enum enum_HashAlgorithm algorithm, T base, D data, M max)
-		    pass
             #elif mref.name == 'encrypt_bytes':
             #    fmt_params = format_method_parameters(e.arguments, method_params)
             #    #[ void encrypt_bytes(

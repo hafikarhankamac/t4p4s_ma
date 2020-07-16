@@ -15,6 +15,7 @@
 #include "dpdk_model_v1model.h"
 #include "util_packet.h"
 #include "sheep_precise_timer.h"
+#include "dpdk_hash.h"
 
 #include <rte_ip.h>
 
@@ -124,6 +125,11 @@ void mark_to_drop(SHORT_STDPARAMS) {
 void sheep(uint32_t duration, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(sheep,extern) " waiting " T4LIT(%d) " cycles\n", duration);
     wait_cycles(duration);
+}
+
+void hash(uint8_t* hash_result, enum enum_HashAlgorithm algorithm, uint8_t base, ipv4_5_tuple_t data, uint8_t max) {
+	//      debug("    : Hashing(" T4LIT(%s) "," T4L1T(%d) ",(" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) ")," T4L1T(%d) " to " T4L1T(%d) "\n",
+	//              algorithm, base, ipv4_5_tuple->srcAddr, ipv4_5_tuple->dstAddr, ipv4_5_tuple->prot, ipv4_5_tuple->srcPort, ipv4_5_tuple->dstPort, max, hash_result);
 }
 
 

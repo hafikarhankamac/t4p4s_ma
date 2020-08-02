@@ -95,7 +95,7 @@ for table in hlir16.tables:
         aname = action.action_object.name
         mname = action.expression.method.ref.name
 
-        #[ void action_code_$aname(packet_descriptor_t *pd, lookup_table_t **tables, action_${mname}_params_t);
+        #[ void action_code_$aname(packet_descriptor_t *pd, lookup_table_t **tables, action_${mname}_params_t *parameters);
 
 
 for ctl in hlir16.controls:

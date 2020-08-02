@@ -180,7 +180,7 @@ for table in hlir16.tables:
         if action_name == 'NoAction':
             continue
         #{         case action_${action_name}:
-        #[           action_code_${action_name}(SHORT_STDPARAMS_IN, entry->action.${action_name}_params);
+        #[           action_code_${action_name}(SHORT_STDPARAMS_IN, &(entry->action.${action_name}_params));
         #}           break;
     #[       }
     #[     } else {

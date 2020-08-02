@@ -76,7 +76,7 @@ for table in hlir16.tables:
 
 for ctl in hlir16.controls:
     for act in ctl.actions:
-        fun_params = ["SHORT_STDPARAMS", "action_{}_params_t parameters".format(act.name)]
+        fun_params = ["SHORT_STDPARAMS", "action_{}_params_t *parameters".format(act.name)]
 
         #{ void action_code_${act.name}(${', '.join(fun_params)}) {
         #[     uint32_t value32, res32, mask32;

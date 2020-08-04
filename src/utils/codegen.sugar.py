@@ -284,7 +284,7 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
                 src_vw_bitwidth = 'pstate->{}_var'.format(src.expr.ref.name)
                 dst_bytewidth = '({}/8)'.format(src_vw_bitwidth)
     elif src.node_type == 'PathExpression':
-        refbase = "local_vars->" if is_control_local_var(src.ref.name) else 'parameters.'
+        refbase = "local_vars->" if is_control_local_var(src.ref.name) else 'parameters->'
         src_pointer = '{}{}'.format(refbase, src.ref.name)
     elif src.node_type == 'Constant':
         src_pointer = 'value_{}'.format(src.id)
@@ -315,7 +315,7 @@ def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_byte
         #[ $src_buffer = ${format_expr(src)};
     elif src.node_type == 'PathExpression':
         indirection = "&" if is_primitive(src.type) else ""
-        refbase = "local_vars->" if is_control_local_var(src.ref.name) else 'parameters.'
+        refbase = "local_vars->" if is_control_local_var(src.ref.name) else 'parameters->'
         #[ memcpy(&$src_buffer, $indirection($refbase${src.ref.name}), $dst_bytewidth);
     else:
         #[ $src_buffer = ${format_expr(src)};
@@ -919,8 +919,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
     elif e.node_type == 'PathExpression':
         if is_control_local_var(e.ref.name):
             return "local_vars->" + e.ref.name
-        if expand_parameters and not e.path.absolute:
-            return "parameters." + e.ref.name
+        if (expand_parameters or e.ref.node_type == 'Parameter') and not e.path.absolute:
+            return "parameters->" + e.ref.name
         return e.ref.name
 
     elif e.node_type == 'Member':

@@ -48,14 +48,17 @@ class types:
 for m in hlir16.objects['Method']:
     # TODO temporary fix for l3-routing-full, this will be computed later on
     with types({
-        "T": "struct uint8_buffer_s",
-        "O": "unsigned",
+        "T": "struct uint8_buffer_s" if m.name != "hash" else "uint16_t",
+        "O": "unsigned" if m.name != "hash" else "uint32_t*",
         "HashAlgorithm": "int",
+	"D": "struct ipv4_5_tuple_s",
+	"M": "uint32_t"
     }):
         t = m.type
         ret_type = format_type(t.returnType)
         args = ", ".join([format_expr(arg) for arg in t.parameters.parameters if not arg.type._type_ref('is_metadata')] + ['SHORT_STDPARAMS'])
 
+	print('In actions: extern {} {}({})'.format(ret_type, m.name, args))
         #[ extern ${ret_type} ${m.name}(${args});
 
 

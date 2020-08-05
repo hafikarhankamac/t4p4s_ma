@@ -1,6 +1,16 @@
 #include <core.p4>
 #include <v1model.p4>
 
+const bit<32> MAX_FLOWS = 0x65536;
+
+const bit<16> ZERO = 0x0;
+
+const bit<32> srcAddr = 0x1;
+const bit<32> dstAddr = 0x2;
+const bit<8> protocol = 0x06;
+const bit<16> srcPort = 12345;
+const bit<16> dstPort = 12345;
+
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -67,8 +77,10 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         }
         size = 512;
     }
+    bit<32> flow_id = 0;
     apply {
         smac.apply();
+	hash(flow_id, HashAlgorithm.crc32, ZERO, {srcAddr, dstAddr, protocol, srcPort, dstPort}, MAX_FLOWS);
         dmac.apply();
     }
 }

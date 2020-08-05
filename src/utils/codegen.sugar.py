@@ -750,8 +750,9 @@ def groupby(xs, fun):
         yield elems
 
 def group_references(refs):
+    print("refs: ", refs)
     for xs in groupby(refs, lambda x1, x2: isinstance(x1, tuple) and isinstance(x2, tuple) and is_subsequent(x1, x2)):
-        if xs == [None]:
+        if not xs or xs == [None]:
             # TODO investigate this case further
             continue
         
@@ -788,11 +789,13 @@ def listexpression_to_buf(expr):
     o = '0'
     # TODO add support for component.node_type == 'Constant'
     components = [('tuple', c[0], c[1]) if type(c) == tuple else convert_component(c) for c in map(resolve_reference, expr.components)]
-    components = [(c[1], c[2]) for c in components if c is not None if c[0] != 'Constant']
+    print("components: ", components)
+    components = [(c[1], c[2]) for c in components if c is not None]
     for h, fs in group_references(components):
         w = '+'.join([width(h, f) for f in fs])
         s += 'memcpy(buffer%s + (%s+7)/8, field_desc(pd, %s).byte_addr, (%s+7)/8);\n' % (expr.id, o, fldid(h, fs[0]), w)
         o += '+'+w
+	print("o: ", o)
     return 'int buffer{0}_size = ({1}+7)/8;\nuint8_t buffer{0}[buffer{0}_size];\n'.format(expr.id, o) + s
 
 ################################################################################
@@ -960,6 +963,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
         return ''
 
     elif e.node_type == 'ListExpression':
+	print(e.__dict__["components"])
         if e.id not in generated_exprs:
             prepend_statement(listexpression_to_buf(e))
             generated_exprs.add(e.id)
@@ -1167,17 +1171,22 @@ class types:
 
 def gen_format_call_extern(e, mref, method_params):
     # TODO temporary fix, this will be computed later on
+    print("mref: ", mref.name)
     with types({
-        "T": "struct uint8_buffer_s",
-        "O": "unsigned",
+        "T": "struct uint8_buffer_s" if str(mref.name) != "hash" else "uint16_t",
+        "O": "unsigned" if mref.name != "hash" else "uint32_t*",
         "HashAlgorithm": "int",
+	"D": "struct ipv4_5_tuple_s",
+	"M": "uint32_t"
     }):
         fmt_params = format_method_parameters(e.arguments, method_params)
         all_params = ", ".join([p for p in [fmt_params, "SHORT_STDPARAMS_IN"] if p != ''])
+	print(all_params)
 
         return_type = format_type(mref.type.returnType)
         param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
 
+	print("{}({})".format(mref.name, all_params))
         #pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
         #[ ${mref.name}($all_params)
 

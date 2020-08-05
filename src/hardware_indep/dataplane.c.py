@@ -314,9 +314,11 @@ class types:
 for m in hlir16.objects['Method']:
     # TODO temporary fix for l3-routing-full, this will be computed later on
     with types({
-        "T": "struct uint8_buffer_s",
-        "O": "unsigned" if not m.name == "verify_checksum" else "bitfield_handle_t",
+        "T": "struct uint8_buffer_s" if m.name != "hash" else "uint16_t",
+	"O": "unsigned" if not m.name == "verify_checksum" else "uint32_t*" if m.name == "hash" else "bitfield_handle_t",
         "HashAlgorithm": "int",
+	"D": "struct ipv4_5_tuple_s",
+	"M": "uint32_t"
     }):
         t = m.type
         ret_type = format_type(t.returnType)

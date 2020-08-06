@@ -407,8 +407,8 @@ def gen_format_statement(stmt):
                         # [ memcpy(&(${format_expr(dst)}), &$tmpvar, sizeof(${format_type(dst.type)}));
                         # TODO debug printout
                 else:
-                    #[ memcpy(&(${format_expr(dst)}), &(${format_expr(src, expand_parameters=True)}), ${dst.type.size});
-                    #[ dbg_bytes(&(${format_expr(src, expand_parameters=True)}), ${dst.type.size}, "Copied " T4LIT(%02d) " bytes from ${format_expr(src, expand_parameters=True)} to ${format_expr(dst)}: ", ${dst.type.size});
+                    #[ memcpy(&(${format_expr(dst)}), &(${format_expr(src, expand_parameters=True)}), ${(dst.type.size+7)/8});
+                    #[ dbg_bytes(&(${format_expr(src, expand_parameters=True)}), ${(dst.type.size+7)/8}, "Copied " T4LIT(%02d) " bytes from ${format_expr(src, expand_parameters=True)} to ${format_expr(dst)}: ", ${(dst.type.size+7)/8});
             else:
                 #[ ${format_expr(dst)} = ${format_expr(src, expand_parameters=True)};
     elif stmt.node_type == 'BlockStatement':

@@ -790,7 +790,7 @@ def listexpression_to_buf(expr):
     # TODO add support for component.node_type == 'Constant'
     components = [('tuple', c[0], c[1]) if type(c) == tuple else convert_component(c) for c in map(resolve_reference, expr.components)]
     print("components: ", components)
-    components = [(c[1], c[2]) for c in components if c is not None]
+    components = [(c[1], c[2]) for c in components if c is not None if c[0] != 'Constant']
     for h, fs in group_references(components):
         w = '+'.join([width(h, f) for f in fs])
         s += 'memcpy(buffer%s + (%s+7)/8, field_desc(pd, %s).byte_addr, (%s+7)/8);\n' % (expr.id, o, fldid(h, fs[0]), w)
@@ -1176,7 +1176,7 @@ def gen_format_call_extern(e, mref, method_params):
         "T": "struct uint8_buffer_s" if str(mref.name) != "hash" else "uint16_t",
         "O": "unsigned" if mref.name != "hash" else "uint32_t*",
         "HashAlgorithm": "int",
-	"D": "struct ipv4_5_tuple_s",
+	"D": "struct uint8_buffer_s",
 	"M": "uint32_t"
     }):
         fmt_params = format_method_parameters(e.arguments, method_params)

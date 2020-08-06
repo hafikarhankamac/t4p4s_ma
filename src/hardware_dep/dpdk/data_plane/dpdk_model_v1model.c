@@ -127,9 +127,11 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
     wait_cycles(duration);
 }
 
-void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct ipv4_5_tuple_s data, uint32_t max) {
-	//      debug("    : Hashing(" T4LIT(%s) "," T4L1T(%d) ",(" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) "/" T4L1T(%d) ")," T4L1T(%d) " to " T4L1T(%d) "\n",
-	//              algorithm, base, ipv4_5_tuple->srcAddr, ipv4_5_tuple->dstAddr, ipv4_5_tuple->prot, ipv4_5_tuple->srcPort, ipv4_5_tuple->dstPort, max, hash_result);
+void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
+	debug("    : Hashing")
+	if (algorithm == enum_HashAlgorithm_crc32) {
+		hash_result = 0x0;
+	}
 }
 
 

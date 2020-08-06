@@ -51,7 +51,7 @@ for m in hlir16.objects['Method']:
         "T": "struct uint8_buffer_s" if m.name != "hash" else "uint16_t",
         "O": "unsigned" if m.name != "hash" else "uint32_t*",
         "HashAlgorithm": "int",
-	"D": "struct ipv4_5_tuple_s",
+	"D": "struct uint8_buffer_s",
 	"M": "uint32_t"
     }):
         t = m.type

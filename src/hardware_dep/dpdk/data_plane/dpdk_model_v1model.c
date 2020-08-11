@@ -128,9 +128,12 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 }
 
 void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
-	debug("    : Hashing")
+	debug("    : Hashing\n")
 	if (algorithm == enum_HashAlgorithm_crc32) {
-		hash_result = 0x0;
+		for (int i = 0; i< data.buffer_size; i++) {
+			hash_result = data.buffer[i];
+			debug("    : Hashed to " T4LIT(%d) "\n", hash_result);
+		}
 	}
 }
 

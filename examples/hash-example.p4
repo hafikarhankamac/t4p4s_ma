@@ -72,16 +72,16 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 
     bit<16> ZERO = 0x0;
 
-    bit<32> srcAddr = 0x1;
-    bit<32> dstAddr = 0x2;
+    bit<32> srcAddr = 0x11111111;
+    bit<32> dstAddr = 0x22222222;
     bit<8> protocol = 0x06;
     bit<16> srcPort = 12345;
     bit<16> dstPort = 12345;
 
    apply {
-//        smac.apply();
+        smac.apply();
 	hash(flow_id, HashAlgorithm.crc32, ZERO, {srcAddr, dstAddr, protocol, srcPort, dstPort}, MAX_FLOWS);
-//        dmac.apply();
+        dmac.apply();
     }
 }
 

@@ -792,10 +792,10 @@ def listexpression_to_buf(expr):
     print("components: ", components)
     components = [(c[1], c[2]) for c in components if c is not None if c[0] != 'Constant']
     for h, fs in group_references(components):
-        w = '+'.join([width(h, f) for f in fs])
+	print("h: {}\nfs: {}".format(h, fs))
+	w = '+'.join([width(h, f) for f in fs])
         s += 'memcpy(buffer%s + (%s+7)/8, field_desc(pd, %s).byte_addr, (%s+7)/8);\n' % (expr.id, o, fldid(h, fs[0]), w)
         o += '+'+w
-	print("o: ", o)
     return 'int buffer{0}_size = ({1}+7)/8;\nuint8_t buffer{0}[buffer{0}_size];\n'.format(expr.id, o) + s
 
 ################################################################################
@@ -963,7 +963,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
         return ''
 
     elif e.node_type == 'ListExpression':
-	print(e.__dict__["components"])
+	for i in e.__dict__["components"]:
+	    print(i.__dict__)
         if e.id not in generated_exprs:
             prepend_statement(listexpression_to_buf(e))
             generated_exprs.add(e.id)
@@ -1171,7 +1172,6 @@ class types:
 
 def gen_format_call_extern(e, mref, method_params):
     # TODO temporary fix, this will be computed later on
-    print("mref: ", mref.name)
     with types({
         "T": "struct uint8_buffer_s" if str(mref.name) != "hash" else "uint16_t",
         "O": "unsigned" if mref.name != "hash" else "uint32_t*",
@@ -1181,12 +1181,12 @@ def gen_format_call_extern(e, mref, method_params):
     }):
         fmt_params = format_method_parameters(e.arguments, method_params)
         all_params = ", ".join([p for p in [fmt_params, "SHORT_STDPARAMS_IN"] if p != ''])
-	print(all_params)
+	if False: print(all_params)
 
         return_type = format_type(mref.type.returnType)
         param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
 
-	print("{}({})".format(mref.name, all_params))
+	if False: print("{}({})".format(mref.name, all_params))
         #pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
         #[ ${mref.name}($all_params)
 

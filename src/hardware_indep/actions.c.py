@@ -58,7 +58,6 @@ for m in hlir16.objects['Method']:
         ret_type = format_type(t.returnType)
         args = ", ".join([format_expr(arg) for arg in t.parameters.parameters if not arg.type._type_ref('is_metadata')] + ['SHORT_STDPARAMS'])
 
-	print('In actions: extern {} {}({})'.format(ret_type, m.name, args))
         #[ extern ${ret_type} ${m.name}(${args});
 
 

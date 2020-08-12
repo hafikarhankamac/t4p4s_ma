@@ -139,7 +139,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 5;
     }
 
-//    register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
+    register<bit<16>>(MAX_FLOWS) state; // per flow state keeping
     bit<32> var;
     apply {
         // simple forwarding
@@ -166,9 +166,10 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    //	MAX_FLOWS
 	    //);
 //	    var = (bit<32>) hdr.ip4.hdrChecksum;
+	    var = 1;
 
 	    // get state for flow
-//        state.read(meta.state_metadata.current_state, var);
+        state.read(meta.state_metadata.current_state, var);
 
 	    // execute action depending on state
 //	    switch_state.apply();

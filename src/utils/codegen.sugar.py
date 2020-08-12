@@ -573,7 +573,9 @@ def gen_format_extern_single(stmt, m, smem_type, is_possibly_multiple, packets_o
 
     method_args = zip(stmt.methodCall.arguments, parameters)
 
-    mprefix = "global_smem."
+    # TODO Find correct condition
+    mprefix = "global_smem."if True else "local_vars->"
+    # mprefix = "local_vars->" if m.expr.ref.node_type == 'Declaration_Instance' and (m.expr.ref.type.baseType.type_ref.name if hasattr(m.expr.ref.type, 'baseType') else m.expr.ref.type.type_ref.name) != 'register' else "global_smem."
     mname = mprefix + m.expr.path.name
     mparname = mname
 

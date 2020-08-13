@@ -40,7 +40,7 @@ void fill_smac_table(uint8_t count, uint8_t mac[6])
 
     ap = add_p4_action_parameter(h, a, 8);
     strcpy(ap->name, "count");
-    memcpy(ap->bitmap, count, 1);
+    memcpy(ap->bitmap, &count, 1);
     ap->length = 8;
 
 

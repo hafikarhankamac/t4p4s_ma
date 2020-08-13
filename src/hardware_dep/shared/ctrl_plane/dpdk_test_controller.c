@@ -14,7 +14,7 @@ controller c;
 
 extern void notify_controller_initialized();
 
-void fill_smac_table(uint8_t count, uint8_t mac[6])
+void fill_smac_table(uint32_t count, uint8_t mac[6])
 {
     char buffer[2048];
     struct p4_header* h;
@@ -26,7 +26,7 @@ void fill_smac_table(uint8_t count, uint8_t mac[6])
 
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "table0");
+    strcpy(te->table_name, "table0_0");
 
     exact = add_p4_field_match_exact(te, 2048);
     strcpy(exact->header.name, "ethernet.srcAddr");
@@ -38,10 +38,10 @@ void fill_smac_table(uint8_t count, uint8_t mac[6])
     a = add_p4_action(h, 2048);
     strcpy(a->description.name, "forward");
 
-    ap = add_p4_action_parameter(h, a, 8);
+    ap = add_p4_action_parameter(h, a, 2048);
     strcpy(ap->name, "count");
-    memcpy(ap->bitmap, &count, 1);
-    ap->length = 8;
+    memcpy(ap->bitmap, &count, 4);
+    ap->length = 4*8;
 
 
     netconv_p4_header(h);
@@ -71,7 +71,7 @@ void set_default_action_smac()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "table0");
+    strcpy(sda->table_name, "table0_0");
 
     a = &(sda->action);
     strcpy(a->description.name, "_drop");
@@ -85,14 +85,14 @@ void set_default_action_smac()
 
 
 uint8_t macs[MAX_MACS][6];
-uint8_t countmap[MAX_MACS];
+uint32_t countmap[MAX_MACS];
 int mac_count = -1;
 
 int read_macs_and_ports_from_file(char *filename) {
     FILE *f;
     char line[100];
     int values[6];
-    int count;
+    uint32_t count;
     int i;
 
     f = fopen(filename, "r");
@@ -115,7 +115,7 @@ int read_macs_and_ports_from_file(char *filename) {
             for( i = 0; i < 6; ++i ) {
               macs[mac_count][i] = (uint8_t) values[i];
             }
-            countmap[mac_count] = (uint8_t) count;
+            countmap[mac_count] = (uint32_t) count;
 
         } else {
             printf("Wrong format error in line %d : %s\n", mac_count+2, line);

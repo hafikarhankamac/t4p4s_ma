@@ -26,7 +26,7 @@ from utils.codegen import format_type
 # TODO this should not be here in the indep section
 #[ #include "dpdk_reg.h"
 
-#[ #define FIELD(name, length) uint8_t name[(length + 7) / 8];
+#[ #define WIDEFIELD(name, length) uint8_t name[(length + 7) / 8];
 
 def unique_stable(items):
     """Returns only the first occurrence of the items in a list.
@@ -56,9 +56,13 @@ for ctl in hlir16.controls:
         #{ typedef struct action_${act.name}_params_s {
         for param in act.parameters.parameters:
             paramtype = resolve_typeref(hlir16, param)
-            #[ FIELD(${param.name}, ${paramtype.size});
-
-        #[ FIELD(DUMMY_FIELD, 0);
+            if (paramtype.size in {8, 16, 32}):
+                typeString = 'u' if not paramtype.isSigned else ''
+                typeString += 'int%s_t' % paramtype.size
+                #[ ${typeString} ${param.name};
+            else:
+                #[ WIDEFIELD(${param.name}, ${paramtype.size});
+        #[ WIDEFIELD(DUMMY_FIELD, 0);
         #} } action_${act.name}_params_t;
 
 #{ typedef struct all_metadatas_s {

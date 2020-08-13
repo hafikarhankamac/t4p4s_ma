@@ -266,7 +266,34 @@ def gen_extern_format_parameter(expr, par):
 def member_to_field_id(member):
     return 'field_{}_{}'.format(member.expr.type.name, member.member)
 
-def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_header_id, dst_field_id):
+def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_header_id, dst_field_id):
+    global src_pointer
+    src_pointer = ''
+    #= gen_format_statement_ref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth)
+
+    if dst_is_vw:
+        dst_fixed_size = dst.expr.header_ref.type.type_ref.bit_width - dst.field_ref.size
+        # dst_fixed_size = dst.expr.header_ref.type.type_ref.bit_width - dst.expression.field_ref.size
+
+        #[ pd->headers[$dst_header_id].var_width_field_bitwidth = get_var_width_bitwidth(pstate);
+        #[ pd->headers[$dst_header_id].length = ($dst_fixed_size + pd->headers[$dst_header_id].var_width_field_bitwidth)/8;
+
+    #[ MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, $dst_header_id, $dst_field_id, $src_pointer, $dst_bytewidth)
+
+def gen_format_statement_parameter_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth):
+    global src_pointer
+    #= gen_format_statement_ref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth)
+
+    if dst_is_vw:
+        addError("Error formatting parameter expression", "Varbit is not supported for parameter assignment")
+        return ''
+    refbase = "local_vars->" if is_control_local_var(dst.ref.name) else 'parameters->'
+    dst_pointer = '{}{}'.format(refbase, dst.ref.name)
+    # src_pointer is array in this case
+    #[ memcpy(&($dst_pointer), $src_pointer, $dst_bytewidth);
+
+def gen_format_statement_ref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth,):
+    global src_pointer
     if src.node_type == 'Member':
         src_pointer = 'value_{}'.format(src.id)
         #[ uint8_t $src_pointer[$dst_bytewidth];
@@ -293,15 +320,6 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
         src_pointer = 'NOT_SUPPORTED'
         addError('formatting statement', 'Unhandled right hand side in assignment statement: {}'.format(src))
 
-    if dst_is_vw:
-        dst_fixed_size = dst.expr.header_ref.type.type_ref.bit_width - dst.field_ref.size
-        # dst_fixed_size = dst.expr.header_ref.type.type_ref.bit_width - dst.expression.field_ref.size
-
-        #[ pd->headers[$dst_header_id].var_width_field_bitwidth = get_var_width_bitwidth(pstate);
-        #[ pd->headers[$dst_header_id].length = ($dst_fixed_size + pd->headers[$dst_header_id].var_width_field_bitwidth)/8;
-
-    #[ MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, $dst_header_id, $dst_field_id, $src_pointer, $dst_bytewidth)
-
 
 def is_primitive(typenode):
     """Returns true if the argument node is compiled to a non-reference C type."""
@@ -309,8 +327,20 @@ def is_primitive(typenode):
     return typenode.node_type in ["Type_Boolean"] or (typenode.node_type == 'Type_Bits' and typenode.size <= 32)
 
 
-def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_header_id, dst_field_id):
+def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_header_id, dst_field_id):
     src_buffer = 'value32'
+    #= gen_format_statement_ref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, src_buffer)
+    #[ // MODIFY_INT32_INT32_AUTO_PACKET(pd, $dst_header_id, $dst_field_id, $src_buffer)
+    #[ set_field((fldT[]){{pd, $dst_header_id, $dst_field_id}}, 0, $src_buffer, $dst_width);
+
+def gen_format_statement_parameter_short(dst, src, dst_width, dst_is_vw, dst_bytewidth):
+    src_buffer = 'value32'
+    #= gen_format_statement_ref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, src_buffer)
+    indirection = "&" if is_primitive(dst.type) else ""
+    refbase = "local_vars->" if is_control_local_var(dst.ref.name) else 'parameters->'
+    #[ memcpy($indirection($refbase${dst.ref.name}), &$src_buffer, $dst_bytewidth);
+
+def gen_format_statement_ref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, src_buffer='value32'):
     if src.node_type == 'Member':
         #[ $src_buffer = ${format_expr(src)};
     elif src.node_type == 'PathExpression':
@@ -321,11 +351,27 @@ def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_byte
         #[ $src_buffer = ${format_expr(src)};
 
 
-    #[ // MODIFY_INT32_INT32_AUTO_PACKET(pd, $dst_header_id, $dst_field_id, $src_buffer)
-    #[ set_field((fldT[]){{pd, $dst_header_id, $dst_field_id}}, 0, $src_buffer, $dst_width);
-
 def gen_format_statement_fieldref(dst, src):
     #TODO: handle preparsed fields, width assignment for vw fields and assignment to buffer instead header fields
+    dst_width, dst_is_vw, dst_bytewidth = extract_sizes(dst, src)
+
+    dst_name      = dst.expr.member if dst.expr.node_type == 'Member' else dst.expr.path.name if dst.expr('header_ref', lambda h: h.type_ref.is_metadata) else dst.expr._header_ref._path.name
+    dst_header_id = "header_instance_all_metadatas" if dst.expr("ref.type.type_ref.is_metadata") else 'header_instance_{}'.format(dst_name)
+    dst_field_id  = member_to_field_id(dst)
+
+    if dst_width <= 32:
+        #= gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_header_id, dst_field_id)
+    else:
+        #= gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_header_id, dst_field_id)
+
+def gen_format_statement_parameter(dst, src):
+    dst_width, dst_is_vw, dst_bytewidth = extract_sizes(dst, src)
+    if dst_width <= 32:
+        #= gen_format_statement_parameter_short(dst, src, dst_width, dst_is_vw, dst_bytewidth)
+    else:
+        #= gen_format_statement_parameter_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth)
+
+def extract_sizes(dst, src):
     dst_width = dst.type.size
     dst_is_vw = dst.type.node_type == 'Type_Varbits'
     dst_bytewidth = (dst_width+7)/8
@@ -333,16 +379,7 @@ def gen_format_statement_fieldref(dst, src):
     assert(dst_width == src.type.size)
     assert(dst_is_vw == (src.type.node_type == 'Type_Varbits'))
 
-    dst_name      = dst.expr.member if dst.expr.node_type == 'Member' else dst.expr.path.name if dst.expr('header_ref', lambda h: h.type_ref.is_metadata) else dst.expr._header_ref._path.name
-    dst_header_id = "header_instance_all_metadatas" if dst.expr("ref.type.type_ref.is_metadata") else 'header_instance_{}'.format(dst_name)
-    dst_field_id  = member_to_field_id(dst)
-
-    if dst_width <= 32:
-        #= gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_header_id, dst_field_id)
-    else:
-        #= gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_header_id, dst_field_id)
-
-
+    return dst_width, dst_is_vw, dst_bytewidth
 
 def is_atomic_block(blckstmt):
     try:
@@ -360,6 +397,8 @@ def gen_format_statement(stmt):
         src = stmt.right
         if hasattr(dst, 'field_ref'):
             #= gen_format_statement_fieldref(dst, src)
+        elif hasattr(dst, 'ref'):
+            #= gen_format_statement_parameter(dst, src)
         else:
             if dst.type.node_type == 'Type_Header':
                 #[ // TODO make it work properly for non-byte-aligned headers

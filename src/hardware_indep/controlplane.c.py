@@ -158,7 +158,7 @@ for table in hlir16_tables_with_keys:
         #[     action.action_id = action_${action.action_object.name};
         for j, p in enumerate(action.action_object.parameters.parameters):
             #[ uint8_t* ${p.name} = (uint8_t*)((struct p4_action_parameter*)ctrl_m->action_params[$j])->bitmap;
-            #[ memcpy(action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.type._type_ref.size+7)/8});
+            #[ memcpy(${'&' if p.type.size in [8, 16, 32] else ''}action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.type._type_ref.size+7)/8});
 
         #{     ${table.name}_add(
         for i, k in enumerate(table.key.keyElements):
@@ -197,7 +197,7 @@ for table in hlir16_tables_with_keys:
         #[     action.action_id = action_${action.action_object.name};
         for j, p in enumerate(action.action_object.parameters.parameters):
             #[ uint8_t* ${p.name} = (uint8_t*)((struct p4_action_parameter*)ctrl_m->action_params[$j])->bitmap;
-            #[ memcpy(action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.type._type_ref.size+7)/8});
+            #[ memcpy(${'&' if p.type.size in [8, 16, 32] else ''}action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.type._type_ref.size+7)/8});
         #[     debug(" " T4LIT(ctl>,incoming) " " T4LIT(Set default action,action) " for $$[table]{table.name}: $$[action]{action_name_str}\n");
         #[     ${table.name}_setdefault( action );
         #} } else

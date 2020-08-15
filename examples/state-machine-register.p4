@@ -166,10 +166,10 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 	    //	MAX_FLOWS
 	    //);
 //	    var = (bit<32>) hdr.ip4.hdrChecksum;
-	    var = 1;
+//	    var = 1;
 
 	    // get state for flow
-        state.read(meta.state_metadata.current_state, var);
+//        state.read(meta.state_metadata.current_state, var);
 
 	    // execute action depending on state
 //	    switch_state.apply();

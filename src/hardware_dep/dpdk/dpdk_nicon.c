@@ -35,12 +35,20 @@ struct rte_mbuf* deparse_mbuf;
 /* Send burst of packets on an output interface */
 static inline void send_burst(struct lcore_conf *conf, uint16_t n, uint8_t port)
 {
+    debug("Start burst\n");
     uint16_t queueid = conf->hw.tx_queue_id[port];
     struct rte_mbuf **m_table = (struct rte_mbuf **)conf->hw.tx_mbufs[port].m_table;
-
+    
+    debug("Before rte burst\n");
+    debug("rte args port_id: " T4LIT(%d) "\n", port);
+    debug("rte args queueid: " T4LIT(%d) "\n", queueid);
+    debug("rte args rte_mbuf: " T4LIT(%d) "\n", m_table);
+    debug("rte args number packets: " T4LIT(%d) "\n", n);
     int ret = rte_eth_tx_burst(port, queueid, m_table, n);
+    debug("After rte burst\n");
     if (unlikely(ret < n)) {
         do {
+	    debug("Iteration\n");
             rte_pktmbuf_free(m_table[ret]);
         } while (++ret < n);
     }
@@ -131,7 +139,11 @@ static void dpdk_send_packet(struct rte_mbuf *mbuf, uint8_t port, uint32_t lcore
 
     if (unlikely(queue_length == MAX_PKT_BURST)) {
         debug("    :: BURST SENDING DPDK PACKETS - port:%d\n", port);
+	debug("Burst attrs: " T4LIT(%d) "\n" , conf);
+ 	debug("Burst attrs: " T4LIT(%d) "\n" , MAX_PKT_BURST);
+ 	debug("Burst attrs: " T4LIT(%d) "\n" , port);
         send_burst(conf, MAX_PKT_BURST, port);
+	debug("    :: Finished BURST\n");
         queue_length = 0;
     }
 

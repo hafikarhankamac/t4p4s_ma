@@ -752,7 +752,7 @@ def groupby(xs, fun):
         yield elems
 
 def group_references(refs):
-    print("refs: ", refs)
+    if False: print("refs: ", refs)
     for xs in groupby(refs, lambda x1, x2: isinstance(x1, tuple) and isinstance(x2, tuple) and is_subsequent(x1, x2)):
         if not xs or xs == [None]:
             # TODO investigate this case further
@@ -791,10 +791,10 @@ def listexpression_to_buf(expr):
     o = '0'
     # TODO add support for component.node_type == 'Constant'
     components = [('tuple', c[0], c[1]) if type(c) == tuple else convert_component(c) for c in map(resolve_reference, expr.components)]
-    print("components: ", components)
+    if False: print("components: ", components)
     components = [(c[1], c[2]) for c in components if c is not None if c[0] != 'Constant']
     for h, fs in group_references(components):
-	print("h: {}\nfs: {}".format(h, fs))
+	if False: print("h: {}\nfs: {}".format(h, fs))
 	w = '+'.join([width(h, f) for f in fs])
         s += 'memcpy(buffer%s + (%s+7)/8, field_desc(pd, %s).byte_addr, (%s+7)/8);\n' % (expr.id, o, fldid(h, fs[0]), w)
         o += '+'+w
@@ -966,7 +966,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
 
     elif e.node_type == 'ListExpression':
 	for i in e.__dict__["components"]:
-	    print(i.__dict__)
+	    if False: print(i.__dict__)
         if e.id not in generated_exprs:
             prepend_statement(listexpression_to_buf(e))
             generated_exprs.add(e.id)

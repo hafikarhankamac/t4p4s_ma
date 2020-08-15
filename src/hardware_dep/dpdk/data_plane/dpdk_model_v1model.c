@@ -128,18 +128,25 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 }
 
 void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
+	debug("    : Hash input: Data length " T4LIT(%d) " byte\n", data.buffer_size);
+	for (int i = 0; i < data.buffer_size; i++) {
+		debug("    : Hash input: Data at byte " T4LIT(%d) ": " T4LIT(%d) "\n", i, data.buffer[i]);
+	}
 	if (algorithm == enum_HashAlgorithm_identity) {
 		if (data.buffer_size < 4) {
 		// TODO Write available components to address
-			for (int i = 0; i < data.buffer_size; i++) {
-				hash_result = data.buffer<<(3-i)*8;
+		//	for (int i = 0; i < data.buffer_size; i++) {
+		//		hash_result = data.buffer<<(3-i)*8;
+			hash_result = 0x11111111;
 		}else{
-			hash_result = data.buffer[0] | data.buffer[1] | data.buffer[2] | data.buffer[3]
+			hash_result = data.buffer[0] | data.buffer[1] | data.buffer[2] | data.buffer[3];
 		}
-		debug("    : Hashed to " T4LIT(%d)i "\n", hash_result);
+		debug("    : Hashed to " T4LIT(%d) "\n", hash_result);
 	} else
 	{
-		sheep(100)
+		hash_result = 0x0;
+		sheep((uint32_t) 100, pd, tables);
+		debug("    : Simulated hashing to " T4LIT(%d) "\n", hash_result);
 	}
 
 }

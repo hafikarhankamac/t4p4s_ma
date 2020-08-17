@@ -15,8 +15,8 @@
 #include "dpdk_model_v1model.h"
 #include "util_packet.h"
 #include "sheep_precise_timer.h"
-//#include "dpdk_hash.h"
 
+#include <zlib.h>
 #include <rte_ip.h>
 
 int egress_port_field() {
@@ -135,8 +135,6 @@ void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t bas
 	if (algorithm == enum_HashAlgorithm_identity) {
 		if (data.buffer_size < 4) {
 		// TODO Write available components to address
-		//	for (int i = 0; i < data.buffer_size; i++) {
-		//		hash_result = data.buffer<<(3-i)*8;
 			hash_result = 0x11111111;
 		}else{
 			hash_result = data.buffer[0] | data.buffer[1] | data.buffer[2] | data.buffer[3];
@@ -144,9 +142,19 @@ void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t bas
 		debug("    : Hashed to " T4LIT(%d) "\n", hash_result);
 	} else
 	{
-		hash_result = 0x0;
-		sheep((uint32_t) 100, pd, tables);
-		debug("    : Simulated hashing to " T4LIT(%d) "\n", hash_result);
+		if (algorithm == enum_HashAlgorithm_crc32) {
+//			uLong crc = crc32(0L, Z_NULL, 0);
+//			for (int i = 0; i < data.buffer_size; i++) {
+//				crc = crc32(crc, data.buffer + i, 1);
+//			}
+//			hash_result = crc;
+			hash_result = 0x00000000;
+		}else{
+
+			hash_result = 0x0;
+			sheep((uint32_t) 100, pd, tables);
+			debug("    : Simulated hashing to " T4LIT(%d) "\n", hash_result);
+		}
 	}
 
 }

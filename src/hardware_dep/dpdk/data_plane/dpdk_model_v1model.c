@@ -128,34 +128,62 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 }
 
 void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
-	debug("    : Hash input: Data length " T4LIT(%d) " byte\n", data.buffer_size);
-	for (int i = 0; i < data.buffer_size; i++) {
-		debug("    : Hash input: Data at byte " T4LIT(%d) ": " T4LIT(%d) "\n", i, data.buffer[i]);
-	}
-	if (algorithm == enum_HashAlgorithm_identity) {
-		if (data.buffer_size < 4) {
-		// TODO Write available components to address
-			hash_result = 0x11111111;
-		}else{
-			hash_result = data.buffer[0] | data.buffer[1] | data.buffer[2] | data.buffer[3];
-		}
-		debug("    : Hashed to " T4LIT(%d) "\n", hash_result);
-	} else
-	{
-		if (algorithm == enum_HashAlgorithm_crc32) {
-//			uLong crc = crc32(0L, Z_NULL, 0);
-//			for (int i = 0; i < data.buffer_size; i++) {
-//				crc = crc32(crc, data.buffer + i, 1);
-//			}
-//			hash_result = crc;
-			hash_result = 0x00000000;
-		}else{
-
-			hash_result = 0x0;
+	debug(" :::: Called extern " T4LIT(hash, extern) "\n");
+	debug(" :: Base -> " T4LIT(%X) "\n", base);
+	debug(" :: Max -> " T4LIT(%X) "\n", max);
+	switch(algorithm) {
+		case enum_HashAlgorithm_crc32: ;
+			uLong crc = crc32(0L, Z_NULL, 0);
+			for (int i = 0; i < data.buffer_size; i++) {
+				crc = crc32(crc, data.buffer + i, 1);
+			}
+			hash_result = (uint32_t) base + (uint32_t) crc % (max - (uint32_t) base);
+			break;
+		case enum_HashAlgorithm_crc32_custom:
+			hash_result = (uint32_t) base;
 			sheep((uint32_t) 100, pd, tables);
-			debug("    : Simulated hashing to " T4LIT(%d) "\n", hash_result);
-		}
+			debug("   :: Simulated hashing of CRC32-Custom\n");
+			break;
+		case enum_HashAlgorithm_crc16:
+			hash_result = (uint32_t) base;
+			sheep((uint32_t) 100, pd, tables);
+			debug("   :: Simulated hashing of CRC16\n");
+			break;
+		case enum_HashAlgorithm_crc16_custom:
+			hash_result = (uint32_t) base;
+			sheep((uint32_t) 100, pd, tables);
+			debug("   :: Simulated hashing of CRC16-Custom\n");
+			break;
+		case enum_HashAlgorithm_random:
+			hash_result = (uint32_t) base;
+			sheep((uint32_t) 100, pd, tables);
+			debug("   :: Simulated hashing of RANDOM\n");
+			break;
+		case enum_HashAlgorithm_identity:
+			if (data.buffer_size < 4) {
+			// TODO Write available components to address
+				hash_result = (uint32_t) 0x11111111;
+	 	        }else{
+		                hash_result = (uint32_t) base + (uint32_t) (data.buffer[0] | data.buffer[1] | data.buffer[2] | data.buffer[3]) % (max - (uint32_t) base);
+		        }
+		        debug("   :: Hashed with IDENTITY\n");
+			break;
+		case enum_HashAlgorithm_csum16:
+			hash_result = (uint32_t) base;
+			sheep((uint32_t) 100, pd, tables);
+			debug("   :: Simulated hashing of CSUM16\n");
+			break;
+		case enum_HashAlgorithm_xor16:
+			hash_result = (uint32_t) base;
+			sheep((uint32_t) 100, pd, tables);
+			debug("   :: Simulated hashing of COR16\n");
+			break;
+		default:
+			hash_result = (uint32_t) base;
+			debug("   :: Invalid hash method chosen");
+			break;
 	}
+	debug("    : Hash value -> " T4LIT(%u) "\n", hash_result);
 
 }
 

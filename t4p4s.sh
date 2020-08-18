@@ -576,6 +576,7 @@ fi
 # Phase 0b: If a phase with root access is needed, ask for it now
 if [ "$(optvalue run)" != off ]; then
     verbosemsg "Requesting root access..."
+
     sudo echo -n ""
     verbosemsg "Root access granted, starting..."
 fi
@@ -632,6 +633,8 @@ EXTRA_CFLAGS += ${OPTS[extra-cflags]}
 LDFLAGS += ${OPTS[ldflags]}
 EOT
 
+
+
     if [ "$(optvalue testcase)" != off -o "$(optvalue suite)" != off ]; then
         # TESTDIR is defined in the check above
         TESTFILE=$(find "$TESTDIR" -type f -name "test-${OPTS[example]##test-}.c")
@@ -649,6 +652,8 @@ EOT
     echo "CFLAGS += ${OPTS[cflags]}" >> "/tmp/${GEN_MAKEFILE}.tmp"
     echo "include \$(CDIR)/../../makefiles/${ARCH}_backend_post.mk" >> "/tmp/${GEN_MAKEFILE}.tmp"
 
+    echo "LDFLAGS += -lz" >> "/tmp/${GEN_MAKEFILE}.tmp"
+ 
     overwrite_on_difference "${GEN_MAKEFILE}" "${GEN_MAKEFILE_DIR}"
 
 

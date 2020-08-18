@@ -72,7 +72,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 512;
     }
 
-    bit<32> flow_id = 0x0;
+    bit<64> flow_id = 0x0;
     
 
     apply {

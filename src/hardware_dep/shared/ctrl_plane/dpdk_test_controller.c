@@ -11,7 +11,7 @@
 #define MAX_MACS 60000
 
 #define TYPE uint32_t
-#define SIZE 1
+#define SIZE 2
 
 controller c;
 
@@ -23,7 +23,7 @@ void fill_smac_table(TYPE count[], uint8_t mac[6])
     struct p4_header* h;
     struct p4_add_table_entry* te;
     struct p4_action* a;
-    struct p4_action_parameter* ap;
+    struct p4_action_parameter* ap[SIZE];
     // struct p4_field_match_header* fmh;
     struct p4_field_match_exact* exact;
 
@@ -42,12 +42,12 @@ void fill_smac_table(TYPE count[], uint8_t mac[6])
     strcpy(a->description.name, "forward");
 
     for (uint32_t i = 0; i < SIZE; i++) {
-        ap = add_p4_action_parameter(h, a, 2048);
-        char name[10];
-        sprintf(name, "count%5d", i);
-        strcpy(ap->name, name);
-        memcpy(ap->bitmap, &count, (sizeof(TYPE)));
-        ap->length = (sizeof(TYPE)) * 8;
+        ap[i] = add_p4_action_parameter(h, a, 2048);
+        char name[11];
+        sprintf(name, "count%05d", i);
+        strcpy(ap[i]->name, name);
+        memcpy(ap[i]->bitmap, &count[i], (sizeof(TYPE)));
+        ap[i]->length = (sizeof(TYPE)) * 8;
     }
 
 
@@ -55,7 +55,10 @@ void fill_smac_table(TYPE count[], uint8_t mac[6])
     netconv_p4_add_table_entry(te);
     netconv_p4_field_match_exact(exact);
     netconv_p4_action(a);
-    netconv_p4_action_parameter(ap);
+    
+    for (uint32_t i = 0; i < SIZE; i++) {
+	netconv_p4_action_parameter(ap[i]);
+    }
 
     send_p4_msg(c, buffer, 2048);
 }
@@ -92,16 +95,14 @@ void set_default_action_smac()
 
 
 uint8_t macs[MAX_MACS][6];
-TYPE countmap[MAX_MACS];
+TYPE countmap[MAX_MACS][SIZE];
 int mac_count = -1;
 
 int read_macs_and_ports_from_file(char *filename) {
     FILE *f;
     char line[200];
     int values[6];
-    TYPE count[SIZE];
     int i;
-    char counts[100];
     char* ptr;
 
     f = fopen(filename, "r");
@@ -109,10 +110,10 @@ int read_macs_and_ports_from_file(char *filename) {
 
     while (fgets(line, sizeof(line), f)) {
         line[strlen(line)-1] = '\0';
-
-        if (7 == sscanf(line, "%x:%x:%x:%x:%x:%x %s",
+	int length;
+        if (6 == sscanf(line, "%x:%x:%x:%x:%x:%x %n",
                         &values[0], &values[1], &values[2],
-                        &values[3], &values[4], &values[5], counts) )
+                        &values[3], &values[4], &values[5], &length) )
         {
             if (mac_count==MAX_MACS-1)
             {
@@ -122,23 +123,20 @@ int read_macs_and_ports_from_file(char *filename) {
 
             ++mac_count;
             for( i = 0; i < 6; ++i ) {
-              macs[mac_count][i] = (uint8_t) values[i];
+            	macs[mac_count][i] = (uint8_t) values[i];
             }
 
-            ptr = strtok(counts, " ");
+	    ptr = strtok(line+length, " ");
             TYPE c;
             i = 0;
             while(ptr != NULL) {
-                sscanf(ptr, "%d", &c)
-                ptr = strtok(NULL, delimiter);
-                if (++i >= SIZE) {
+                sscanf(ptr, "%d", &c);
+                ptr = strtok(NULL, " ");
+                if (i >= SIZE) {
                     printf("Too many entries...\n");
                     break;
                 }
-                countmap[mac_count][i] = (TYPE) c;
-            }
-            for ( i = 0; i < SIZE; ++i ) {
-                countmap[mac_count][i] = (TYPE) count;
+                countmap[mac_count][i++] = (TYPE) c;
             }
 
         } else {
@@ -160,7 +158,7 @@ void init() {
 
     for (i=0;i<=mac_count;++i)
     {
-        printf("Filling tables smac COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", countmap[i], macs[i][0],macs[i][1],macs[i][2],macs[i][3],macs[i][4],macs[i][5]);
+        printf("Filling tables smac MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", macs[i][0],macs[i][1],macs[i][2],macs[i][3],macs[i][4],macs[i][5]);
         fill_smac_table(countmap[i], macs[i]);
     }
 

@@ -1,9 +1,12 @@
 #include <core.p4>
 #include <v1model.p4>
+const bit<16> ETHERTYPE_IP4 = 0x0800;
+
+const bit<8>  IPPROTO_TCP   = 0x06;
+const bit<8>  IPPROTO_UDP   = 0x11;
 
 const bit<32> ZERO = 0;
-//const bit<32> MAX_FLOWS = 65535;
-const bit<16> MAX_FLOWS = 0xFFFF;
+const bit<32> MAX_FLOWS = 65535;
 
 header ethernet_t {
     bit<48> dstAddr;
@@ -11,21 +14,68 @@ header ethernet_t {
     bit<16> etherType;
 }
 
-struct metadata {
+header ip4_t {
+    bit<4>     version;
+    bit<4>     ihl;
+    bit<8>     diffserv;
+    bit<16>    totalLen;
+    bit<16>    identification;
+    bit<3>     flags;
+    bit<13>    fragOffset;
+    bit<8>     ttl;
+    bit<8>     protocol;
+    bit<16>    hdrChecksum;
+    bit<32>    srcAddr;
+    bit<32>    dstAddr;
 }
-
+					    
+header l4_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+}
+								    
+struct state_metadata_t {
+    bit<16> current_state;
+    bit<32> flow_id;
+}
+										
+struct metadata {
+    state_metadata_t state_metadata;
+}
+										    
 struct headers {
-    @name(".ethernet") 
+    @name(".ethernet")
     ethernet_t ethernet;
+    ip4_t        ip4;
+    l4_t         l4;
 }
 
 parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
-    @name(".parse_ethernet") state parse_ethernet {
-        packet.extract(hdr.ethernet);
-        transition accept;
-    }
     @name(".start") state start {
         transition parse_ethernet;
+    }
+    @name(".parse_ethernet") state parse_ethernet {
+        packet.extract(hdr.ethernet);
+        transition select(hdr.ethernet.etherType) {
+      	   ETHERTYPE_IP4: parse_ip4;
+           default: reject;
+        }
+    }
+    state parse_ip4 {
+        packet.extract(hdr.ip4);
+        transition select(hdr.ip4.protocol) {
+                IPPROTO_UDP  : parse_l4;
+	        IPPROTO_TCP  : parse_l4;
+	        default      : reject;
+        }
+    }
+    state parse_l4 {
+        packet.extract(hdr.l4);
+        transition select(hdr.ip4.protocol) {
+            IPPROTO_UDP  : accept;
+            IPPROTO_TCP  : accept;
+            default      : reject;
+        }
     }
 }
 

@@ -185,7 +185,7 @@ void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t bas
 				break;
 		}
 	}else{
-		hash_value = (uint32_t) base;
+		hash_result = (uint32_t) base;
 	}
 	debug("    : Hash value -> " T4LIT(%u) "\n", hash_result);
 

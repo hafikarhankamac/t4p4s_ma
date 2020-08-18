@@ -10,11 +10,14 @@
 
 #define MAX_MACS 60000
 
+#define TYPE uint32_t
+#define SIZE 1
+
 controller c;
 
 extern void notify_controller_initialized();
 
-void fill_smac_table(uint8_t count, uint8_t mac[6])
+void fill_smac_table(TYPE count[], uint8_t mac[6])
 {
     char buffer[2048];
     struct p4_header* h;
@@ -26,7 +29,7 @@ void fill_smac_table(uint8_t count, uint8_t mac[6])
 
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "table0");
+    strcpy(te->table_name, "table0_0");
 
     exact = add_p4_field_match_exact(te, 2048);
     strcpy(exact->header.name, "ethernet.srcAddr");
@@ -38,10 +41,14 @@ void fill_smac_table(uint8_t count, uint8_t mac[6])
     a = add_p4_action(h, 2048);
     strcpy(a->description.name, "forward");
 
-    ap = add_p4_action_parameter(h, a, 8);
-    strcpy(ap->name, "count");
-    memcpy(ap->bitmap, &count, 1);
-    ap->length = 8;
+    for (uint32_t i = 0; i < SIZE; i++) {
+        ap = add_p4_action_parameter(h, a, 2048);
+        char name[10];
+        sprintf(name, "count%5d", i);
+        strcpy(ap->name, name);
+        memcpy(ap->bitmap, &count, (sizeof(TYPE)));
+        ap->length = (sizeof(TYPE)) * 8;
+    }
 
 
     netconv_p4_header(h);
@@ -71,7 +78,7 @@ void set_default_action_smac()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "table0");
+    strcpy(sda->table_name, "table0_0");
 
     a = &(sda->action);
     strcpy(a->description.name, "_drop");
@@ -85,15 +92,17 @@ void set_default_action_smac()
 
 
 uint8_t macs[MAX_MACS][6];
-uint8_t countmap[MAX_MACS];
+TYPE countmap[MAX_MACS][SIZE];
 int mac_count = -1;
 
 int read_macs_and_ports_from_file(char *filename) {
     FILE *f;
-    char line[100];
+    char line[200];
     int values[6];
-    int count;
+    TYPE count[SIZE];
     int i;
+    char counts[100];
+    char* ptr;
 
     f = fopen(filename, "r");
     if (f == NULL) return -1;
@@ -101,9 +110,9 @@ int read_macs_and_ports_from_file(char *filename) {
     while (fgets(line, sizeof(line), f)) {
         line[strlen(line)-1] = '\0';
 
-        if (7 == sscanf(line, "%x:%x:%x:%x:%x:%x %d",
+        if (7 == sscanf(line, "%x:%x:%x:%x:%x:%x %s",
                         &values[0], &values[1], &values[2],
-                        &values[3], &values[4], &values[5], &count) )
+                        &values[3], &values[4], &values[5], counts) )
         {
             if (mac_count==MAX_MACS-1)
             {
@@ -113,9 +122,21 @@ int read_macs_and_ports_from_file(char *filename) {
 
             ++mac_count;
             for( i = 0; i < 6; ++i ) {
-              macs[mac_count][i] = (uint8_t) values[i];
+            	macs[mac_count][i] = (uint8_t) values[i];
             }
-            countmap[mac_count] = (uint8_t) count;
+
+	    ptr = strtok(counts, " ");
+            TYPE c;
+            i = 0;
+            while(ptr != NULL) {
+                sscanf(ptr, "%d", &c);
+                ptr = strtok(NULL, " ");
+                if (++i >= SIZE) {
+                    printf("Too many entries...\n");
+                    break;
+                }
+                countmap[mac_count][i] = (TYPE) c;
+            }
 
         } else {
             printf("Wrong format error in line %d : %s\n", mac_count+2, line);
@@ -136,7 +157,7 @@ void init() {
 
     for (i=0;i<=mac_count;++i)
     {
-        printf("Filling tables smac COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", countmap[i], macs[i][0],macs[i][1],macs[i][2],macs[i][3],macs[i][4],macs[i][5]);
+        printf("Filling tables smac MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", macs[i][0],macs[i][1],macs[i][2],macs[i][3],macs[i][4],macs[i][5]);
         fill_smac_table(countmap[i], macs[i]);
     }
 

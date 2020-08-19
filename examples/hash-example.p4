@@ -5,7 +5,7 @@ const bit<16> ETHERTYPE_IP4 = 0x0800;
 const bit<8>  IPPROTO_TCP   = 0x06;
 const bit<8>  IPPROTO_UDP   = 0x11;
 
-const bit<32> ZERO = 0;
+const bit<16> ZERO = 0;
 const bit<32> MAX_FLOWS = 65535;
 
 header ethernet_t {
@@ -93,9 +93,6 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     @name(".forward") action forward(bit<9> port) {
         standard_metadata.egress_spec = port;
     }
-    @name(".bcast") action bcast() {
-        standard_metadata.egress_spec = 9w100;
-    }
     @name(".mac_learn") action mac_learn() {
         digest<mac_learn_digest>((bit<32>)1024, { hdr.ethernet.srcAddr, standard_metadata.ingress_port });
     }
@@ -104,7 +101,6 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     @name(".dmac") table dmac {
         actions = {
             forward;
-            bcast;
         }
         key = {
             hdr.ethernet.dstAddr: exact;
@@ -128,7 +124,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     apply {
         smac.apply();
 	//hash(flow_id, HashAlgorithm.identity, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
- 	hash(flow_id, HashAlgorithm.crc32, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
+// 	hash(flow_id, HashAlgorithm.crc32, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
         dmac.apply();
     }
 }
@@ -136,6 +132,8 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 control DeparserImpl(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
+	packet.emit(hdr.ip4);
+	packet.emit(hdr.l4);
     }
 }
 

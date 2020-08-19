@@ -151,7 +151,7 @@ static void dpdk_send_packet(struct rte_mbuf *mbuf, uint8_t port, uint32_t lcore
 }
 
 /* Enqueue a single packet, and send burst if queue is filled */
-void send_single_packet(struct lcore_data* lcdata, packet_descriptor_t* pd, packet* pkt, int egress_port, int ingress_port, bool send_clone)
+void send_single_packet(struct lcore_data* lcdata, packet_descriptor_t* pd, packet* pkt, int egress_port, int ingress_port)
 {
     uint32_t lcore_id = rte_lcore_id();
     struct rte_mbuf* mbuf = (struct rte_mbuf *)pkt;

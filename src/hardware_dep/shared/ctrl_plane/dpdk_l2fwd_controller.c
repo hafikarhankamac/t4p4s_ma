@@ -207,7 +207,9 @@ void set_default_action_dmac()
     strcpy(sda->table_name, "dmac_0");
 
     a = &(sda->action);
-    strcpy(a->description.name, "bcast");
+
+    strcpy(a->description.name, "NoAction");
+//    strcpy(a->description.name, "bcast");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);

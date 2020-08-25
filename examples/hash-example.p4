@@ -124,7 +124,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     apply {
         smac.apply();
 	//hash(flow_id, HashAlgorithm.identity, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
-// 	hash(flow_id, HashAlgorithm.crc32, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
+    //hash(flow_id, HashAlgorithm.crc32, ZERO, {hdr.ethernet.srcAddr, hdr.ethernet.dstAddr, hdr.ethernet.etherType}, MAX_FLOWS);
         dmac.apply();
     }
 }

@@ -64,16 +64,23 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
 
 // pipeline instantiations
 
+@name("change_table_entry") struct change_table_entry {
+    bit<48> srcAddr;
+    bit<32> count;
+}
+
 // control
 control ingress(inout headers hdr, inout metadata data, inout standard_metadata_t standard_metadata) {
     @name("._drop") action _drop() {
         mark_to_drop();
     }
 
-    @name(".forward") action forward(@__ref bit<32> count) {
+    @name(".forward") action forward(bit<32> count) {
         standard_metadata.egress_port = 9w1;
-        digest<change_table_entry>((bit<32>) hdr.ipv4.srcAddr);
+        digest<change_table_entry>((bit<32>) 1000, {hdr.ethernet.dstAddr, hdr.ipv4.srcAddr});
     }
+
+
 
     @name(".table0") table table0 {
         actions = {

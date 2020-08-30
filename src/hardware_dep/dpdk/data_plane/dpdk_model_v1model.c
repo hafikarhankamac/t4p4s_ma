@@ -147,7 +147,7 @@ void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t bas
 				break;
 			case enum_HashAlgorithm_crc16:
 				hash_result = (uint32_t) base;
-				sheep((uint32_t) 100, pd, tables);
+				sheep((uint32_t) 10000, pd, tables);
 				debug("   :: Simulated hashing of CRC16\n");
 				break;
 			case enum_HashAlgorithm_crc16_custom:

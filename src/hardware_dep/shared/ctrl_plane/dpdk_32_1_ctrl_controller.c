@@ -72,9 +72,9 @@ void change_table_entry(void* b) {
     memcpy(mac, df->value, 6);
     offset += sizeof(struct p4_digest_field);
     df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
-    memcpy(counter[0], df->value, sizeof(TYPE));
-    printf("Ctrl: mac_learn_digest COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", counter, mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    fill_dmac_table(counter, mac);
+    memcpy(&counter[0], df->value, sizeof(TYPE));
+    printf("Ctrl: mac_learn_digest COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", counter[0], mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    fill_smac_table(counter, mac);
 }
 
 
@@ -88,7 +88,7 @@ void dhf(void* b) {
     struct p4_digest* d = unpack_p4_digest(b,0);
     if (strcmp(d->field_list_name, "change_table_entry")==0) {
         change_table_entry(b);
-    }
+    } else {
         printf("Unknown digest received: X%sX\n", d->field_list_name);
     }
 }

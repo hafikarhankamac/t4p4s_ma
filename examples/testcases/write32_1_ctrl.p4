@@ -28,7 +28,8 @@ header udp_t {
     bit<16> dstPort;
     bit<16> len;
     bit<16> chkSum;
-    bit<32> payload;
+    bit<32> payload1;
+    bit<32> payload2;
 }
 
 struct headers {
@@ -77,8 +78,8 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
 
     @name(".forward") action forward(bit<32> count) {
         standard_metadata.egress_port = 9w1;
-        hdr.udp.payload = count;
-	digest<change_table_entry>((bit<32>) 1000, {hdr.ethernet.dstAddr, hdr.udp.payload});
+	digest<change_table_entry>((bit<32>) 1000, {hdr.ethernet.dstAddr, hdr.udp.payload1 });
+	hdr.udp.payload2 = count;
     }
 
 

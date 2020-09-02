@@ -27,8 +27,7 @@ header udp_t {
     bit<16> srcPort;
     bit<16> dstPort;
     bit<16> len;
-    bit<16> chkSum;
-    bit<1000> payload;
+    bit<32> chkSum;
 }
 
 struct headers {
@@ -72,7 +71,7 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
 
     @name(".forward") action forward(@__ref bit<32> count) {
         standard_metadata.egress_port = 9w1;
-        count = hdr.ipv4.srcAddr;
+        count = hdr.udp.chkSum;
     }
 
     @name(".table0") table table0 {

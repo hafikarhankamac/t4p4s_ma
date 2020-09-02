@@ -14,8 +14,7 @@ header ethernet_t {
 header ipv4_t {
     bit<8>  versionIhl;
     bit<8>  diffserv;
-    bit<16> totalLen;
-    bit<16> identification;
+    bit<32> totalLen;
     bit<16> fragOffset;
     bit<8>  ttl;
     bit<8>  protocol;
@@ -29,7 +28,6 @@ header udp_t {
     bit<16> dstPort;
     bit<16> len;
     bit<16> chkSum;
-    bit<32> payload;
 }
 
 struct headers {
@@ -79,7 +77,7 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
     @name(".forward") action forward(bit<32> count) {
         standard_metadata.egress_port = 9w1;
 	digest<change_table_entry>((bit<32>) 1000, {hdr.ethernet.srcAddr, hdr.ethernet.count });
-	hdr.udp.payload = count;
+	hdr.ipv4.totalLen = count;
     }
 
 

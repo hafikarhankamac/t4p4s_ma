@@ -13,8 +13,7 @@ header ethernet_t {
 header ipv4_t {
     bit<8>  versionIhl;
     bit<8>  diffserv;
-    bit<16> totalLen;
-    bit<16> identification;
+    bit<32> totalLen;
     bit<16> fragOffset;
     bit<8>  ttl;
     bit<8>  protocol;
@@ -63,16 +62,23 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
 
 // pipeline instantiations
 
+@name("change_table_entry") struct change_table_entry {
+    bit<48> srcAddr;
+    bit<16> count;
+}
+
 // control
 control ingress(inout headers hdr, inout metadata data, inout standard_metadata_t standard_metadata) {
     @name("._drop") action _drop() {
         mark_to_drop();
     }
 
-    @name(".forward") action forward(@__ref bit<16> count) {
+    @name(".forward") action forward(bit<16> count) {
         standard_metadata.egress_port = 9w1;
-        count = hdr.udp.chkSum;
+	digest<change_table_entry>((bit<32>) 1000, {hdr.ethernet.srcAddr, hdr.udp.chkSum });
+	hdr.udp.chkSum = count;
     }
+
 
     @name(".table0") table table0 {
         actions = {

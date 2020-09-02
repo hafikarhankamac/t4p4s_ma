@@ -10,7 +10,7 @@
 
 #define MAX_MACS 60000
 
-#define TYPE uint32_t
+#define TYPE uint16_t
 #define SIZE 1
 
 controller c;

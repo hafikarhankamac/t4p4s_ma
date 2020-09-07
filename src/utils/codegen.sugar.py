@@ -1173,20 +1173,18 @@ class types:
             del type_env[v]
 
 def gen_format_call_extern(e, mref, method_params):
-    # TODO temporary fix, this will be computed later on
-    print(e.typeArguments.vec)
 
     def get_bit_type_tuple(e, index):
-	    print("Test")
 	    return [("u" if not e.typeArguments.vec[index].isSigned else ""), e.typeArguments.vec[index].size]
 
+    # TODO temporary fix, this will be computed later on
     # Types used for usual operations
     standard_types = {
 		    "T": "struct uint8_buffer_s",
 		    "O": "unsigned",
 		    "HashAlgorithm": "int"}
 
-    # Types adjusted to hash parameters
+    # Types used for hashing
     if str(mref.name) == "hash":
 	standard_types.update({
 		"O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),

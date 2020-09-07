@@ -310,16 +310,30 @@ class types:
         for v in self.env_vars:
             del type_env[v]
 
+def get_bit_type_tuple(e, index):
+    return ("u" if not e.vec[index].isSigned else ""), e.typeArguments.vec[index].size
+
 # forward declarations for externs
 for m in hlir16.objects['Method']:
+    print(m.__dict__)
     # TODO temporary fix for l3-routing-full, this will be computed later on
-    with types({
-        "T": "struct uint8_buffer_s" if m.name != "hash" else "uint16_t",
-	"O": "unsigned" if not m.name == "verify_checksum" else "uint32_t*" if m.name == "hash" else "bitfield_handle_t",
-        "HashAlgorithm": "int",
-	"D": "struct uint8_buffer_s",
-	"M": "uint32_t"
-    }):
+    # Types used for usual operations
+    standard_types = {
+		    "T": "struct uint8_buffer_s",
+		    "O": "unsigned" if not m.name == "verify_checksum" else "bitfield_handle_t",
+		    "HashAlgorithm": "int"
+		    }
+
+    # Types used for hashing
+    if str(m.name) == "hash":
+	standard_types.update({
+	    "O": "{}int{}_t".format(*get_bit_type_tuple(m,0)),
+	    "T": "{}int{}_t".format(*get_bit_type_tuple(m,1)),
+	    "D": "struct uint8_buffer_s",
+	    "M": "{}int{}_t".format(*get_bit_type_tuple(m,3))
+	    })
+
+    with types(standard_types):
         t = m.type
         ret_type = format_type(t.returnType)
         args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['STDPARAMS' if not m.name == "verify_checksum" else 'SHORT_STDPARAMS'])

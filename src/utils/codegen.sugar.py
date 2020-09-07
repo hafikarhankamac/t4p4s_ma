@@ -1174,13 +1174,27 @@ class types:
 
 def gen_format_call_extern(e, mref, method_params):
     # TODO temporary fix, this will be computed later on
-    with types({
-        "T": "struct uint8_buffer_s" if str(mref.name) != "hash" else "uint16_t",
-        "O": "unsigned" if mref.name != "hash" else "uint32_t*",
-        "HashAlgorithm": "int",
-	"D": "struct uint8_buffer_s",
-	"M": "uint32_t"
-    }):
+    print(e.typeArguments.vec)
+
+    def get_bit_type_tuple(e, index):
+	    print("Test")
+	    return [("u" if not e.typeArguments.vec[index].isSigned else ""), e.typeArguments.vec[index].size]
+
+    # Types used for usual operations
+    standard_types = {
+		    "T": "struct uint8_buffer_s",
+		    "O": "unsigned",
+		    "HashAlgorithm": "int"}
+
+    # Types adjusted to hash parameters
+    if str(mref.name) == "hash":
+	standard_types.update({
+		"O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),
+		"T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
+		"D": "struct uint8_buffer_s",
+		"M": "{}int{}_t".format(*get_bit_type_tuple(e,3))})
+
+    with types(standard_types):
         fmt_params = format_method_parameters(e.arguments, method_params)
         all_params = ", ".join([p for p in [fmt_params, "SHORT_STDPARAMS_IN"] if p != ''])
 	if False: print(all_params)

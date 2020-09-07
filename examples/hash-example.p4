@@ -66,7 +66,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         transition select(hdr.ip4.protocol) {
                 IPPROTO_UDP  : parse_l4;
 	        IPPROTO_TCP  : parse_l4;
-	        default      : reject;
+	        default      : parse_l4;
         }
     }
     state parse_l4 {
@@ -122,8 +122,8 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     
 
     apply {
-        smac.apply();
-        //hash(flow_id, HashAlgorithm.identity, ZERO, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType, hdr.ip4.version, hdr.ip4.ihl, hdr.ip4.diffserv, hdr.ip4.totalLen, hdr.ip4.identification, hdr.ip4.flags, hdr.ip4.fragOffset, hdr.ip4.ttl, hdr.ip4.protocol, hdr.ip4.hdrChecksum, hdr.ip4.srcAddr, hdr.ip4.dstAddr, hdr.l4.srcPort, hdr.l4.dstPort}, MAX_FLOWS);
+	smac.apply();
+	//hash(flow_id, HashAlgorithm.identity, ZERO, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, MAX_FLOWS);
         dmac.apply();
     }
 }

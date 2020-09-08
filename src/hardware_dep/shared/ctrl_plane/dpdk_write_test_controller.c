@@ -109,39 +109,32 @@ int read_entries_from_file(char *filename) {
     if (f == NULL) return -1;
 
     while (fgets(line, sizeof(line), f)) {
-        line[strlen(line)-1] = '\0';
-	    int length;
-        if (1 == sscanf(line, "%n %n",
-                        &key, &length) )
-        {
-            if (entry_count==MAX_ENTRIES-1)
-            {
-                printf("Too many entries...\n");
-                break;
-            }
+	    line[strlen(line)-1] = '\0';
+	    if (entry_count==MAX_ENTRIES-1)
+	    {
+		printf("Too many entries...\n");
+		break;
+	    }
 
-            ++entry_count;
-            entry[entry_count] = key;
+	    ptr = strtok(line, " ");
+	    TYPE c;
+	    i = 0;
+	    if (ptr != NULL) {
+		sscanf(ptr, "%d", &c);
+		ptr = strtok(NULL, " ");
+		entry[entry_count] = (TYPE) c;
+	    }
+	    while(ptr != NULL) {
+		sscanf(ptr, "%d", &c);
+		ptr = strtok(NULL, " ");
+		if (i >= SIZE) {
+		    printf("Too many entries...\n");
+		    break;
+		}
+		countmap[entry_count][i++] = (TYPE) c;
+	    }
 
-	    ptr = strtok(line+length, " ");
-            TYPE c;
-            i = 0;
-            while(ptr != NULL) {
-                sscanf(ptr, "%d", &c);
-                ptr = strtok(NULL, " ");
-                if (i >= SIZE) {
-                    printf("Too many entries...\n");
-                    break;
-                }
-                countmap[entry_count][i++] = (TYPE) c;
-            }
-
-        } else {
-            printf("Wrong format error in line %d : %s\n", entry_count+2, line);
-            fclose(f);
-            return -1;
-        }
-
+	    entry_count++;
     }
 
     fclose(f);

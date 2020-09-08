@@ -27,7 +27,7 @@ header udp_t {
     bit<16> srcPort;
     bit<16> dstPort;
     bit<16> len;
-    bit<32> chkSum;
+    bit<16> chkSum;
 }
 
 header custom_t {

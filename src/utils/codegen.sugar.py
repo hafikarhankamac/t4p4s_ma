@@ -1175,7 +1175,10 @@ class types:
 def gen_format_call_extern(e, mref, method_params):
 
     def get_bit_type_tuple(e, index):
-	    return [("u" if not e.typeArguments.vec[index].isSigned else ""), e.typeArguments.vec[index].size]
+	    required_size = 1
+	    while e.typeArguments.vec[index].size > required_size:
+		    required_size *= 2
+	    return [("u" if not e.typeArguments.vec[index].isSigned else ""), required_size]
 
     # TODO temporary fix, this will be computed later on
     # Types used for usual operations
@@ -1191,6 +1194,10 @@ def gen_format_call_extern(e, mref, method_params):
 		"T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
 		"D": "struct uint8_buffer_s",
 		"M": "{}int{}_t".format(*get_bit_type_tuple(e,3))})
+		#"O": "struct uint8_buffer_s",
+		#"T": "struct uint8_buffer_s",
+		#"D": "struct uint8_buffer_s",
+		#"M": "struct uint8_buffer_s"})
 
     with types(standard_types):
         fmt_params = format_method_parameters(e.arguments, method_params)
@@ -1201,7 +1208,7 @@ def gen_format_call_extern(e, mref, method_params):
         param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
 
 	if False: print("{}({})".format(mref.name, all_params))
-        #pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
+ 	#pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
         #[ ${mref.name}($all_params)
 
 def gen_format_call_digest(e):

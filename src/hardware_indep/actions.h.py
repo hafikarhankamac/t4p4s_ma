@@ -25,7 +25,6 @@ from utils.codegen import format_type
 
 # TODO this should not be here in the indep section
 #[ #include "dpdk_smem.h"
-# #[ #include "dpdk_hash.h"
 
 #[ #define FIELD(name, length) uint8_t name[(length + 7) / 8];
 

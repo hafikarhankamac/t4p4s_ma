@@ -323,22 +323,27 @@ for m in hlir16.objects['Method']:
 		    "O": "unsigned" if not m.name == "verify_checksum" else "bitfield_handle_t",
 		    "HashAlgorithm": "int"
 		    }
-
+    """
     # Types used for hashing
     if str(m.name) == "hash":
 	standard_types.update({
-	    "O": "{}int{}_t".format(*get_bit_type_tuple(m,0)),
-	    "T": "{}int{}_t".format(*get_bit_type_tuple(m,1)),
+	    #"O": "{}int{}_t".format(*get_bit_type_tuple(m,0)),
+	    #"T": "{}int{}_t".format(*get_bit_type_tuple(m,1)),
+	    #"D": "struct uint8_buffer_s",
+	    #"M": "{}int{}_t".format(*get_bit_type_tuple(m,3))
+	    "O": "uint32_t*",
+	    "T": "uint16_t",
 	    "D": "struct uint8_buffer_s",
-	    "M": "{}int{}_t".format(*get_bit_type_tuple(m,3))
+	    "M": "uint32_t"
 	    })
-
+    """
     with types(standard_types):
         t = m.type
         ret_type = format_type(t.returnType)
         args = ", ".join([format_expr(arg) for arg in t.parameters.parameters] + ['STDPARAMS' if not m.name == "verify_checksum" else 'SHORT_STDPARAMS'])
-
-        #[ extern ${ret_type} ${m.name}(${args});
+	
+	if str(m.name) != "hash":
+	        #[ extern ${ret_type} ${m.name}(${args});
 
 for ctl in p4_ctls:
     #[ void control_${ctl.name}(STDPARAMS)

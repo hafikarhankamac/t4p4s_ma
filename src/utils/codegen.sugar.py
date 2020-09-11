@@ -1099,6 +1099,24 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
             #    #[ encrypt_bytes(
             #    #[    $fmt_params,
             #    #[    SHORT_STDPARAMS_IN)
+   	    elif mref.name == 'hash':
+	        def get_bit_type_tuple(e, index):
+		    required_size = 1
+		    while e.typeArguments.vec[index].size > required_size:
+		        required_size *= 2
+		    return [("u" if not e.typeArguments.vec[index].isSigned else ""), required_size]
+
+		with types({
+		    "O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),
+		    "T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
+		    "D": "struct uint8_buffer_s",
+		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3))}):
+			fmt_params = format_method_parameters(e.arguments, method_params)
+			param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
+			return_type, base_type, max_type = tuple([type_env[i].split('_')[0].split('int')[1] for i in ['O','T','M']])
+			#pre[ extern void hash_r${return_type}_b${base_type}_m${max_type}($param_types);
+			#[ hash_r${return_type}_b${base_type}_m${max_type}($fmt_params, SHORT_STDPARAMS_IN);
+
             else:
                 return gen_format_call_extern(e, mref, method_params)
         else:
@@ -1174,32 +1192,11 @@ class types:
 
 def gen_format_call_extern(e, mref, method_params):
 
-    def get_bit_type_tuple(e, index):
-	    required_size = 1
-	    while e.typeArguments.vec[index].size > required_size:
-		    required_size *= 2
-	    return [("u" if not e.typeArguments.vec[index].isSigned else ""), required_size]
-
     # TODO temporary fix, this will be computed later on
-    # Types used for usual operations
-    standard_types = {
-		    "T": "struct uint8_buffer_s",
-		    "O": "unsigned",
-		    "HashAlgorithm": "int"}
-
-    # Types used for hashing
-    if str(mref.name) == "hash":
-	standard_types.update({
-		"O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),
-		"T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
-		"D": "struct uint8_buffer_s",
-		"M": "{}int{}_t".format(*get_bit_type_tuple(e,3))})
-		#"O": "struct uint8_buffer_s",
-		#"T": "struct uint8_buffer_s",
-		#"D": "struct uint8_buffer_s",
-		#"M": "struct uint8_buffer_s"})
-
-    with types(standard_types):
+    with types({
+	    "T": "struct uint8_buffer_s",
+	    "O": "unsigned",
+	    "HashAlgorithm": "int"}):
         fmt_params = format_method_parameters(e.arguments, method_params)
         all_params = ", ".join([p for p in [fmt_params, "SHORT_STDPARAMS_IN"] if p != ''])
 	if False: print(all_params)
@@ -1207,7 +1204,6 @@ def gen_format_call_extern(e, mref, method_params):
         return_type = format_type(mref.type.returnType)
         param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
 
-	if False: print("{}({})".format(mref.name, all_params))
  	#pre[ extern ${format_type(e.type)} ${mref.name}(${param_types});
         #[ ${mref.name}($all_params)
 

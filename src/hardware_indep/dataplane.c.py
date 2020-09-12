@@ -315,7 +315,6 @@ def get_bit_type_tuple(e, index):
 
 # forward declarations for externs
 for m in hlir16.objects['Method']:
-    print(m.__dict__)
     # TODO temporary fix for l3-routing-full, this will be computed later on
     # Types used for usual operations
     standard_types = {

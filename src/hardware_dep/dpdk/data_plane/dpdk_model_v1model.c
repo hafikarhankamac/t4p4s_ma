@@ -15,6 +15,7 @@
 #include "dpdk_model_v1model.h"
 #include "util_packet.h"
 #include "sheep_precise_timer.h"
+#include "dpdk_hash.h"
 
 #include <zlib.h>
 #include <rte_ip.h>
@@ -126,8 +127,8 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(sheep,extern) " waiting " T4LIT(%d) " cycles\n", duration);
     wait_cycles(duration);
 }
-
-void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
+/*
+void hash_r32_b16_m32(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS) {
 	debug(" :::: Called extern " T4LIT(hash, extern) "\n");
 	debug(" :: Base -> " T4LIT(%X) "\n", base);
 	debug(" :: Max -> " T4LIT(%X) "\n", max);
@@ -190,7 +191,7 @@ void hash(uint32_t* hash_result, enum enum_HashAlgorithm algorithm, uint16_t bas
 	debug("    : Hash value -> " T4LIT(%u) "\n", hash_result);
 
 }
-
+*/
 
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
 //    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) " (" T4LIT(%d) "-" T4LIT(%d) ") [" T4LIT(IV, field) " " T4LIT(%x) " " T4LIT(key, field) " " T4LIT(%x) "] starting at byte " T4LIT(%d) " (" T4LIT(%d) " bytes)\n", algorithm, mode, iv, key, start_byte, length);

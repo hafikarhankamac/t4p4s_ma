@@ -40,58 +40,53 @@ void hash_random(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 }
 
 void hash_xor16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
-	debug("   :: Simulated hashing of COR16\n");
+	debug("   :: Simulated hashing of XOR16\n");
 }
 
 
-void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
-	uint8_t* hash_value;
-	if (max > 0) {
-		switch(algorithm) {
-			case enum_HashAlgorithm_crc32:
-				hash_crc32(hash_start, data, hash_length);
-				break;
-			case enum_HashAlgorithm_crc32_custom:
-				hash_crc32_custom(hash_start, data, hash_length);
-				sheep((uint32_t) 100, pd, tables);
-				break;
-			case enum_HashAlgorithm_crc16:
-				hash_crc16(hash_start, data, hash_length);
-				sheep((uint32_t) 1000, pd, tables);
-				break;
-			case enum_HashAlgorithm_crc16_custom:	
-				hash_crc16_custom(hash_start, data, hash_length);
-				sheep((uint32_t) 10000, pd, tables);
-				break;
-			case enum_HashAlgorithm_random:
-				hash_random(hash_start, data, hash_length);
-				sheep((uint32_t) 100, pd, tables);
-				break;
-			case enum_HashAlgorithm_identity:	
-				hash_identity(hash_start, data, hash_length);
-				break;
-			case enum_HashAlgorithm_csum16:	
-				hash_csum16(hash_start, data, hash_length);
-				sheep((uint32_t) 100, pd, tables);
-				break;
-			case enum_HashAlgorithm_xor16:
-				hash_xor16(hash_start, data, hash_length);
-				sheep((uint32_t) 100, pd, tables);
-				break;
-			default:
-				for (int i = 0; i<hash_length; i++) {
-					hash_value[i] = 0xFF;
-				}
-				debug("   :: Invalid hash method chosen");
-				break;
-		}
-	}else{
-		//TODO: Base
-		for (int i = 0; i< hash_length; i++) {
-			hash_value[i] = 0;
-		}
+void calculate_hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, struct uint8_buffer_s data, SHORT_STDPARAMS){
+	switch(algorithm) {
+		case enum_HashAlgorithm_crc32:
+			hash_crc32(hash_start, data, hash_length);
+			break;
+		case enum_HashAlgorithm_crc32_custom:
+			hash_crc32_custom(hash_start, data, hash_length);
+			sheep((uint32_t) 100, pd, tables);
+			break;
+		case enum_HashAlgorithm_crc16:
+			hash_crc16(hash_start, data, hash_length);
+			sheep((uint32_t) 1000, pd, tables);
+			break;
+		case enum_HashAlgorithm_crc16_custom:	
+			hash_crc16_custom(hash_start, data, hash_length);
+			sheep((uint32_t) 10000, pd, tables);
+			break;
+		case enum_HashAlgorithm_random:
+			hash_random(hash_start, data, hash_length);
+			sheep((uint32_t) 100, pd, tables);
+			break;
+		case enum_HashAlgorithm_identity:	
+			hash_identity(hash_start, data, hash_length);
+			break;
+		case enum_HashAlgorithm_csum16:	
+			hash_csum16(hash_start, data, hash_length);
+			sheep((uint32_t) 100, pd, tables);
+			break;
+		case enum_HashAlgorithm_xor16:
+			hash_xor16(hash_start, data, hash_length);
+			sheep((uint32_t) 100, pd, tables);
+			break;
+		default:
+			for (int i = 0; i<hash_length; i++) {
+				hash_start[i] = 0xFF;
+			}
+			debug("   :: Invalid hash method chosen");
+			break;
 	}
-#ifdef T4P4S_DEBUG
+}
+
+
+void hash_debug(uint8_t* hash_start, int hash_length){
 	switch(hash_length) {
 		case 0:
 			debug("    : Not hashed (invalid length of 0)\n");
@@ -121,11 +116,23 @@ void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorith
 		case 14:
 		case 15:
 		case 16:
-			debug("    : Hashed to %" PRIX64 " %" PRIX64 "\n", *(uint64_t*)(hash_start+8), *(uint64_t*)(hash_start));
+			debug("    : Hashed to %" PRIX64 "%" PRIX64 "\n", *(uint64_t*)(hash_start+8), *(uint64_t*)(hash_start));
 			break;
 		default:
 			debug("    : Hashed to value > 128 bit\n");
 	}
-#endif
+}
 
+void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
+	int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+	memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted); 
+	if (max > 0) {
+		calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+		*(uint32_t*)hash_start = (uint32_t) base + (*(uint32_t*)hash_start % max);
+	}else{
+		*(uint32_t*)hash_start = (uint32_t) base;
+	}
+#ifdef T4P4S_DEBUG
+	hash_debug((uint8_t*)hash_start, hash_length);
+#endif
 }

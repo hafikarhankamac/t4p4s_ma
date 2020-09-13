@@ -1111,9 +1111,10 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
 			all_params_list = [format_expr(i) for i in e.arguments]
 			formatted_params = ", ".join(all_params_list[1:])
 			result_size = int(type_env['O'].split('int')[1].split('_')[0])/8
+			base_size, max_size = tuple(map(lambda x: int(type_env[x].split('int')[1].split('_')[0]), ['T', 'M']))
 
-			#pre[ extern void hash(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
-			#[ hash(&(${all_params_list[0]}), $result_size, $formatted_params, SHORT_STDPARAMS_IN);
+			#pre[ extern void hash_b${base_size}_m${max_size}(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
+			#[ hash_b${base_size}_m${max_size}((uint8_t*) &(${all_params_list[0]}), $result_size, $formatted_params, SHORT_STDPARAMS_IN);
 
             else:
                 return gen_format_call_extern(e, mref, method_params)

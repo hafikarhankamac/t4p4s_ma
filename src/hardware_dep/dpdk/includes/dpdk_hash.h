@@ -123,6 +123,7 @@ void hash_debug(uint8_t* hash_start, int hash_length){
 	}
 }
 
+/*
 void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
 	int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
 	memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted); 
@@ -136,3 +137,129 @@ void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorith
 	hash_debug((uint8_t*)hash_start, hash_length);
 #endif
 }
+*/
+
+void hash_b8_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t base, struct uint8_buffer_s data, uint8_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint8_t*)hash_start = (uint8_t) base + (*(uint8_t*)hash_start % max);
+    }else{
+        *(uint8_t*)hash_start = (uint8_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b8_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint8_t*)hash_start = (uint8_t) base + (*(uint8_t*)hash_start % max);
+    }else{
+        *(uint8_t*)hash_start = (uint8_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b8_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint8_t*)hash_start = (uint8_t) base + (*(uint8_t*)hash_start % max);
+    }else{
+        *(uint8_t*)hash_start = (uint8_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b16_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint8_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint16_t*)hash_start = (uint16_t) base + (*(uint16_t*)hash_start % max);
+    }else{
+        *(uint16_t*)hash_start = (uint16_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint16_t*)hash_start = (uint16_t) base + (*(uint16_t*)hash_start % max);
+    }else{
+        *(uint16_t*)hash_start = (uint16_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint16_t*)hash_start = (uint16_t) base + (*(uint16_t*)hash_start % max);
+    }else{
+        *(uint16_t*)hash_start = (uint16_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b32_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint8_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint32_t*)hash_start = (uint32_t) base + (*(uint32_t*)hash_start % max);
+    }else{
+        *(uint32_t*)hash_start = (uint32_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint32_t*)hash_start = (uint32_t) base + (*(uint32_t*)hash_start % max);
+    }else{
+        *(uint32_t*)hash_start = (uint32_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif
+
+
+void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
+    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
+    if (max > 0) {
+        calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
+        *(uint32_t*)hash_start = (uint32_t) base + (*(uint32_t*)hash_start % max);
+    }else{
+        *(uint32_t*)hash_start = (uint32_t) base;
+    }
+#ifdef T4P4S_DEBUG
+    hash_debug((uint8_t*)hash_start, hash_length);
+#endif

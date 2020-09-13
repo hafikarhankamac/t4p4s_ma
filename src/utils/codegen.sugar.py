@@ -1108,10 +1108,12 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
 		    "D": "struct uint8_buffer_s",
 		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3))}):
 			fmt_params = format_method_parameters(e.arguments, method_params)
-			param_types = ", ".join([format_type(tpar) for (par, tpar) in method_parameters_by_type(e.arguments, method_params)] + ["SHORT_STDPARAMS"])
-			return_type, base_type, max_type = tuple([type_env[i].split('_')[0].split('int')[1] for i in ['O','T','M']])
-			#pre[ extern void hash_r${return_type}_b${base_type}_m${max_type}($param_types);
-			#[ hash_r${return_type}_b${base_type}_m${max_type}($fmt_params, SHORT_STDPARAMS_IN);
+			all_params_list = [format_expr(i) for i in e.arguments]
+			formatted_params = ", ".join(all_params_list[1:])
+			result_size = int(type_env['O'].split('int')[1].split('_')[0])/8
+
+			#pre[ extern void hash(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
+			#[ hash(&(${all_params_list[0]}), $result_size, $formatted_params, SHORT_STDPARAMS_IN);
 
             else:
                 return gen_format_call_extern(e, mref, method_params)

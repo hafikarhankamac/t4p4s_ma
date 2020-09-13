@@ -1097,10 +1097,10 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
             #    #[    SHORT_STDPARAMS_IN)
    	    elif mref.name == 'hash':
 	        def get_bit_type_tuple(e, index):
-			#required_size = 1
-		    #while e.typeArguments.vec[index].size > required_size:
-		    #    required_size *= 2
-		    return [("u" if not e.typeArguments.vec[index].isSigned else ""), e.typeArguments.vec[index].size]
+		    required_size = 8
+		    while e.typeArguments.vec[index].size > required_size:
+		        required_size += 8
+		    return [("u" if not e.typeArguments.vec[index].isSigned else ""), required_size]
 
 		with types({
 		    "O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),

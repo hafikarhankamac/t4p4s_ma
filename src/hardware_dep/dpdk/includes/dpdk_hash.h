@@ -93,6 +93,9 @@ void hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorith
 	}
 #ifdef T4P4S_DEBUG
 	switch(hash_length) {
+		case 0:
+			debug("    : Not hashed (invalid length of 0)\n");
+			break;
 		case 1:
 			debug("    : Hashed to " T4LIT(%x) "\n", *hash_start);
 			break;

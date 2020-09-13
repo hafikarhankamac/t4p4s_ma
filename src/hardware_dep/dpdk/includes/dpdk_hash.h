@@ -151,7 +151,7 @@ void hash_b8_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm al
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b8_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -165,7 +165,7 @@ void hash_b8_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b8_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -179,7 +179,7 @@ void hash_b8_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b16_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint8_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -193,7 +193,7 @@ void hash_b16_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -207,7 +207,7 @@ void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -221,7 +221,7 @@ void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b32_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint8_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -235,7 +235,7 @@ void hash_b32_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint16_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -249,7 +249,7 @@ void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
-
+}
 
 void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
     int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
@@ -263,3 +263,4 @@ void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
+}

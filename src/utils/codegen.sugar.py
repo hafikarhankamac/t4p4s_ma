@@ -1109,12 +1109,27 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
 		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3))}):
 			fmt_params = format_method_parameters(e.arguments, method_params)
 			all_params_list = [format_expr(i) for i in e.arguments]
-			formatted_params = ", ".join(all_params_list[1:])
-			result_size = int(type_env['O'].split('int')[1].split('_')[0])/8
-			base_size, max_size = tuple(map(lambda x: int(type_env[x].split('int')[1].split('_')[0]), ['T', 'M']))
-
-			#pre[ extern void hash_b${base_size}_m${max_size}(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
-			#[ hash_b${base_size}_m${max_size}((uint8_t*) &(${all_params_list[0]}), $result_size, $formatted_params, SHORT_STDPARAMS_IN);
+			formatted_params = ", ".join([all_params_list[1]] + [all_params_list[3]])
+			result_size_byte = int(type_env['O'].split('int')[1].split('_')[0])/8
+			base_size_bit, max_size_bit = tuple(map(lambda x: int(type_env[x].split('int')[1].split('_')[0]), ['T', 'M']))
+			base_size_byte, max_size_byte = base_size_bit/8, max_size_bit/8
+			# #pre[ extern void hash_b${base_size_bit}_m${max_size_bit}(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
+			if False:
+				if max_size <= 32 and base_size <= 32:
+					formatted_params = ", ".join(all_params_list[1:])
+					#[ hash_b${base_size_bit}_m${max_size_bit}((uint8_t*) &(${all_params_list[0]}), $result_size_byte, $formatted_params, SHORT_STDPARAMS_IN);
+				elif max_size > 32 and base_size <= 32:
+					formatted_params = ", ".join(all_params_list[1:3])
+					#[ hash_b${base_size_bit}((uint8_t*) &(${all_params_list[0]}), $result_size_byte, $formatted_params, SHORT_STDPARAMS_IN)
+				elif max_size <= 32 and base_size > 32:
+					formatted_params = ", ".join(all_params_list[1] + all_params_list[3:])
+					#[ hash_m${max_size_bit}((uint8_t*) &(${all_params_list[0]}), $result_size_byte, $formatted_params, SHORT_STDPARAMS_IN)
+				else:
+					formatted_params = ", ".join(all_params_list[1:])
+					#[ hash((uint8_t*) &(${all_params_list[0]}), $result_size_byte, $formatted_params, SHORT_STDPARAMS_IN)
+			else:
+				#pre[ extern void hash(uint8_t*, int, uint8_t*, int, uint8_t*, int, int, ${type_env['D']}, SHORT_STDPARAMS);
+				#[ hash((uint8_t*) &(${all_params_list[0]}), $result_size_byte, (uint8_t*) ${all_params_list[2]}, $base_size_byte, (uint8_t*) ${all_params_list[4]}, $max_size_byte, $formatted_params, SHORT_STDPARAMS_IN);
 
             else:
                 return gen_format_call_extern(e, mref, method_params)

@@ -108,7 +108,7 @@ struct lcore_rx_queue {
 	uint8_t queue_id;
 } __rte_cache_aligned;
 
-#define NB_REPLICA 2
+#define NB_REPLICA 1
 
 struct lcore_params {
     uint8_t port_id;

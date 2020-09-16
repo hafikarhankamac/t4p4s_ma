@@ -69,6 +69,9 @@ extern char* get_entry_action_name(void* entry);
             b \
         }
 
+void exact_change_promote(int tableid, uint8_t* key, uint8_t* value) {
+    FORALLNUMANODES(Add, "/" T4LIT(exact), CHANGE_TABLE(exact_change, key, value))
+}
 void exact_add_promote(int tableid, uint8_t* key, uint8_t* value) {
     FORALLNUMANODES(Add, "/" T4LIT(exact), CHANGE_TABLE(exact_add, key, value))
 }

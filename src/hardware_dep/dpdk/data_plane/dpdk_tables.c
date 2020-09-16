@@ -91,6 +91,11 @@ void make_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
     *entry_validity_ptr(entry, t) = VALID_TABLE_ENTRY;
 }
 
+// Changes the value of a table entry
+void change_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
+    memcpy(entry, value, t->entry.action_size);
+}
+
 uint8_t* make_table_entry_on_socket(lookup_table_t* t, uint8_t* value) {
     int length = t->entry.entry_size;
     uint8_t* entry = rte_malloc_socket("uint8_t", sizeof(uint8_t)*length, 0, t->socketid);

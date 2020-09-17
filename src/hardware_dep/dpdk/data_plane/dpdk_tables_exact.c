@@ -81,7 +81,7 @@ void exact_change(lookup_table_t* t, uint8_t* key, uint8_t* value) {
         rte_exit(EXIT_FAILURE, "HASH: change failed\n");
     }
 
-    change_table_entry(ext->content[index%t->max_size], value);
+    change_table_entry(ext->content[index%t->max_size], value, t);
 }
 
 void exact_delete(lookup_table_t* t, uint8_t* key)

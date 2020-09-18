@@ -207,6 +207,12 @@ void hash_debug(uint8_t* hash_start, int hash_length){
  *
  */
 void hash_b8_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t* base, struct uint8_buffer_s data, uint8_t* max, SHORT_STDPARAMS){
+    if (hash_length<=1){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 1 < hash_length ? 1 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint8_t*)hash_start % *max);
@@ -219,6 +225,12 @@ void hash_b8_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm al
 }
 
 void hash_b8_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t* base, struct uint8_buffer_s data, uint16_t* max, SHORT_STDPARAMS){
+    if (hash_length<=1){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 2 < hash_length ? 2 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint8_t*)hash_start % *max);
@@ -231,6 +243,12 @@ void hash_b8_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b8_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t* base, struct uint8_buffer_s data, uint32_t* max, SHORT_STDPARAMS){
+    if (hash_length<=1){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint8_t*)hash_start % *max);
@@ -243,6 +261,12 @@ void hash_b8_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b8_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
+    if (hash_length<=1){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint8_t*)hash_start % *max);
@@ -255,6 +279,12 @@ void hash_b8_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b16_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t* base, struct uint8_buffer_s data, uint8_t* max, SHORT_STDPARAMS){
+    if (hash_length<=2){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 2 < hash_length ? 2 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint16_t*)hash_start % *max);
@@ -267,6 +297,12 @@ void hash_b16_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t* base, struct uint8_buffer_s data, uint16_t* max, SHORT_STDPARAMS){
+    if (hash_length<=2){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 2 < hash_length ? 2 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint16_t*)hash_start % *max);
@@ -279,6 +315,12 @@ void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t* base, struct uint8_buffer_s data, uint32_t* max, SHORT_STDPARAMS){
+    if (hash_length<=2){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint16_t*)hash_start % *max);
@@ -291,6 +333,12 @@ void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b16_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
+    if (hash_length<=2){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint16_t*)hash_start % *max);
@@ -303,6 +351,12 @@ void hash_b16_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b32_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint8_t* max, SHORT_STDPARAMS){
+    if (hash_length<=4){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint32_t*)hash_start % *max);
@@ -315,6 +369,12 @@ void hash_b32_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint16_t* max, SHORT_STDPARAMS){
+    if (hash_length<=4){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint32_t*)hash_start % *max);
@@ -327,6 +387,12 @@ void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint32_t* max, SHORT_STDPARAMS){
+    if (hash_length<=4){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint32_t*)hash_start % *max);
@@ -339,6 +405,12 @@ void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b32_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
+    if (hash_length<=4){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint32_t*)hash_start % *max);
@@ -351,6 +423,12 @@ void hash_b32_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b64_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint8_t* max, SHORT_STDPARAMS){
+    if (hash_length<=8){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint64_t*)hash_start % *max);
@@ -363,6 +441,12 @@ void hash_b64_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm a
 }
 
 void hash_b64_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint16_t* max, SHORT_STDPARAMS){
+    if (hash_length<=8){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint64_t*)hash_start % *max);
@@ -375,6 +459,12 @@ void hash_b64_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b64_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint32_t* max, SHORT_STDPARAMS){
+    if (hash_length<=8){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint64_t*)hash_start % *max);
@@ -387,6 +477,12 @@ void hash_b64_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b64_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
+    if (hash_length<=8){
+          uint64_t hash_max_val = 1<<(hash_length*8)-1;
+          if (hash_max_val-max<base){
+               base = max_val > max ? max_val-max : 0;
+          }
+    }
     if (max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint64_t*)hash_start % *max);

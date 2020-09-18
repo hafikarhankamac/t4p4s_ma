@@ -118,14 +118,26 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 512;
     }
 
-    bit<64> flow_id = 0x0;
-    bit<64> base = 0x0;
-    bit<64> max_val = 0xFFFFFFFFFFFFFFFF;
+    bit<256> flow_256 = 0x0;
+    bit<128> flow_128 = 0x0;
+    bit<64> flow_64 = 0x0;
+    bit<32> flow_32 = 0x0;
+    bit<16> flow_16 = 0x0;
+
+    bit<64> base_64 = 0x00000000FFFFFFFF;
+    bit<32> base_32 = 0x0000FFFF;
+    bit<16> base_16 = 0x0FF;
+    bit<8> base_8 = 0x0F;
+
+    bit<64> max_64 = 0x00000000FFFFFFFF;
+    bit<32> max_32 = 0x0000FFFF;
+    bit<16> max_16 = 0x0FF;
+    bit<8> max_8 = 0x0F;
 
 
     apply {
 	smac.apply();
-	hash(flow_id, HashAlgorithm.crc32, base, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, max_val);
+	hash(flow_32, HashAlgorithm.crc32, base_32, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, max_32);
         dmac.apply();
     }
 }

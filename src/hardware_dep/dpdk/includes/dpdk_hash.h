@@ -177,10 +177,10 @@ void hash_debug(uint8_t* hash_start, int hash_length){
  * value space [base, base+max-1]. If the maximum value is 0, the returned value
  * will be equal to the base.
  * 
- * The long-term aim is the provide an entirely arbitrary parametrization. However,
+ * The long-term aim is to provide an entirely arbitrary parametrization. However,
  * the current state of t4p4s does not support greater values than 64bit to be
- * transformed from P4 code to C code (the varaibles themself are transformed into adjusted
- * arrays, but the value do not exceed 64bit). Therefore, this implementation is focusing on
+ * transformed from P4 code to C code (the variables themselves are transformed into adjusted
+ * arrays, but the values do not exceed 64bit). Therefore, this implementation is focusing on
  * the datatypes 8, 16, 32 and 64 bit for base and max.
  *
  * The data to hash as well as the return value can be arbitrarily big. Thus, the return values
@@ -188,12 +188,14 @@ void hash_debug(uint8_t* hash_start, int hash_length){
  * hash function.
  *
  * The current implementation does not interfere with the users parameters, since
- * error detection might be easier if implementation does not try to optimize
- * the users inputs.
+ * error detection might be easier if the implementation does masquerade
+ * unwanted behaviour by "optimizing" the users input. (a potential idea is to
+ * adjust borders with a certain priority.)
  * 
  * By calculating the difference between actual hash length and border lengths, the hashing
- * can be reduced to the utilized parts. The values are precalculated and represent 
- * min(hash_length, max(base_length, max_length)), with base/max-length being the required bytes.
+ * can be reduced to the utilized parts. The known values are precalculated and represent
+ * in total "min(hash_length, max(base_length, max_length))",
+ * with base/max-length being the required bytes.
  * 
  * @param hash_start: Pointer specifying the hash value's start byte
  * @param hash_length: Int specifying the size of the hash value

@@ -5,22 +5,25 @@
 
 void hash_identity(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 	debug("   :: Hashed with Identity\n");
-	for(int i = 0; i < size; i++) {
-		hash_value[size-1-i] = data.buffer[i%data.buffer_size];
-	}
+//	for(int i = 0; i < size; i++) {
+//		debug("buffer %u\n", data.buffer[i%data.buffer_size]);
+//		hash_value[size-1-i] = data.buffer[i%data.buffer_size];
+//	}
+	size = size < data.buffer_size ? size : data.buffer_size;
+	memcpy(hash_value, data.buffer, size);
 }
 
 void hash_crc32(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 	debug("   :: Hashed with CRC32\n");
 	uLong crc = crc32(0L, Z_NULL, 0);
 	crc = crc32(crc, data.buffer, data.buffer_size);
-	if (sizeof(crc) < size) {size = sizeof(crc);}
 
+	if (sizeof(uLong) < size) {size = sizeof(uLong);}
 	memcpy(hash_value, &crc, size);
 }
 
 void hash_crc32_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size){
-	debug("   :: Simulated hashing of CRC32-Custom\n");
+	debug("   :: Hashing with CRC32-Custom\n");
 }
 
 void hash_crc16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
@@ -50,7 +53,7 @@ void calculate_hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorith
 			hash_crc32(hash_start, data, hash_length);
 			break;
 		case enum_HashAlgorithm_crc32_custom:
-			hash_crc32_custom(hash_start, data, hash_length);
+			//hash_crc32_custom(hash_start, data, hash_length);
 			sheep((uint32_t) 100, pd, tables);
 			break;
 		case enum_HashAlgorithm_crc16:
@@ -99,7 +102,7 @@ void hash_debug(uint8_t* hash_start, int hash_length){
 			break;
 		case 3:
 		case 4:
-			debug("    : Hashed to " T4LIT(%x) "\n", *(uint32_t*)hash_start);
+			debug("    : Hashed to " T4LIT(%u) "\n", *(uint32_t*)hash_start);
 			break;
 		case 5:
 			
@@ -210,13 +213,13 @@ void hash_b16_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
 }
 
 void hash_b16_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint16_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
-    int hash_length_adjusted = sizeof(max) < hash_length ? sizeof(max) : hash_length;
+    int hash_length_adjusted = 4 < hash_length ? 4 : hash_length;
     memset(hash_start+hash_length_adjusted,0,hash_length-hash_length_adjusted);
     if (max > 0) {
         calculate_hash(hash_start, hash_length_adjusted, algorithm, data, SHORT_STDPARAMS_IN);
-        *(uint16_t*)hash_start = (uint16_t) base + (*(uint16_t*)hash_start % max);
+        *(uint32_t*)hash_start = (uint32_t) base + (*(uint32_t*)hash_start % max);
     }else{
-        *(uint16_t*)hash_start = (uint16_t) base;
+        *(uint32_t*)hash_start = (uint32_t) base;
     }
 #ifdef T4P4S_DEBUG
     hash_debug((uint8_t*)hash_start, hash_length);
@@ -264,3 +267,16 @@ void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
     hash_debug((uint8_t*)hash_start, hash_length);
 #endif
 }
+
+void hash_b64_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
+	if (max > 0) {
+		calculate_hash(hash_start, 9 < hash_length ? 9 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
+		*hash_start = *base + (*(uint64_t*)hash_start % *max);
+	}else{
+		*hash_start = *base;
+	}
+#ifdef T4P4S_DEBUG
+        hash_debug(hash_start, hash_length);
+#endif
+}
+

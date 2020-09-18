@@ -118,12 +118,14 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 512;
     }
 
-    bit<32> flow_id = 0x0;
-    
+    bit<64> flow_id = 0x0;
+    bit<64> base = 0x0;
+    bit<64> max_val = 0xFFFFFFFFFFFFFFFF;
+
 
     apply {
 	smac.apply();
-	hash(flow_id, HashAlgorithm.identity, ZERO, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, MAX_FLOWS);
+	hash(flow_id, HashAlgorithm.crc32, base, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, max_val);
         dmac.apply();
     }
 }

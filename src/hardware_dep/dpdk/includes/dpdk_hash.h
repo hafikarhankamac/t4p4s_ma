@@ -40,7 +40,6 @@ void hash_crc32_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size
 	for(int i = 0; i<size; i++){
 		memcpy(hash_value+i, &crc+(i%sizeof(uLong)),1);
 	}
-//	memcpy(hash_value+size/sizeof(uLong), &crc, size%sizeof(uLong));
 }
 
 void hash_crc16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
@@ -167,10 +166,18 @@ void hash_debug(uint8_t* hash_start, int hash_length){
 /* =====================================================================
 				Hash signatures
    =====================================================================
- Here are the signatures for all hash paramterizations to avoid the use of macros
- and to enable flawless use of bit types 8, 16, 32 and 64 for the base and max
- parameters. Since only datatypes differ the following documentation summarizes
- all parameters
+ Here are the signatures for all hash parametrizations. The reason for a multitude of
+ signatures is to avoid the use of macros and to shift the type evaluation to the
+ transformation step from P4 to C code. Therefore, no evaluation is necessary during
+ runtime.
+ 
+ Supported lengths:
+    hash_value -> arbitrary
+    data -> arbitrary
+    max, base -> 8, 16 ,32 ,64 bits
+ 
+ Since only datatypes differ the following documentation summarizes
+ all parameters.
 */
 
 /*
@@ -190,18 +197,20 @@ void hash_debug(uint8_t* hash_start, int hash_length){
  * the datatypes 8, 16, 32 and 64 bit for base and max.
  *
  * The data to hash as well as the return value can be arbitrarily big. Thus, the return values
- * may be manipulated to represent greater value than 64bit ones by adjusting the corresponding
- * hash function.
+ * may be manipulated to represent greater values than 64bit ones by adjusting the corresponding
+ * hash function, but the value space needs to support higher values as well to see an effect.
  *
- * The current implementation does not interfere with the users parameters, since
- * error detection might be easier if the implementation does masquerade
- * unwanted behaviour by "optimizing" the users input. (a potential idea is to
- * adjust borders with a certain priority.)
+ * In case of overflowing the used data type (e.g. 64bit with max values in max and base; hash result > 0)
+ * the overflow will be stored in the next byte of the hash value, if possible.
+ *
+ * The current implementation adjusts the base value according to the requested amount of
+ * hash values by reducing it (up to 0) to increase the value space.
  * 
  * By calculating the difference between actual hash length and border lengths, the hashing
  * can be reduced to the utilized parts. The known values are precalculated and represent
  * in total "min(hash_length, max(base_length, max_length))",
  * with base/max-length being the required bytes.
+ * 
  * 
  * @param hash_start: Pointer specifying the hash value's start byte
  * @param hash_length: Int specifying the size of the hash value

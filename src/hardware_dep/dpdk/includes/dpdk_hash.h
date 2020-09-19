@@ -84,7 +84,7 @@ void calculate_hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorith
 			break;
 		case enum_HashAlgorithm_crc32_custom:
 			hash_crc32_custom(hash_start, data, hash_length);
-			sheep((uint32_t) 100, pd, tables);
+			//sheep((uint32_t) 100, pd, tables);
 			break;
 		case enum_HashAlgorithm_crc16:
 			hash_crc16(hash_start, data, hash_length);

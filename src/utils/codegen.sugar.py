@@ -1105,22 +1105,24 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
 
 		with types({
 		    "O": "{}int{}_t*".format(*get_bit_type_tuple(e,0)),
-		    "T": "{}int{}_t*".format(*get_bit_type_tuple(e,1)),
+		    "T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
 		    "D": "struct uint8_buffer_s",
-		    "M": "{}int{}_t*".format(*get_bit_type_tuple(e,3))}):
+		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3))}):
 			fmt_params = format_method_parameters(e.arguments, method_params)
 			all_params_list = [format_expr(i) for i in e.arguments]
 			result_size_byte = int(type_env['O'].split('int')[1].split('_')[0])/8
 			base_size_bit, max_size_bit = tuple(map(lambda x: int(type_env[x].split('int')[1].split('_')[0]), ['T', 'M']))
-
+			base_array, max_array = "", ""
 			if base_size_bit == 64:
 				all_params_list[2] = "(uint64_t*) " + all_params_list[2]
+				base_array = "*"
 			if max_size_bit == 64:
 				all_params_list[4] = "(uint64_t*) " + all_params_list[4]
+				max_array = "*"
 
 			formatted_params = ", ".join(all_params_list[1:])
 			
-			#pre[ extern void hash_b${base_size_bit}_m${max_size_bit}(uint8_t*, int, int, ${type_env['T']}, ${type_env['D']}, ${type_env['M']}, SHORT_STDPARAMS);
+			#pre[ extern void hash_b${base_size_bit}_m${max_size_bit}(uint8_t*, int, int, ${type_env['T']}${base_array}, ${type_env['D']}, ${type_env['M']}${max_array}, SHORT_STDPARAMS);
 			#[ hash_b${base_size_bit}_m${max_size_bit}((uint8_t*) &(${all_params_list[0]}), $result_size_byte, $formatted_params, SHORT_STDPARAMS_IN);
 
             else:

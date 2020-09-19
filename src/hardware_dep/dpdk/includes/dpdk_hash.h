@@ -33,34 +33,47 @@ void hash_crc32(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 	memcpy(hash_value, &crc, size);
 }
 
-void hash_crc32_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+void hash_crc32_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with CRC32-Custom (not implemented yet)\n");
 	uLong crc = crc32(0L, Z_NULL, 0);
-	crc = crc32(crc,data.buffer, data.buffer_size);
+	for(int i = 0; i<data.buffer_size; i++) {
+		crc = crc32(crc,data.buffer+i, 1);
+	}
 	for(int i = 0; i<size; i++){
 		memcpy(hash_value+i, &crc+(i%sizeof(uLong)),1);
 	}
 }
 
-void hash_crc16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+/*
+ * Disabling optimization to enable the use of sheep
+ */
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+void hash_crc16(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with CRC16 (not implemented yet)\n");
+	sheep(100, pd, tables);
 }
 
-void hash_crc16_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+void hash_crc16_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with CRC16-Custom (not implemented yet)\n");
+	sheep(200, pd, tables);
 }
 
-void hash_csum16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+void hash_csum16(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with CSUM16 (not implemented yet)\n");
+	sheep(300, pd, tables);
 }
 
-void hash_random(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+void hash_random(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with RANDOM (not implemented yet)\n");
+	sheep(400, pd, tables);
 }
 
-void hash_xor16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
+void hash_xor16(uint8_t* hash_value, struct uint8_buffer_s data, int size, SHORT_STDPARAMS){
 	debug("   :: Hashing with XOR16 (not implemented yet)\n");
+	sheep(500, pd, tables);
 }
+#pragma GCC pop_options
 
 
 
@@ -82,37 +95,28 @@ void calculate_hash(uint8_t* hash_start, int hash_length, enum enum_HashAlgorith
 			hash_crc32(hash_start, data, hash_length);
 			break;
 		case enum_HashAlgorithm_crc32_custom:
-			hash_crc32_custom(hash_start, data, hash_length);
-			//sheep((uint32_t) 100, pd, tables);
+			hash_crc32_custom(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		case enum_HashAlgorithm_crc16:
-			hash_crc16(hash_start, data, hash_length);
-			sheep((uint32_t) 1000, pd, tables);
+			hash_crc16(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		case enum_HashAlgorithm_crc16_custom:	
-			hash_crc16_custom(hash_start, data, hash_length);
-			sheep((uint32_t) 10000, pd, tables);
+			hash_crc16_custom(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		case enum_HashAlgorithm_random:
-			hash_random(hash_start, data, hash_length);
-			sheep((uint32_t) 100, pd, tables);
+			hash_random(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		case enum_HashAlgorithm_identity:	
 			hash_identity(hash_start, data, hash_length);
 			break;
 		case enum_HashAlgorithm_csum16:	
-			hash_csum16(hash_start, data, hash_length);
-			sheep((uint32_t) 100, pd, tables);
+			hash_csum16(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		case enum_HashAlgorithm_xor16:
-			hash_xor16(hash_start, data, hash_length);
-			sheep((uint32_t) 100, pd, tables);
+			hash_xor16(hash_start, data, hash_length, SHORT_STDPARAMS_IN);
 			break;
 		default:
-			for (int i = 0; i<hash_length; i++) {
-				hash_start[i] = 0xFF;
-			}
-			debug("   :: Invalid hash method chosen");
+			memset(hash_start,0,hash_length);
 			break;
 	}
 }
@@ -624,7 +628,7 @@ void hash_b64_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
     if (*max > 0) {
         //Calculate initial value
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
-        //Apply value space
+	//Apply value space
         *hash_start = *base + (*(uint64_t*)hash_start % *max);
         //If computation exceeds data type, set next byte if used
         if((*(uint64_t*)hash_start) < *base && hash_length>8){

@@ -35,6 +35,12 @@ void hash_crc32(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 
 void hash_crc32_custom(uint8_t* hash_value, struct uint8_buffer_s data, int size){
 	debug("   :: Hashing with CRC32-Custom (not implemented yet)\n");
+	uLong crc = crc32(0L, Z_NULL, 0);
+	crc = crc32(crc,data.buffer, data.buffer_size);
+	for(int i = 0; i<size; i++){
+		memcpy(hash_value+i, &crc+(i%sizeof(uLong)),1);
+	}
+//	memcpy(hash_value+size/sizeof(uLong), &crc, size%sizeof(uLong));
 }
 
 void hash_crc16(uint8_t* hash_value, struct uint8_buffer_s data, int size){
@@ -206,6 +212,8 @@ void hash_debug(uint8_t* hash_start, int hash_length){
  * @param SHORT_STDPARAMS: Predefined parameters used for sheep
  *
  */
+
+/*
 void hash_b8_m8(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint8_t* base, struct uint8_buffer_s data, uint8_t* max, SHORT_STDPARAMS){
     if (hash_length<=1){
           uint64_t hash_max_val = 1<<(hash_length*8)-1;
@@ -385,25 +393,28 @@ void hash_b32_m16(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
     hash_debug(hash_start, hash_length);
 #endif
 }
-
-void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint32_t* max, SHORT_STDPARAMS){
-    if (hash_length<=4){
-          uint64_t hash_max_val = 1<<(hash_length*8)-1;
-          if (hash_max_val-max<base){
-               base = hash_max_val > max ? hash_max_val-max : 0;
+*/
+void hash_b32_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t base, struct uint8_buffer_s data, uint32_t max, SHORT_STDPARAMS){
+    if (hash_length<=5){
+          uint64_t hash_max_val = (1<<(hash_length*8))-1;
+          if (hash_max_val-max < base){
+               base = hash_max_val > max ? hash_max_val - max : 0;
           }
     }
     if (max > 0) {
-        calculate_hash(hash_start, 4 < hash_length ? 4 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
-        *hash_start = *base + (*(uint32_t*)hash_start % *max);
+        calculate_hash(hash_start, 5 < hash_length ? 5 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
+	if(base + (*(uint32_t*)hash_start) % max < base && hash_length>=5){
+		hash_start[4] = 1;
+	}
+	*hash_start = base + (*(uint32_t*)hash_start) % max;
     }else{
-        *hash_start = *base;
+        *hash_start = base;
     }
 #ifdef T4P4S_DEBUG
     hash_debug(hash_start, hash_length);
 #endif
 }
-
+/*
 void hash_b32_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint32_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
     if (hash_length<=4){
           uint64_t hash_max_val = 1<<(hash_length*8)-1;
@@ -475,15 +486,15 @@ void hash_b64_m32(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
     hash_debug(hash_start, hash_length);
 #endif
 }
-
+*/
 void hash_b64_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm algorithm, uint64_t* base, struct uint8_buffer_s data, uint64_t* max, SHORT_STDPARAMS){
     if (hash_length<=8){
-          uint64_t hash_max_val = 1<<(hash_length*8)-1;
-          if (hash_max_val-max<base){
-               base = hash_max_val > max ? hash_max_val-max : 0;
+          uint64_t hash_max_val = (1<<(hash_length*8))-1;
+          if (hash_max_val-*max<*base){
+               *base = hash_max_val > *max ? hash_max_val-*max : 0;
           }
     }
-    if (max > 0) {
+    if (*max > 0) {
         calculate_hash(hash_start, 8 < hash_length ? 8 : hash_length, algorithm, data, SHORT_STDPARAMS_IN);
         *hash_start = *base + (*(uint64_t*)hash_start % *max);
     }else{
@@ -493,3 +504,4 @@ void hash_b64_m64(uint8_t* hash_start, int hash_length, enum enum_HashAlgorithm 
     hash_debug(hash_start, hash_length);
 #endif
 }
+

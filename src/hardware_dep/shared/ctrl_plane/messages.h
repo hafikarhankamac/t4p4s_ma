@@ -216,6 +216,14 @@ struct p4_add_table_entry {
 	/* struct p4_action; */
 };
 
+struct p4_change_table_entry {
+    struct p4_header header;
+    char table_name[P4_MAX_TABLE_NAME_LEN];
+    uint8_t read_size;
+    /* struct p4_field_match matches[read_size]; */
+    /* struct p4_action; */
+};
+
 #define P4_MAX_FIELD_LIST_NAME_LEN 128
 #define P4_MAX_FIELD_NAME_LENGTH 128
 #define P4_MAX_FIELD_VALUE_LENGTH 32

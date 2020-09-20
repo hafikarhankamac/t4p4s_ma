@@ -115,7 +115,7 @@ void change_table_entry(void* b) {
     df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
     memcpy(&counter[0], df->value, sizeof(TYPE));
     printf("Ctrl: mac_learn_digest COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", counter[0], mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    fill_smac_table(counter, mac);
+    fill_table(counter, mac);
 }
 
 void dhf(void* b) {

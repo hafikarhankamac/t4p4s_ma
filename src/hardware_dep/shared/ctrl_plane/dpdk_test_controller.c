@@ -8,16 +8,16 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define MAX_MACS 60000
+#define MAX_ENTRIES 60000
 
 #define TYPE uint32_t
-#define SIZE 2
+#define SIZE 1
 
 controller c;
 
 extern void notify_controller_initialized();
 
-void fill_smac_table(TYPE count[], uint8_t mac[6])
+void fill_table(TYPE count[], TYPE key)
 {
     char buffer[2048];
     struct p4_header* h;
@@ -32,11 +32,52 @@ void fill_smac_table(TYPE count[], uint8_t mac[6])
     strcpy(te->table_name, "table0_0");
 
     exact = add_p4_field_match_exact(te, 2048);
-    strcpy(exact->header.name, "ethernet.srcAddr");
-    memcpy(exact->bitmap, mac, 6);
-    exact->length = 6*8+0;
+    strcpy(exact->header.name, "custom.payload1");
+    memcpy(exact->bitmap, &key, sizeof(TYPE));
+    exact->length = sizeof(TYPE)*8+0;
 
 
+
+    a = add_p4_action(h, 2048);
+    strcpy(a->description.name, "forward");
+
+    for (uint32_t i = 0; i < SIZE; i++) {
+        ap[i] = add_p4_action_parameter(h, a, 2048);
+        char name[11];
+        sprintf(name, "count%05d", i);
+        strcpy(ap[i]->name, name);
+        memcpy(ap[i]->bitmap, &count[i], (sizeof(TYPE)));
+        ap[i]->length = (sizeof(TYPE)) * 8;
+    }
+
+    netconv_p4_header(h);
+    netconv_p4_add_table_entry(te);
+    netconv_p4_field_match_exact(exact);
+    netconv_p4_action(a);
+    
+    for (uint32_t i = 0; i < SIZE; i++) {
+	    netconv_p4_action_parameter(ap[i]);
+    }
+
+    send_p4_msg(c, buffer, 2048);
+}
+
+void change_entry(TYPE count[], TYPE key) {
+    char buffer[2048];
+    struct p4_header* h;
+    struct p4_change_table_entry* te;
+    struct p4_action* a;
+    struct p4_action_parameter* ap[SIZE];
+    struct p4_field_match_exact* exact;
+
+    h = create_p4_header(buffer, 0, 2048);
+    te = create_p4_add_table_entry(buffer,0,2048);
+    strcpy(te->table_name, "table0_0");
+
+    exact = add_p4_field_match_exact(te, 2048);
+    strcpy(exact->header.name, "custom.payload1");
+    memcpy(exact->bitmap, &key, sizeof(TYPE));
+    exact->length = sizeof(TYPE)*8+0;
 
     a = add_p4_action(h, 2048);
     strcpy(a->description.name, "forward");
@@ -55,18 +96,41 @@ void fill_smac_table(TYPE count[], uint8_t mac[6])
     netconv_p4_add_table_entry(te);
     netconv_p4_field_match_exact(exact);
     netconv_p4_action(a);
-    
+
     for (uint32_t i = 0; i < SIZE; i++) {
-	netconv_p4_action_parameter(ap[i]);
+        netconv_p4_action_parameter(ap[i]);
     }
 
     send_p4_msg(c, buffer, 2048);
 }
 
-
+void change_table_entry(void* b) {
+    uint8_t mac[6];
+    TYPE counter[1];
+    uint16_t offset=0;
+    offset = sizeof(struct p4_digest);
+    struct p4_digest_field* df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
+    memcpy(mac, df->value, 6);
+    offset += sizeof(struct p4_digest_field);
+    df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
+    memcpy(&counter[0], df->value, sizeof(TYPE));
+    printf("Ctrl: mac_learn_digest COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", counter[0], mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    fill_table(counter, mac);
+}
 
 void dhf(void* b) {
-    printf("Unknown digest received\n");
+    struct p4_header* h = netconv_p4_header(unpack_p4_header(b, 0));
+    if (h->type != P4T_DIGEST) {
+        printf("Method is not implemented\n");
+        return;
+    }
+
+    struct p4_digest* d = unpack_p4_digest(b,0);
+    if (strcmp(d->field_list_name, "change_table_entry")==0) {
+        change_table_entry(b);
+    } else {
+        printf("Unknown digest received: X%sX\n", d->field_list_name);
+    }
 }
 
 void set_default_action_smac()
@@ -94,14 +158,14 @@ void set_default_action_smac()
 }
 
 
-uint8_t macs[MAX_MACS][6];
-TYPE countmap[MAX_MACS][SIZE];
-int mac_count = -1;
+TYPE entry[MAX_ENTRIES];
+TYPE countmap[MAX_ENTRIES][SIZE];
+int entry_count = -1;
 
-int read_macs_and_ports_from_file(char *filename) {
+int read_entries_from_file(char *filename) {
     FILE *f;
     char line[200];
-    int values[6];
+    TYPE key;
     int i;
     char* ptr;
 
@@ -109,42 +173,32 @@ int read_macs_and_ports_from_file(char *filename) {
     if (f == NULL) return -1;
 
     while (fgets(line, sizeof(line), f)) {
-        line[strlen(line)-1] = '\0';
-	int length;
-        if (6 == sscanf(line, "%x:%x:%x:%x:%x:%x %n",
-                        &values[0], &values[1], &values[2],
-                        &values[3], &values[4], &values[5], &length) )
-        {
-            if (mac_count==MAX_MACS-1)
-            {
-                printf("Too many entries...\n");
-                break;
-            }
+	    line[strlen(line)-1] = '\0';
+	    if (entry_count==MAX_ENTRIES-1)
+	    {
+		printf("Too many entries...\n");
+		break;
+	    }
 
-            ++mac_count;
-            for( i = 0; i < 6; ++i ) {
-            	macs[mac_count][i] = (uint8_t) values[i];
-            }
+	    ptr = strtok(line, " ");
+	    TYPE c;
+	    i = 0;
+	    if (ptr != NULL) {
+		sscanf(ptr, "%d", &c);
+		ptr = strtok(NULL, " ");
+		entry[entry_count] = (TYPE) c;
+	    }
+	    while(ptr != NULL) {
+		sscanf(ptr, "%d", &c);
+		ptr = strtok(NULL, " ");
+		if (i >= SIZE) {
+		    printf("Too many entries...\n");
+		    break;
+		}
+		countmap[entry_count][i++] = (TYPE) c;
+	    }
 
-	    ptr = strtok(line+length, " ");
-            TYPE c;
-            i = 0;
-            while(ptr != NULL) {
-                sscanf(ptr, "%d", &c);
-                ptr = strtok(NULL, " ");
-                if (i >= SIZE) {
-                    printf("Too many entries...\n");
-                    break;
-                }
-                countmap[mac_count][i++] = (TYPE) c;
-            }
-
-        } else {
-            printf("Wrong format error in line %d : %s\n", mac_count+2, line);
-            fclose(f);
-            return -1;
-        }
-
+	    entry_count++;
     }
 
     fclose(f);
@@ -156,10 +210,10 @@ void init() {
     printf("Set default actions.\n");
     set_default_action_smac();
 
-    for (i=0;i<=mac_count;++i)
+    for (i=0;i<=entry_count;++i)
     {
-        printf("Filling tables smac MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", macs[i][0],macs[i][1],macs[i][2],macs[i][3],macs[i][4],macs[i][5]);
-        fill_smac_table(countmap[i], macs[i]);
+        printf("Filling tables key: %08x\n", entry[i]);
+        fill_table(countmap[i], entry[i]);
     }
 
     notify_controller_initialized();
@@ -174,7 +228,7 @@ int main(int argc, char* argv[])
             return -1;
         }
         printf("Command line argument is present...\nLoading configuration data...\n");
-        if (read_macs_and_ports_from_file(argv[1])<0) {
+        if (read_entries_from_file(argv[1])<0) {
             printf("File cannnot be opened...\n");
             return -1;
         }

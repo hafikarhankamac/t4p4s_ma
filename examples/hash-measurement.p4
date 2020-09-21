@@ -111,7 +111,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 
     apply {
 	smac.apply();
-	hash(flow_256, HashAlgorithm.crc32, base_64, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType, hdr.test_packet.byte_16}, max_64);
+	hash(flow_256, HashAlgorithm.crc32, base_64, {hdr.ethernet.dstAddr, hdr.ethernet.srcAddr, hdr.ethernet.etherType}, max_64);
         dmac.apply();
     }
 }

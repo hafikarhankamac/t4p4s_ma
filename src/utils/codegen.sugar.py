@@ -1096,18 +1096,18 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False):
             #    #[    $fmt_params,
             #    #[    SHORT_STDPARAMS_IN)
    	    elif mref.name == 'hash':
-	        def get_bit_type_tuple(e, index, limited=True):
+	        def get_bit_type_tuple(e, index, limit):
 		    required_size = 8
 		    # Currently the maximum value supported by the P4 to C conversion uses 64bit
-		    while e.typeArguments.vec[index].size > required_size and (!limited or required_size<64):
+		    while e.typeArguments.vec[index].size > required_size and (required_size<64 or not limit):
 		        required_size += 8
 		    return [("u" if not e.typeArguments.vec[index].isSigned else ""), required_size]
 
 		with types({
 		    "O": "{}int{}_t*".format(*get_bit_type_tuple(e,0,False)),
-		    "T": "{}int{}_t".format(*get_bit_type_tuple(e,1)),
+		    "T": "{}int{}_t".format(*get_bit_type_tuple(e,1,True)),
 		    "D": "struct uint8_buffer_s",
-		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3))}):
+		    "M": "{}int{}_t".format(*get_bit_type_tuple(e,3,True))}):
 			fmt_params = format_method_parameters(e.arguments, method_params)
 			all_params_list = [format_expr(i) for i in e.arguments]
 			result_size_byte = int(type_env['O'].split('int')[1].split('_')[0])/8

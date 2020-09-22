@@ -71,7 +71,7 @@ void change_entry(TYPE count[], TYPE key) {
     struct p4_field_match_exact* exact;
 
     h = create_p4_header(buffer, 0, 2048);
-    te = create_p4_add_table_entry(buffer,0,2048);
+    te = create_p4_change_table_entry(buffer,0,2048);
     strcpy(te->table_name, "table0_0");
 
     exact = add_p4_field_match_exact(te, 2048);

@@ -281,5 +281,6 @@ struct p4_action_parameter* netconv_p4_action_parameter(struct p4_action_paramet
 struct p4_set_default_action* netconv_p4_set_default_action(struct p4_set_default_action* m);
 struct p4_field_match_header* netconv_p4_field_match_complex(struct p4_field_match_header *m, int* size);
 struct p4_add_table_entry* netconv_p4_add_table_entry(struct p4_add_table_entry* m);
+struct p4_change_table_entry* netconv_p4_change_table_entry(struct p4_change_table_entry* m);
 
 #endif

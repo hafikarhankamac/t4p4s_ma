@@ -59,8 +59,22 @@ struct p4_add_table_entry* create_p4_add_table_entry(char* buffer, uint16_t offs
 	return add_table_entry;
 }
 
+struct p4_change_table_entry* create_p4_add_table_entry(char* buffer, uint16_t offset, uint16_t maxlength) {
+    struct p4_change_table_entry* change_table_entry;
+    if (offset+sizeof(struct p4_change_table_entry) >= maxlength) return 0; /* buffer overflow */
+    change_table_entry = (struct p4_change_table_entry*)(buffer + offset);
+    change_table_entry->header.length = sizeof (struct p4_change_table_entry);
+    change_table_entry->header.type = P4T_MODIFY_TABLE_ENTRY;
+    change_table_entry->read_size = 0;
+    change_table_entry->table_name[0] = '\0';
+    return add_table_entry;
+}
+
 inline struct p4_add_table_entry* netconv_p4_add_table_entry(struct p4_add_table_entry* m) {
 	return m; /*nothing to do*/
+}
+inline struct p4_change_table_entry* netconv_p4_change_table_entry(struct p4_change_table_entry* m) {
+    return m; /*nothing to do*/
 }
 
 struct p4_field_match_lpm* add_p4_field_match_lpm(struct p4_add_table_entry* add_table_entry, uint16_t maxlength) {

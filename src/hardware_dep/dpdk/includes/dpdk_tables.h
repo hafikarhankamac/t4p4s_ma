@@ -32,9 +32,9 @@ typedef struct extended_table_s {
 // Table size limits
 
 #ifdef RTE_ARCH_X86_64
-#define HASH_ENTRIES		10000
+#define HASH_ENTRIES		100000
 #else
-#define HASH_ENTRIES		10000
+#define HASH_ENTRIES		100000
 #endif
 #define LPM_MAX_RULES         1024
 #define LPM6_NUMBER_TBL8S (1 << 16)

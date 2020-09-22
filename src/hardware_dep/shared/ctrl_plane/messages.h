@@ -247,6 +247,7 @@ void check_p4_header( struct p4_header* a, struct p4_header* b);
 struct p4_header* netconv_p4_header(struct p4_header* m);
 
 struct p4_add_table_entry* create_p4_add_table_entry(char* buffer, uint16_t offset, uint16_t maxlength);
+struct p4_change_table_entry* create_p4_change_table_entry(char* buffer, uint16_t offset, uint16_t maxlength);
 struct p4_field_match_lpm* add_p4_field_match_lpm(struct p4_add_table_entry* add_table_entry, uint16_t maxlength);
 struct p4_add_table_entry* unpack_p4_add_table_entry(char* buffer, uint16_t offset);
 struct p4_field_match_header* unpack_p4_field_match_header(char* buffer, uint16_t offset);

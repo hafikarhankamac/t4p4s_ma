@@ -93,7 +93,7 @@ void change_entry(TYPE count[], TYPE key) {
 
 
     netconv_p4_header(h);
-    netconv_p4_add_table_entry(te);
+    netconv_p4_change_table_entry(te);
     netconv_p4_field_match_exact(exact);
     netconv_p4_action(a);
 
@@ -105,17 +105,16 @@ void change_entry(TYPE count[], TYPE key) {
 }
 
 void change_table_entry(void* b) {
-    uint8_t mac[6];
+    TYPE key;
     TYPE counter[1];
     uint16_t offset=0;
     offset = sizeof(struct p4_digest);
     struct p4_digest_field* df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
-    memcpy(mac, df->value, 6);
+    memcpy(&key, df->value, sizeof(TYPE));
     offset += sizeof(struct p4_digest_field);
     df = netconv_p4_digest_field(unpack_p4_digest_field(b, offset));
     memcpy(&counter[0], df->value, sizeof(TYPE));
-    printf("Ctrl: mac_learn_digest COUNT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", counter[0], mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    fill_table(counter, mac);
+    change_entry(counter, key);
 }
 
 void dhf(void* b) {

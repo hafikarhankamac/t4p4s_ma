@@ -8,7 +8,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define MAX_ENTRIES 60000
+#define MAX_ENTRIES 100000
 
 #define TYPE uint32_t
 #define SIZE 1
@@ -213,6 +213,9 @@ void init() {
     {
         printf("Filling tables key: %08x\n", entry[i]);
         fill_table(countmap[i], entry[i]);
+	if (i % 5000 == 0) {
+	    sleep(2);
+	}
     }
 
     notify_controller_initialized();

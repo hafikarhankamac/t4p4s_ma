@@ -23,6 +23,8 @@ from utils.misc import addError, addWarning
 for table in hlir16.tables:
     tmt = table.match_type if hasattr(table, 'key') else "none"
     ks  = table.key_length_bytes if hasattr(table, 'key') else 0
+    ts = table.table_size if hasattr(table, 'size') else 512
+
     #[ {
     #[  .name= "${table.name}",
     #[  .id = TABLE_${table.name},
@@ -40,7 +42,7 @@ for table in hlir16.tables:
     #[  },
 
     #[  .min_size = 0,
-    #[  .max_size = TABLE_ENTRIES,
+    #[  .max_size = $ts,
     #[ },
 #[ };
 

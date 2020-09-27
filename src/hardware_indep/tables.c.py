@@ -40,7 +40,7 @@ for table in hlir16.tables:
     #[  },
 
     #[  .min_size = 0,
-    #[  .max_size = 250000,
+    #[  .max_size = TABLE_ENTRIES,
     #[ },
 #[ };
 

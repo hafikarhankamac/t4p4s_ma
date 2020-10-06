@@ -31,7 +31,7 @@ typedef struct extended_table_s {
 //=============================================================================
 // Table size limits
 
-#define TABLE_ENTRIES 100000
+#define TABLE_ENTRIES 2097152
 
 #ifdef RTE_ARCH_X86_64
 #define HASH_ENTRIES		TABLE_ENTRIES

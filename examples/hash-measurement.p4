@@ -16,6 +16,8 @@ header test_packet_t {
 	bit<512> byte_128;
 	bit<1024> byte_256;
 	bit<2048> byte_512;
+    bit<4096> byte_1024;
+    bit<3808> byte_1500;
 }
 
 header ethernet_t {

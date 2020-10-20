@@ -152,7 +152,7 @@ WAITPROC_PROTOBUF="$!"
 WAITPROC_P4C="$!"
 [ "$PARALLEL_INSTALL" == "yes" ] || wait "$WAITPROC_P4C"
 
-[ ! -d t4p4s ] && git clone https://github.com/P4ELTE/t4p4s && cd t4p4s && git checkout $TAPAS_COMMIT && git submodule update --init --recursive && cd src/hlir16/ git checkout ${HLIR_COMMIT} && cd ../../../ &
+[ ! -d t4p4s ] && git clone https://gitlab+deploy-token-247:-K1yHEhTvygwQsCiJ8tG@gitlab.lrz.de/p4/tapas/t4p4s.git && cd t4p4s && git checkout $TAPAS_COMMIT && git submodule update --init --recursive && cd src/hlir16/ && git checkout ${HLIR_COMMIT} && cd ../../../ &
 WAITPROC_T4P4S="$!"
 [ "$PARALLEL_INSTALL" == "yes" ] || wait "$WAITPROC_T4P4S"
 

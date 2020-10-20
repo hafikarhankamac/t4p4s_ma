@@ -34,6 +34,8 @@ FRESH=${FRESH-no}
 CLEANUP=${CLEANUP-no}
 USE_OPTIONAL_PACKAGES=${USE_OPTIONAL_PACKAGES-yes}
 
+TAPAS_COMMIT=${TAPAS_COMMIT-master}
+
 echo -e "System has $cc`nproc --all`$nn cores; will use $cc$MAX_MAKE_JOBS$nn jobs"
 echo Requesting root access...
 sudo echo -n ""
@@ -97,7 +99,7 @@ else
 fi
 
 DPDK_FILEVSN="$DPDK_VSN"
-[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
+#[ "${vsn[0]}" != "-1" ] && DPDK_FILEVSN="$DPDK_VSN.${vsn[0]}"
 
 
 if [ "$RTE_TARGET" != "" ]; then
@@ -119,7 +121,7 @@ PYTHON3=${PYTHON3-$NEWEST_PYTHON}
 [ "$NEWEST_PYTHON" == "$PYTHON3" ] && echo -e "Using the newest Python 3 version ${cc}${PYTHON3}$nn"
 [ "$NEWEST_PYTHON" != "$PYTHON3" ] && echo -e "Using Python 3 version ${cc}${PYTHON3}$nn (the newest one available is ${cc}${NEWEST_PYTHON}$nn)"
 
-PKGS_PYTHON="${PYTHON3} python3-scapy python3-ipaddr python3-dill python3-setuptools python3-dev"
+PKGS_PYTHON="${PYTHON3} python3-scapy python-ipaddr python3-dill python-dill python3-setuptools python3-dev"
 PKGS_LIB="libtool libgc-dev libprotobuf-dev libnuma-dev libfl-dev libgmp-dev libboost-dev libboost-iostreams-dev"
 PKGS_MAKE="automake bison flex cmake ccache lld pkg-config"
 REQUIRED_PACKAGES="$PKGS_PYTHON $PKGS_LIB $PKGS_MAKE g++ tcpdump"
@@ -127,8 +129,8 @@ if [ "$USE_OPTIONAL_PACKAGES" == "yes" ]; then
     OPT_PACKAGES="python3-ipdb python3-termcolor python3-pip python3-yaml python3-ujson python3-ruamel.yaml gnome-terminal"
 fi
 
-T4P4S_DIR=${T4P4S_DIR-t4p4s}
-[ $# -gt 0 ] && T4P4S_DIR="t4p4s-$1" && T4P4S_CLONE_OPT="$T4P4S_DIR -b $1" && echo -e "Using the $cc$1$nn branch of T4P4S"
+#T4P4S_DIR=${T4P4S_DIR-t4p4s}
+#[ $# -gt 0 ] && T4P4S_DIR="t4p4s-$1" && T4P4S_CLONE_OPT="$T4P4S_DIR -b $1" && echo -e "Using the $cc$1$nn branch of T4P4S"
 
 
 echo
@@ -150,7 +152,7 @@ WAITPROC_PROTOBUF="$!"
 WAITPROC_P4C="$!"
 [ "$PARALLEL_INSTALL" == "yes" ] || wait "$WAITPROC_P4C"
 
-[ ! -d t4p4s ] && git clone --recursive https://github.com/P4ELTE/t4p4s $T4P4S_CLONE_OPT &
+[ ! -d t4p4s ] && git clone https://github.com/P4ELTE/t4p4s && cd t4p4s && git checkout $TAPAS_COMMIT && git submodule update --init --recursive &
 WAITPROC_T4P4S="$!"
 [ "$PARALLEL_INSTALL" == "yes" ] || wait "$WAITPROC_T4P4S"
 

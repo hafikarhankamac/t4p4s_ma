@@ -121,12 +121,17 @@ void create_ext_table(lookup_table_t* t, void* rte_table, int socketid);
 void create_ext_table(lookup_table_t* t, void* rte_table, int socketid)
 {
     extended_table_t* ext = rte_malloc_socket("extended_table_t", sizeof(extended_table_t), 0, socketid);
+
+    // exact stores pointer directly in table; ternary does not use it
+    if (t->type == LOOKUP_LPM) {
+        ext->content = rte_malloc_socket("uint8_t*", sizeof(uint8_t * ) * t->max_size, 0, socketid);
+        if (unlikely(ext->content == NULL)) {
+            create_error(-1, t->type == 0 ? "hash" : t->type == 1 ? "lpm" : "ternary", t->name);
+        }
+    }
+
     ext->rte_table = rte_table;
     ext->size = 0;
-    ext->content = rte_malloc_socket("uint8_t*", sizeof(uint8_t*)*t->max_size, 0, socketid);
-    if (unlikely(ext->content == NULL)) {
-        create_error(-1, t->type == 0 ? "hash" : t->type == 1 ? "lpm" : "ternary", t->name);
-    }
     t->table = ext;
 }
 

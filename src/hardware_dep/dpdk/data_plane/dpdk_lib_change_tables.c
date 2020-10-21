@@ -15,34 +15,10 @@
 
 // This file is included directly from `dpdk_lib.c`.
 
-void change_replica(int socketid, int tid, int replica) {
-    for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
-        if (rte_lcore_is_enabled(lcore_id) == 0) continue;
-
-        int core_socketid = rte_lcore_to_socket_id(lcore_id);
-        if (core_socketid != socketid) continue;
-
-        struct lcore_conf* qconf = &lcore_conf[lcore_id];
-        qconf->state.tables[tid] = state[socketid].tables[tid][replica]; // TODO should this be atomic?
-        state[socketid].active_replica[tid] = replica;
-
-        // debug("    : " T4LIT(%d,core) "@" T4LIT(%d,socket) " uses table replica " T4LIT(%s,table) "#" T4LIT(%d) "\n", lcore_id, socketid, state[socketid].tables[tid][replica]->name, replica);
-    }
-}
-
 #define CHANGE_TABLE(fun, par...) \
 { \
     { \
-        int current_replica = state[socketid].active_replica[tableid]; \
-        int next_replica = (current_replica+1)%NB_REPLICA; \
-        fun(state[socketid].tables[tableid][next_replica], par); \
-        change_replica(socketid, tableid, next_replica); \
-        usleep(TABCHANGE_SLEEP_MICROS); \
-        for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
-            if (current_replica != next_replica) { \
-                fun(state[socketid].tables[tableid][current_replica], par); \
-            } \
-        } \
+        fun(state[socketid].tables[tableid], par); \
     } \
 }
 
@@ -51,8 +27,7 @@ extern char* get_entry_action_name(void* entry);
 #define CHANGE_TABLE_NOREPLICA(fun, par...) \
 { \
     { \
-        int current_replica = state[socketid].active_replica[tableid]; \
-        fun(state[socketid].tables[tableid][current_replica], par); \
+        fun(state[socketid].tables[tableid], par); \
     } \
 }
 
@@ -88,9 +63,8 @@ void table_setdefault_promote(int tableid, uint8_t* value) {
 #define CHANGE_TABLE_NOREPLICA_SEQ(fun, par...) \
 { \
     { \
-        int current_replica = state[socketid].active_replica[tableid]; \
         for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-            fun(state[socketid].tables[tableid][current_replica], par); \
+            fun(state[socketid].tables[tableid], par); \
         } \
     } \
 }
@@ -98,19 +72,8 @@ void table_setdefault_promote(int tableid, uint8_t* value) {
 #define CHANGE_TABLE_SEQ(fun, par...) \
 { \
     { \
-        int current_replica = state[socketid].active_replica[tableid]; \
-        int next_replica = (current_replica+1)%NB_REPLICA; \
         for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-            fun(state[socketid].tables[tableid][next_replica], par); \
-        } \
-        change_replica(socketid, tableid, next_replica); \
-        usleep(TABCHANGE_SLEEP_MICROS); \
-        for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
-            if (current_replica != next_replica) { \
-                for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-                    fun(state[socketid].tables[tableid][current_replica], par); \
-                } \
-            } \
+            fun(state[socketid].tables[tableid], par); \
         } \
     } \
 }

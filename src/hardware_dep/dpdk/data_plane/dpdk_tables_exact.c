@@ -27,6 +27,8 @@ struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rt
         .key_len = keylen,
         .hash_func = hashfunc,
         .hash_func_init_val = 0,
+        .extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY,
+        //.extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY | RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY_LF,
     };
     hash_params.name = name;
     hash_params.socket_id = socketid;
@@ -44,10 +46,10 @@ void exact_create(lookup_table_t* t, int socketid)
     create_ext_table(t, h, socketid);
 }
 
-int32_t hash_add_key(struct rte_hash* h, void *key)
+int32_t hash_add_key(struct rte_hash* h, void *key, void *data)
 {
     int32_t ret;
-    ret = rte_hash_add_key(h,(void *) key);
+    ret = rte_hash_add_key_data(h,(void *) key, (void *) data);
     if (ret < 0)
         rte_exit(EXIT_FAILURE, "Unable to add entry to the hash.\n");
     return ret;
@@ -58,30 +60,21 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
     extended_table_t* ext = (extended_table_t*)t->table;
-    uint32_t index = rte_hash_add_key(ext->rte_table, (void*) key);
+    uint32_t index = rte_hash_add_key_data(ext->rte_table, (void*) key, (void*) make_table_entry_on_socket(t, value));
 
     if (unlikely((int32_t)index < 0)) {
         fprintf(stderr, "!!!!!!!!! HASH: add failed. hash=%d\n", index);
         rte_exit(EXIT_FAILURE, "HASH: add failed\n");
     }
 
-    ext->content[index%t->max_size] = make_table_entry_on_socket(t, value);
-
     // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }
 
 void exact_change(lookup_table_t* t, uint8_t* key, uint8_t* value) {
-    if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+    if (unlikely(t->entry.key_size == 0)) return; // don't add lines to keyless tables
 
-    extended_table_t* ext = (extended_table_t*)t->table;
-    uint32_t index = rte_hash_add_key(ext->rte_table, (void*) key);
-
-    if (unlikely((int32_t)index < 0)) {
-        fprintf(stderr, "!!!!!!!!! HASH: change failed. hash=%d\n", index);
-        rte_exit(EXIT_FAILURE, "HASH: change failed\n");
-    }
-
-    change_table_entry(ext->content[index%t->max_size], value, t);
+    uint8_t* data = exact_lookup(t, key);
+    change_table_entry(data, value, t);
 }
 
 void exact_delete(lookup_table_t* t, uint8_t* key)
@@ -89,17 +82,16 @@ void exact_delete(lookup_table_t* t, uint8_t* key)
     if (t->entry.key_size == 0) return; // nothing must have been added
 
     extended_table_t* ext = (extended_table_t*)t->table;
-    int32_t ret = rte_hash_lookup(ext->rte_table, key);
-    if (ret >= 0)
-        rte_free(ext->content[ret%t->max_size]);
+    int32_t ret = rte_hash_del_key (ext->rte_table, key);
 }
 
 uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
 {
     if(unlikely(t->entry.key_size == 0)) return t->default_val;
     extended_table_t* ext = (extended_table_t*)t->table;
-    int ret = rte_hash_lookup(ext->rte_table, key);
-    return (ret < 0)? t->default_val : ext->content[ret%t->max_size];
+    uint8_t* data;
+    int ret = rte_hash_lookup(ext->rte_table, key, (void**) &data);
+    return (ret < 0)? t->default_val : data;
 }
 
 void exact_flush(lookup_table_t* t)

@@ -42,7 +42,7 @@ typedef struct lookup_table_entry_info_s {
 
     uint8_t key_size;
 
-    // entry size == val_size + validity_size + state_size
+    // entry size == val_size + validity_size + state_size + sizeof(rte_spinlock_t)
     uint8_t entry_size;
     uint8_t action_size;
     uint8_t validity_size;
@@ -62,6 +62,8 @@ typedef struct lookup_table_s {
 
     int socketid;
     int instance;
+
+    bool accessLocked;
 
     lookup_table_entry_info_t entry;
 } lookup_table_t;

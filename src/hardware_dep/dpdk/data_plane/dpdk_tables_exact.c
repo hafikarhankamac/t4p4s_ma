@@ -90,7 +90,7 @@ uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
     if(unlikely(t->entry.key_size == 0)) return t->default_val;
     extended_table_t* ext = (extended_table_t*)t->table;
     uint8_t* data;
-    int ret = rte_hash_lookup(ext->rte_table, key, (void**) &data);
+    int ret = rte_hash_lookup_data(ext->rte_table, key, (void**) &data);
     return (ret < 0)? t->default_val : data;
 }
 

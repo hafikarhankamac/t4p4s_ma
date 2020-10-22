@@ -33,14 +33,14 @@ extern char* get_entry_action_name(void* entry);
 
 #define FORALLNUMANODES(txt1, txt2, b) \
     for (int socketid = 0; socketid < NB_SOCKETS; socketid++) \
-        if (state[socketid].tables[0][0] != NULL) { \
+        if (state[socketid].tables[0] != NULL) { \
             dbg_bytes(key, state[socketid].tables[tableid][0]->entry.key_size, " " T4LIT(ctl>,incoming) " " T4LIT(txt1,action) " " T4LIT(%s,table) txt2 ": " T4LIT(%s,action) " <- ", table_config[tableid].name, get_entry_action_name(value)); \
             b \
         }
 
 #define FORALLNUMANODES_NOKEY(txt1, txt2, b) \
     for (int socketid = 0; socketid < NB_SOCKETS; socketid++) \
-        if (state[socketid].tables[0][0] != NULL) { \
+        if (state[socketid].tables[0] != NULL) { \
             b \
         }
 

@@ -18,6 +18,7 @@ from utils.misc import addError, addWarning
 #[ #include <stdlib.h>
 #[ #include <string.h>
 #[ #include <stdbool.h>
+#[ #include <rte_spinlock.h>
 #[ #include "dpdk_lib.h"
 #[ #include "actions.h"
 #[ #include "backend.h"
@@ -180,7 +181,11 @@ for table in hlir16.tables:
         if action_name == 'NoAction':
             continue
         #{         case action_${action_name}:
+        if action.action_object.has_write_table_parameter:
+            #[           rte_spinlock_lock(entry->lock);
         #[           action_code_${action_name}(SHORT_STDPARAMS_IN, &(entry->action.${action_name}_params));
+        if action.action_object.has_write_table_parameter:
+            #[           rte_spinlock_unlock(entry->lock);
         #}           break;
     #[       }
     #[     } else {

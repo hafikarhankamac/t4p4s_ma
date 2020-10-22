@@ -48,6 +48,11 @@ bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t) {
     return (bool*)(entry + t->entry.action_size + t->entry.state_size);
 }
 
+// Computes the location of the validity field of the entry.
+rte_spinlock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t) {
+    return (lock_t*)(entry + t->entry.action_size + t->entry.state_size + t->entry.validity_size);
+}
+
 // ============================================================================
 // Error messages
 
@@ -89,6 +94,10 @@ void make_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
     memcpy(entry, value, t->entry.action_size);
     memset(entry + t->entry.action_size, 0, t->entry.state_size);
     *entry_validity_ptr(entry, t) = VALID_TABLE_ENTRY;
+
+    if (t->accessLocked) {
+        rte_spinlock_init(entry_lock_ptr(entry, t));
+    }
 }
 
 // Changes the value of a table entry

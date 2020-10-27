@@ -79,6 +79,9 @@ uint8_t*    exact_lookup (lookup_table_t* t, uint8_t* key);
 uint8_t*      lpm_lookup (lookup_table_t* t, uint8_t* key);
 uint8_t*  ternary_lookup (lookup_table_t* t, uint8_t* key);
 
+void                lock (lock_t* lock);
+void              unlock (lock_t* lock);
+
 //=============================================================================
 // Calculations
 

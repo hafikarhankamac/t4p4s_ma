@@ -181,10 +181,10 @@ for table in hlir16.tables:
             continue
         #{         case action_${action_name}:
         if action.action_object.has_write_table_parameter:
-            #[           lock(entry->lock);
+            #[           LOCK(&entry->lock);
         #[           action_code_${action_name}(SHORT_STDPARAMS_IN, &(entry->action.${action_name}_params));
         if action.action_object.has_write_table_parameter:
-            #[           unlock(entry->lock);
+            #[           UNLOCK(&entry->lock);
         #}           break;
     #[       }
     #[     } else {

@@ -63,7 +63,7 @@ typedef struct lookup_table_s {
     int socketid;
     int instance;
 
-    bool accessLocked;
+    bool access_locked;
 
     lookup_table_entry_info_t entry;
 } lookup_table_t;

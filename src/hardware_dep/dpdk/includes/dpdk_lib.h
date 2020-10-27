@@ -36,7 +36,6 @@
 #include <rte_prefetch.h>
 #include <rte_random.h>
 #include <rte_ring.h>
-#include <rte_spinlock.h>
 #include <rte_string_fns.h>
 #include <rte_vect.h>
 

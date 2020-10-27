@@ -95,7 +95,7 @@ void make_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
     memset(entry + t->entry.action_size, 0, t->entry.state_size);
     *entry_validity_ptr(entry, t) = VALID_TABLE_ENTRY;
 
-    if (t->accessLocked) {
+    if (t->access_locked) {
         rte_spinlock_init(entry_lock_ptr(entry, t));
     }
 }

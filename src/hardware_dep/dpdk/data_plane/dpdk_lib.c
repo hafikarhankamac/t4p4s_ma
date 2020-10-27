@@ -26,16 +26,6 @@ extern void print_port_mac(unsigned portid, uint8_t* mac_bytes);
 extern void table_set_default_action(lookup_table_t* t, uint8_t* value);
 
 //=============================================================================
-// Table mgmt
-void lock(lock_t *lock) {
-    rte_spinlock_lock(lock);
-}
-
-void unlock(lock_t *lock) {
-    rte_spinlock_unlock(lock);
-}
-
-//=============================================================================
 // Shared
 
 struct socket_state state[NB_SOCKETS];

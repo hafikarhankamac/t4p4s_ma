@@ -38,7 +38,7 @@ for table in hlir16.tables:
     if table.used_writable:
         #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t),
     else:
-        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t) + sizeof(rte_spinlock_t),
+        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t) + sizeof(lock_t),
 
     #[      .action_size   = sizeof(struct ${table.name}_action),
     #[      .state_size    = sizeof(local_state_${table.name}_t),
@@ -47,7 +47,7 @@ for table in hlir16.tables:
 
     #[  .min_size = 0,
     #[  .max_size = $ts,
-    #[  .accessLocked = $lk,
+    #[  .access_locked = $lk,
     #[ },
 #[ };
 

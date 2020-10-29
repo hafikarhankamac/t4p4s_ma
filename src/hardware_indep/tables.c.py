@@ -35,7 +35,7 @@ for table in hlir16.tables:
     #[      .entry_count = 0,
 
     #[      .key_size = $ks,
-    if table.used_writable:
+    if table.used_writable and table.synced:
         #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t),
     else:
         #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t) + sizeof(lock_t),

@@ -16,11 +16,11 @@
 // This file is included directly from `dpdk_tables.c`.
 
 
-struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc)
+struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc, uint32_t size)
 {
     struct rte_hash_parameters hash_params = {
         .name = NULL,
-        .entries = HASH_ENTRIES,
+        .entries = size,
 #if RTE_VER_MAJOR == 2 && RTE_VER_MINOR == 0
         .bucket_entries = 4,
 #endif
@@ -42,7 +42,7 @@ void exact_create(lookup_table_t* t, int socketid)
 {
     char name[64];
     snprintf(name, sizeof(name), "%d_exact_%d_%d", t->id, socketid, t->instance);
-    struct rte_hash* h = hash_create(socketid, name, t->entry.key_size, rte_hash_crc);
+    struct rte_hash* h = hash_create(socketid, name, t->entry.key_size, rte_hash_crc, t->max_size);
     create_ext_table(t, h, socketid);
 }
 

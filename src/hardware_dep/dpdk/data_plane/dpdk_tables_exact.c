@@ -51,7 +51,7 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
     extended_table_t* ext = (extended_table_t*)t->table;
-    uint32_t index = -1;
+    int32_t index = -1;
     if (t->type == LOOKUP_EXACT_INPLACE) {
         index = rte_hash_add_key(ext->rte_table, (void*) key);
 
@@ -59,12 +59,13 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
         index = rte_hash_add_key_data(ext->rte_table, (void *) key, (void *) make_table_entry_on_socket(t, value));
     }
 
-    if (unlikely((int32_t)index < 0)) {
+    if (unlikely((int32_t)index < 0) || (int32_t) index > t->max_size) {
         fprintf(stderr, "!!!!!!!!! HASH: add failed. hash=%d\n", index);
         rte_exit(EXIT_FAILURE, "HASH: add failed\n");
     }
+
     if (t->type == LOOKUP_EXACT_INPLACE) {
-        make_table_entry(ext->content[index], value, t);
+        make_table_entry(&ext->content[index], value, t);
     }
     // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }

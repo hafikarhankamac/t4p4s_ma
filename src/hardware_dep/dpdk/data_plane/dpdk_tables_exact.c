@@ -46,15 +46,6 @@ void exact_create(lookup_table_t* t, int socketid)
     create_ext_table(t, h, socketid);
 }
 
-int32_t hash_add_key(struct rte_hash* h, void *key, void *data)
-{
-    int32_t ret;
-    ret = rte_hash_add_key_data(h,(void *) key, (void *) data);
-    if (ret < 0)
-        rte_exit(EXIT_FAILURE, "Unable to add entry to the hash.\n");
-    return ret;
-}
-
 void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
 {
     if (t->entry.key_size == 0) return; // don't add lines to keyless tables

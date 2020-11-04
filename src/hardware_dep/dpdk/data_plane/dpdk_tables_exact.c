@@ -64,7 +64,7 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
         rte_exit(EXIT_FAILURE, "HASH: add failed\n");
     }
     if (t->type == LOOKUP_EXACT_INPLACE) {
-        make_table_entry(ext->content[index], value, t);
+        make_table_entry(&(ext->content[index]), value, t);
     }
     // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }
@@ -101,7 +101,7 @@ uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
     uint8_t* data;
     if (t->type == LOOKUP_EXACT_INPLACE) {
         int32_t index = rte_hash_lookup(ext->rte_table, key);
-        return (index < 0) ? t->default_val : ext->content[index];
+        return (index < 0) ? t->default_val : &(ext->content[index]);
     } else if (t->type == LOOKUP_EXACT) {
         int32_t ret = rte_hash_lookup_data(ext->rte_table, key, (void**) &data);
         return (ret < 0)? t->default_val : data;

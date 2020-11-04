@@ -130,7 +130,7 @@ def lockAction(action, table):
     return action.has_write_table_parameter and table.synced
 
 for table in hlir16.tables:
-    lookupfun = {'LPM':'lpm_lookup', 'EXACT':'exact_lookup', 'TERNARY':'ternary_lookup'}
+    lookupfun = {'LPM':'lpm_lookup', 'EXACT':'exact_lookup', 'TERNARY':'ternary_lookup', 'EXACT_INPLACE':'exact_lookup'}
     #[ struct apply_result_s ${table.name}_apply(STDPARAMS)
     #{ {
     if hasattr(table, 'key'):

@@ -25,11 +25,13 @@ enum lookup_t {
     LOOKUP_exact,
     LOOKUP_LPM,
     LOOKUP_TERNARY,
+    LOOKUP_EXACT_INPLACE,
 };
 
 #define LOOKUP_EXACT   0
 #define LOOKUP_LPM     1
 #define LOOKUP_TERNARY 2
+#define LOOKUP_EXACT_INPLACE 3
 
 struct type_field_list {
     uint8_t fields_quantity;

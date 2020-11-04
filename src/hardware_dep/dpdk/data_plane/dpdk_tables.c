@@ -130,8 +130,10 @@ void create_ext_table(lookup_table_t* t, void* rte_table, int socketid);
 void create_ext_table(lookup_table_t* t, void* rte_table, int socketid)
 {
     extended_table_t* ext = rte_malloc_socket("extended_table_t", sizeof(extended_table_t), 0, socketid);
-
-    // exact stores pointer directly in table; ternary does not use it
+    // exact stores pointer directly in table, or stores index to array with table entries; ternary does not use extra array
+    if (t->type == LOOKUP_EXACT_INPLACE) {
+        ext->content = rte_malloc_socket("table_entry", sizeof(t->entry.entry_size) * t->max_size, 0, socketid);
+    }
     if (t->type == LOOKUP_LPM) {
         ext->content = rte_malloc_socket("uint8_t*", sizeof(uint8_t * ) * t->max_size, 0, socketid);
         if (unlikely(ext->content == NULL)) {
@@ -153,6 +155,7 @@ void create_table(lookup_table_t* t, int socketid)
     switch(t->type)
     {
         case LOOKUP_EXACT:
+        case LOOKUP_EXACT_INPLACE:
             exact_create(t, socketid);
             break;
         case LOOKUP_LPM:

@@ -60,13 +60,21 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
     extended_table_t* ext = (extended_table_t*)t->table;
-    uint32_t index = rte_hash_add_key_data(ext->rte_table, (void*) key, (void*) make_table_entry_on_socket(t, value));
+    uint32_t index = -1;
+    if (t->type == LOOKUP_EXACT_INPLACE) {
+        index = rte_hash_add_key(ext->rte_table, (void*) key);
+
+    } else if (t->type == LOOKUP_EXACT) {
+        index = rte_hash_add_key_data(ext->rte_table, (void *) key, (void *) make_table_entry_on_socket(t, value));
+    }
 
     if (unlikely((int32_t)index < 0)) {
         fprintf(stderr, "!!!!!!!!! HASH: add failed. hash=%d\n", index);
         rte_exit(EXIT_FAILURE, "HASH: add failed\n");
     }
-
+    if (t->type == LOOKUP_EXACT_INPLACE) {
+        make_table_entry(ext->content[index], value, t);
+    }
     // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }
 
@@ -82,7 +90,17 @@ void exact_delete(lookup_table_t* t, uint8_t* key)
     if (t->entry.key_size == 0) return; // nothing must have been added
 
     extended_table_t* ext = (extended_table_t*)t->table;
-    int32_t ret = rte_hash_del_key (ext->rte_table, key);
+    // pointer to allocated entry
+    if (t->type == LOOKUP_EXACT) {
+        int32_t index = rte_hash_lookup(ext->rte_table, key);
+        if (index >= 0) {
+            rte_free(ext->content[index]);
+        }
+    // all entries remains allocated -> overwrite later
+    } else if (t->type == LOOKUP_EXACT_INPLACE) {
+        rte_hash_del_key(ext->rte_table, key);
+    }
+
 }
 
 uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
@@ -90,8 +108,15 @@ uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
     if(unlikely(t->entry.key_size == 0)) return t->default_val;
     extended_table_t* ext = (extended_table_t*)t->table;
     uint8_t* data;
-    int ret = rte_hash_lookup_data(ext->rte_table, key, (void**) &data);
-    return (ret < 0)? t->default_val : data;
+    if (t->type == LOOKUP_EXACT_INPLACE) {
+        int32_t index = rte_hash_lookup(ext->rte_table, key);
+        return (index < 0) ? t->default_val : ext->content[index];
+    } else if (t->type == LOOKUP_EXACT) {
+        int32_t ret = rte_hash_lookup_data(ext->rte_table, key, (void**) &data);
+        return (ret < 0)? t->default_val : data;
+    }
+
+    return t->default_val;
 }
 
 void exact_flush(lookup_table_t* t)

@@ -25,6 +25,7 @@ for table in hlir16.tables:
     ks  = table.key_length_bytes if hasattr(table, 'key') else 0
     ts = table.table_size if hasattr(table, 'size') else 512
     lk = "true" if table.used_writable else "false"
+    hr = "false" if table.impl == "dpdk" else "true"
 
     #[ {
     #[  .name= "${table.name}",
@@ -48,6 +49,7 @@ for table in hlir16.tables:
     #[  .min_size = 0,
     #[  .max_size = $ts,
     #[  .access_locked = $lk,
+    #[  .has_replicas = $hr,
     #[ },
 #[ };
 

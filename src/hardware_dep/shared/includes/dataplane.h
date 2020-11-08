@@ -66,6 +66,7 @@ typedef struct lookup_table_s {
     int instance;
 
     bool access_locked;
+    bool has_replicas;
 
     lookup_table_entry_info_t entry;
 } lookup_table_t;

@@ -15,32 +15,67 @@
 
 // This file is included directly from `dpdk_lib.c`.
 
+void change_replica(int socketid, int tid, int replica) {
+    for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
+        if (rte_lcore_is_enabled(lcore_id) == 0) continue;
+
+        int core_socketid = rte_lcore_to_socket_id(lcore_id);
+        if (core_socketid != socketid) continue;
+
+        struct lcore_conf* qconf = &lcore_conf[lcore_id];
+        qconf->state.tables[tid] = state[socketid].tables[tid][replica]; // TODO should this be atomic?
+        state[socketid].active_replica[tid] = replica;
+
+        // debug("    : " T4LIT(%d,core) "@" T4LIT(%d,socket) " uses table replica " T4LIT(%s,table) "#" T4LIT(%d) "\n", lcore_id, socketid, state[socketid].tables[tid][replica]->name, replica);
+    }
+}
+
+#define HAS_REPLICAS(socketid, tableid) state[socketid].tables[tableid][0]->has_replicas
+
 #define CHANGE_TABLE(fun, par...) \
 { \
-    { \
-        fun(state[socketid].tables[tableid], par); \
-    } \
+    {                             \
+        if (HAS_REPLICAS(socketid, tableid)) { \
+            int current_replica = state[socketid].active_replica[tableid]; \
+            int next_replica = (current_replica+1)%NB_REPLICA; \
+            fun(state[socketid].tables[tableid][next_replica], par); \
+            change_replica(socketid, tableid, next_replica); \
+            usleep(TABCHANGE_SLEEP_MICROS); \
+            for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
+                if (current_replica != next_replica) { \
+                    fun(state[socketid].tables[tableid][current_replica], par); \
+                }                 \
+            }                  \
+        } else { \
+            fun(state[socketid].tables[tableid][0], par); \
+        }    \
+    }   \
 }
 
 extern char* get_entry_action_name(void* entry);
 
 #define CHANGE_TABLE_NOREPLICA(fun, par...) \
 { \
-    { \
-        fun(state[socketid].tables[tableid], par); \
+    {   \
+        if (HAS_REPLICAS(stateid, tableid)) { \
+            int current_replica = state[socketid].active_replica[tableid]; \
+            fun(state[socketid].tables[tableid][current_replica], par);    \
+        } else {                            \
+            fun(state[socketid].tables[tableid][0], par);         \
+        }                                    \
     } \
 }
 
 #define FORALLNUMANODES(txt1, txt2, b) \
     for (int socketid = 0; socketid < NB_SOCKETS; socketid++) \
-        if (state[socketid].tables[0] != NULL) { \
-            dbg_bytes(key, state[socketid].tables[tableid]->entry.key_size, " " T4LIT(ctl>,incoming) " " T4LIT(txt1,action) " " T4LIT(%s,table) txt2 ": " T4LIT(%s,action) " <- ", table_config[tableid].name, get_entry_action_name(value)); \
+        if (state[socketid].tables[0][0] != NULL) { \
+            dbg_bytes(key, state[socketid].tables[tableid][0]->entry.key_size, " " T4LIT(ctl>,incoming) " " T4LIT(txt1,action) " " T4LIT(%s,table) txt2 ": " T4LIT(%s,action) " <- ", table_config[tableid].name, get_entry_action_name(value)); \
             b \
         }
 
 #define FORALLNUMANODES_NOKEY(txt1, txt2, b) \
     for (int socketid = 0; socketid < NB_SOCKETS; socketid++) \
-        if (state[socketid].tables[0] != NULL) { \
+        if (state[socketid].tables[0][0] != NULL) { \
             b \
         }
 
@@ -62,9 +97,10 @@ void table_setdefault_promote(int tableid, uint8_t* value) {
 
 #define CHANGE_TABLE_NOREPLICA_SEQ(fun, par...) \
 { \
-    { \
+    {                                           \
+        int current_replica = HAS_REPLICAS(socketid, tableid) ? state[socketid].active_replica[tableid] : 0;  \
         for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-            fun(state[socketid].tables[tableid], par); \
+            fun(state[socketid].tables[tableid][current_replica], par); \
         } \
     } \
 }
@@ -72,8 +108,25 @@ void table_setdefault_promote(int tableid, uint8_t* value) {
 #define CHANGE_TABLE_SEQ(fun, par...) \
 { \
     { \
-        for (uint64_t idx = 0; idx < nr_entries; idx++) { \
-            fun(state[socketid].tables[tableid], par); \
+        if (HAS_REPLICAS(socketid, tableid))  { \
+            int current_replica = state[socketid].active_replica[tableid]; \
+            int next_replica = (current_replica+1)%NB_REPLICA; \
+            for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+                fun(state[socketid].tables[tableid][next_replica], par); \
+            } \
+            change_replica(socketid, tableid, next_replica); \
+            usleep(TABCHANGE_SLEEP_MICROS); \
+            for (int current_replica = 0; current_replica < NB_REPLICA; current_replica++) { \
+                if (current_replica != next_replica) { \
+                    for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+                        fun(state[socketid].tables[tableid][current_replica], par); \
+                    } \
+                } \
+            } \
+        } else {  \
+            for (uint64_t idx = 0; idx < nr_entries; idx++) { \
+                fun(state[socketid].tables[tableid][0], par); \
+            } \
         } \
     } \
 }

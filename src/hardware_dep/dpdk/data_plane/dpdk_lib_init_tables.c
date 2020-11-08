@@ -25,10 +25,17 @@ void create_tables_on_socket(int socketid)
     for (int i = 0; i < NB_TABLES; i++) {
         lookup_table_t t = table_config[i];
 
-        debug("    : Creating instances for table " T4LIT(%s,table) "\n", t.name);
-        state[socketid].tables[i] = malloc(sizeof(lookup_table_t));
-        memcpy(state[socketid].tables[i], &t, sizeof(lookup_table_t));
-        create_table(state[socketid].tables[i], socketid);
+        const int replicas = t.has_replicas ? NB_REPLICA : 1;
+
+        debug("    : Creating instances for table " T4LIT(%s,table) " (" T4LIT(%d) " copies)\n", t.name, replicas);
+        for (int j = 0; j < replicas; j++) {
+            state[socketid].tables[i][j] = malloc(sizeof(lookup_table_t));
+            memcpy(state[socketid].tables[i][j], &t, sizeof(lookup_table_t));
+            state[socketid].tables[i][j]->instance = j;
+            create_table(state[socketid].tables[i][j], socketid);
+        }
+
+        state[socketid].active_replica[i] = 0;
     }
 }
 
@@ -38,14 +45,14 @@ void create_table_on_lcore(unsigned lcore_id)
 
     int socketid = get_socketid(lcore_id);
 
-    if (state[socketid].tables[0] == NULL) {
+    if (state[socketid].tables[0][0] == NULL) {
         create_tables_on_socket(socketid);
     }
 
     // TODO is it necessary to store the table in two places?
     for (int i = 0; i < NB_TABLES; i++) {
         struct lcore_conf* qconf = &lcore_conf[lcore_id];
-        qconf->state.tables[i] = state[socketid].tables[i];
+        qconf->state.tables[i] = state[socketid].tables[i][0];
     }
 }
 
@@ -60,7 +67,14 @@ void init_tables()
 void flush_tables_on_socket(int socketid)
 {
     for (int i = 0; i < NB_TABLES; i++) {
-        flush_table(state[socketid].tables[i]);
+        lookup_table_t t = table_config[i];
+        const int replicas = t.has_replicas ? NB_REPLICA : 1;
+
+        for (int j = 0; j < replicas; j++) {
+            flush_table(state[socketid].tables[i][j]);
+        }
+
+        state[socketid].active_replica[i] = 0;
     }
 }
 
@@ -69,7 +83,7 @@ void flush_table_on_lcore(unsigned lcore_id)
     if (rte_lcore_is_enabled(lcore_id) == 0) return;
 
     int socketid = get_socketid(lcore_id);
-    if (state[socketid].tables[0] == NULL) return;
+    if (state[socketid].tables[0][0] == NULL) return;
     flush_tables_on_socket(socketid);
 }
 

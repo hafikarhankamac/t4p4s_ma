@@ -16,7 +16,7 @@
 // This file is included directly from `dpdk_tables.c`.
 
 
-struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc, uint32_t size)
+struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc, const uint32_t size, const bool has_replicas)
 {
     struct rte_hash_parameters hash_params = {
         .name = NULL,
@@ -27,9 +27,10 @@ struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rt
         .key_len = keylen,
         .hash_func = hashfunc,
         .hash_func_init_val = 0,
-        .extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY,
-        //.extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY | RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY_LF,
-    };
+   };
+    if (has_replicas) {
+        hash_params.extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY;
+    }
     hash_params.name = name;
     hash_params.socket_id = socketid;
     struct rte_hash *h = rte_hash_create(&hash_params);
@@ -42,7 +43,7 @@ void exact_create(lookup_table_t* t, int socketid)
 {
     char name[64];
     snprintf(name, sizeof(name), "%d_exact_%d_%d", t->id, socketid, t->instance);
-    struct rte_hash* h = hash_create(socketid, name, t->entry.key_size, rte_hash_crc, t->max_size);
+    struct rte_hash* h = hash_create(socketid, name, t->entry.key_size, rte_hash_crc, t->max_size, t->has_replicas);
     create_ext_table(t, h, socketid);
 }
 

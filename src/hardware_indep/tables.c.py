@@ -24,7 +24,7 @@ for table in hlir16.tables:
     tmt = table.match_type if hasattr(table, 'key') else "none"
     ks  = table.key_length_bytes if hasattr(table, 'key') else 0
     ts = table.table_size if hasattr(table, 'size') else 512
-    lk = "true" if table.used_writable else "false"
+    lk = "true" if table.used_writable and table.synced else "false"
     hr = "false" if table.impl == "dpdk" else "true"
 
     #[ {

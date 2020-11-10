@@ -48,6 +48,11 @@ bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t) {
     return (bool*)(entry + t->entry.action_size + t->entry.state_size);
 }
 
+// Computes the location of the lock field of the entry.
+lock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t) {
+    return (lock_t*)(entry + t->entry.action_size + t->entry.state_size + t->entry.validity_size);
+}
+
 // ============================================================================
 // Error messages
 
@@ -89,6 +94,10 @@ void make_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
     memcpy(entry, value, t->entry.action_size);
     memset(entry + t->entry.action_size, 0, t->entry.state_size);
     *entry_validity_ptr(entry, t) = VALID_TABLE_ENTRY;
+
+    if (t->access_locked) {
+        rte_spinlock_init(entry_lock_ptr(entry, t));
+    }
 }
 
 // Changes the value of a table entry
@@ -121,12 +130,19 @@ void create_ext_table(lookup_table_t* t, void* rte_table, int socketid);
 void create_ext_table(lookup_table_t* t, void* rte_table, int socketid)
 {
     extended_table_t* ext = rte_malloc_socket("extended_table_t", sizeof(extended_table_t), 0, socketid);
+    // exact stores pointer directly in table, or stores index to array with table entries; ternary does not use extra array
+    if (t->type == LOOKUP_EXACT_INPLACE) {
+        ext->content.inplace = rte_malloc_socket("table_entry", sizeof(t->entry.entry_size) * t->max_size, 0, socketid);
+    }
+    if (t->type == LOOKUP_LPM) {
+        ext->content.pointer = rte_malloc_socket("uint8_t*", sizeof(uint8_t * ) * t->max_size, 0, socketid);
+        if (unlikely(ext->content.pointer == NULL)) {
+            create_error(-1, t->type == 0 ? "hash" : t->type == 1 ? "lpm" : "ternary", t->name);
+        }
+    }
+
     ext->rte_table = rte_table;
     ext->size = 0;
-    ext->content = rte_malloc_socket("uint8_t*", sizeof(uint8_t*)*t->max_size, 0, socketid);
-    if (unlikely(ext->content == NULL)) {
-        create_error(-1, t->type == 0 ? "hash" : t->type == 1 ? "lpm" : "ternary", t->name);
-    }
     t->table = ext;
 }
 
@@ -139,6 +155,7 @@ void create_table(lookup_table_t* t, int socketid)
     switch(t->type)
     {
         case LOOKUP_EXACT:
+        case LOOKUP_EXACT_INPLACE:
             exact_create(t, socketid);
             break;
         case LOOKUP_LPM:

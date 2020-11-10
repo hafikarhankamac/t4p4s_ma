@@ -25,11 +25,13 @@ enum lookup_t {
     LOOKUP_exact,
     LOOKUP_LPM,
     LOOKUP_TERNARY,
+    LOOKUP_EXACT_INPLACE,
 };
 
 #define LOOKUP_EXACT   0
 #define LOOKUP_LPM     1
 #define LOOKUP_TERNARY 2
+#define LOOKUP_EXACT_INPLACE 3
 
 struct type_field_list {
     uint8_t fields_quantity;
@@ -42,7 +44,7 @@ typedef struct lookup_table_entry_info_s {
 
     uint8_t key_size;
 
-    // entry size == val_size + validity_size + state_size
+    // entry size == val_size + validity_size + state_size + sizeof(rte_spinlock_t)
     uint8_t entry_size;
     uint8_t action_size;
     uint8_t validity_size;
@@ -62,6 +64,9 @@ typedef struct lookup_table_s {
 
     int socketid;
     int instance;
+
+    bool access_locked;
+    bool has_replicas;
 
     lookup_table_entry_info_t entry;
 } lookup_table_t;

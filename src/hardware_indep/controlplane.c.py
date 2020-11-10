@@ -112,7 +112,7 @@ for table in hlir16_tables_with_keys:
         #[ for(c = 0; c < ${byte_idx}; c++) *(key+c) = *(reverse_buffer+c);
         #[ lpm_add_promote(TABLE_${table.name}, (uint8_t*)key, prefix_length, (uint8_t*)&action);
 
-    if table.match_type == "EXACT":
+    if table.match_type == "EXACT" or table.match_type == "EXACT_INPLACE":
         #[ exact_add_promote(TABLE_${table.name}, (uint8_t*)key, (uint8_t*)&action);
 
     if table.match_type == "TERNARY":

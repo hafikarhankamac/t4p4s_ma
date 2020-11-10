@@ -24,6 +24,8 @@ for table in hlir16.tables:
     tmt = table.match_type if hasattr(table, 'key') else "none"
     ks  = table.key_length_bytes if hasattr(table, 'key') else 0
     ts = table.table_size if hasattr(table, 'size') else 512
+    lk = "true" if table.used_writable and table.synced else "false"
+    hr = "false" if table.impl == "dpdk" else "true"
 
     #[ {
     #[  .name= "${table.name}",
@@ -34,8 +36,11 @@ for table in hlir16.tables:
     #[      .entry_count = 0,
 
     #[      .key_size = $ks,
+    if table.used_writable and table.synced:
+        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t),
+    else:
+        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t) + sizeof(lock_t),
 
-    #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(local_state_${table.name}_t) + sizeof(entry_validity_t),
     #[      .action_size   = sizeof(struct ${table.name}_action),
     #[      .state_size    = sizeof(local_state_${table.name}_t),
     #[      .validity_size = sizeof(entry_validity_t),
@@ -43,6 +48,8 @@ for table in hlir16.tables:
 
     #[  .min_size = 0,
     #[  .max_size = $ts,
+    #[  .access_locked = $lk,
+    #[  .has_replicas = $hr,
     #[ },
 #[ };
 

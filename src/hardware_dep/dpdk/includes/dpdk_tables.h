@@ -25,7 +25,10 @@ typedef uint8_t table_index_t;
 typedef struct extended_table_s {
     void*          rte_table;
     table_index_t  size;
-    uint8_t**      content;
+    union {
+        uint8_t **pointer;
+        uint8_t *inplace;
+    } content;
 } extended_table_t;
 
 //=============================================================================

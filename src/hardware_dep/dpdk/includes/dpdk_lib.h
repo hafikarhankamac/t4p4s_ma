@@ -125,6 +125,7 @@ struct socket_state {
     // pointers to the instances created on each socket
     lookup_table_t * tables         [NB_TABLES][NB_REPLICA];
     int              active_replica [NB_TABLES];
+
 };
 
 struct lcore_hardware_conf {
@@ -146,6 +147,7 @@ struct lcore_conf {
 // Timings
 
 #define TABCHANGE_SLEEP_MICROS 200
+
 #define DIGEST_SLEEP_MILLIS    1000
 
 

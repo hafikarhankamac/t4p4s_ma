@@ -126,9 +126,11 @@ for table in hlir16.tables:
             name  = comp['name']
             #[ void apply_direct_smem_$type(rte_atomic32_t (*smem)[1], uint32_t value, char* table_name, char* smem_type_name, char* smem_name);
 
+def lockAction(action, table):
+    return action.has_write_table_parameter and table.synced
 
 for table in hlir16.tables:
-    lookupfun = {'LPM':'lpm_lookup', 'EXACT':'exact_lookup', 'TERNARY':'ternary_lookup'}
+    lookupfun = {'LPM':'lpm_lookup', 'EXACT':'exact_lookup', 'TERNARY':'ternary_lookup', 'EXACT_INPLACE':'exact_lookup'}
     #[ struct apply_result_s ${table.name}_apply(STDPARAMS)
     #{ {
     if hasattr(table, 'key'):
@@ -180,7 +182,11 @@ for table in hlir16.tables:
         if action_name == 'NoAction':
             continue
         #{         case action_${action_name}:
+        if lockAction(action.action_object, table):
+            #[           LOCK(&entry->lock);
         #[           action_code_${action_name}(SHORT_STDPARAMS_IN, &(entry->action.${action_name}_params));
+        if lockAction(action.action_object, table):
+            #[           UNLOCK(&entry->lock);
         #}           break;
     #[       }
     #[     } else {

@@ -1,10 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2019 Eotvos Lorand University, Budapest, Hungary
-
-from __future__ import print_function
 
 import os
 import sys
@@ -39,7 +37,7 @@ def replace_genfile_in_tb(tb, genfile):
         if line is not None:
             new_line = line.strip()
         else:
-            new_line = "{}:{}".format(genfile, lineno)
+            new_line = f"{genfile}:{lineno}"
 
         part2 = [(genfile, lineno, "...", new_line)] + part2[1:]
 
@@ -83,22 +81,37 @@ def add_generator_file_to_tb(idx, tbelem):
     return [(file, lineno, '...', line.strip()), tbelem]
 
 
-def print_with_backtrace((exc_type, exc, tb), file, is_tb_extracted = False):
+def simplify_traceback(orig_tb):
+    return [(rel if not rel.startswith('..') else t1, t2, t3, t4) for (t1, t2, t3, t4) in orig_tb for rel in [os.path.relpath(t1)]]
+
+
+def print_with_backtrace(tb_arg, file, is_tb_extracted = False, post_mortem = False):
     if not pkgutil.find_loader('backtrace'):
         raise
 
     import backtrace
 
+    exc_type, exc, tb = tb_arg
+
+    if post_mortem:
+        if pkgutil.find_loader('ipdb'):
+            import ipdb
+            ipdb.post_mortem(tb)
+        else:
+            import pdb
+            pdb.post_mortem(tb)
+
     if not is_tb_extracted:
         tb = traceback.extract_tb(tb)
 
     try:
-        orig_tb = tb
+        orig_tb = simplify_traceback(tb)
         tb = replace_genfile_in_tb(tb, file)
         tb = [new_elem for idx, tbelem in enumerate(tb) for new_elem in add_generator_file_to_tb(idx, tbelem)]
-        tb = [(rel if not rel.startswith('..') else t1, t2, t3, t4) for (t1, t2, t3, t4) in tb for rel in [os.path.relpath(t1)]]
     except:
         tb = orig_tb
+
+    tb = simplify_traceback(tb)
 
     backtrace.hook(
         tpe=exc_type,

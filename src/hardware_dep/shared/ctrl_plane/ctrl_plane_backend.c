@@ -1,16 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
 // Copyright 2016 Eotvos Lorand University, Budapest, Hungary
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//     http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+
 #include "ctrl_plane_backend.h"
 #include "messages.h"
 #include <stdio.h>
@@ -383,10 +373,10 @@ ctrl_plane_digest create_digest(ctrl_plane_backend bg, char* name)
 }
 
 
-ctrl_plane_digest add_digest_field(ctrl_plane_digest d, void* value, uint32_t length)
+ctrl_plane_digest add_digest_field(ctrl_plane_digest d, void* value, uint32_t bitlength)
 {
     Digest_t* dg = (Digest_t*) d;
-    uint32_t bytelength = (length-1)/8+1;
+    uint32_t bytelength = (bitlength-1)/8+1;
 
     struct p4_digest_field* dfield = add_p4_digest_field( dg->ctrl_plane_digest, dg->mem_cell->length );
 
@@ -397,7 +387,7 @@ ctrl_plane_digest add_digest_field(ctrl_plane_digest d, void* value, uint32_t le
     }
     
     memcpy( dfield->value, value, MIN(bytelength, P4_MAX_FIELD_VALUE_LENGTH));
-    dfield->length = length;
+    dfield->length = bitlength;
     netconv_p4_digest_field(dfield);
 
     return d;

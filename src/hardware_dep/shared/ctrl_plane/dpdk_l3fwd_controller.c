@@ -167,7 +167,7 @@ void set_default_action_macfwd()
     strcpy(sda->table_name, "macfwd_0");
 
     a = &(sda->action);
-    strcpy(a->description.name, "_drop");
+    strcpy(a->description.name, "_drop_3");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);
@@ -191,7 +191,7 @@ void set_default_action_nexthops()
     strcpy(sda->table_name, "nexthops_0");
 
     a = &(sda->action);
-    strcpy(a->description.name, "_drop");
+    strcpy(a->description.name, "_drop_4");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);

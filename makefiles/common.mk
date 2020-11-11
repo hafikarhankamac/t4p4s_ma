@@ -26,6 +26,7 @@ CFLAGS += -Wno-unused-function
 # TODO clang has a different name for this
 ifneq ($(CC),clang)
 CFLAGS += -Wno-unused-but-set-variable
+CFLAGS += -flto=thin
 endif
 
 # TODO this is for valgrind, do not use as a regular option
@@ -43,6 +44,6 @@ ifneq ($(P4_GCC_OPTS),)
 CFLAGS += $(P4_GCC_OPTS)
 endif
 
-LDFLAGS += -fuse-ld=gold
+LDFLAGS += -fuse-ld=ld.lld
 
-SRCS-y += util.c
+SRCS-y += util_debug.c

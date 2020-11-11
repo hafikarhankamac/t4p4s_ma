@@ -1,22 +1,13 @@
 #include <core.p4>
 #include <psa.p4>
 
-// In: 00000000000000000000000000000000
-// Out: 1111100000000000
-
-struct data {
-	bit<1> first;
-        bit<1> second;
-        bit<1> third;
-        bit<1> fourth;
-}
-
-header empty_t { }
+// In: 00000000
+// Out: 11000000
 
 header dummy_t {
-    bit<1> f1;
-    data f2;
-    bit<3> padding;
+    bit<2> f1;
+    bit<2> f2;
+    bit<4> padding;
 }
 
 struct empty_metadata_t {
@@ -26,11 +17,7 @@ struct metadata {
 }
 
 struct headers {
-    empty_t empty;
     dummy_t dummy;
-    dummy_t dummy2;
-    dummy_t dummy3;
-    dummy_t dummy4;
 }
 parser IngressParserImpl(packet_in packet,
                          out headers hdr,
@@ -39,11 +26,7 @@ parser IngressParserImpl(packet_in packet,
                          in empty_metadata_t resubmit_meta,
                          in empty_metadata_t recirculate_meta) {
     state parse_ethernet {
-        packet.extract(hdr.empty);
         packet.extract(hdr.dummy);
-        packet.extract(hdr.dummy2);
-        packet.extract(hdr.dummy3);
-        packet.extract(hdr.dummy4);
         transition accept;
     }
     state start {
@@ -56,17 +39,33 @@ control egress(inout headers hdr,
                in    psa_egress_input_metadata_t  istd,
                inout psa_egress_output_metadata_t ostd)
 {
+    bit<2> z = 0;
+    action action_one(in bit<2> f1, bit<2> f2) {
+        hdr.dummy.f1 = f1;
+        hdr.dummy.f2 = f2;
+        z = f1;
+    }
+    action action_two(in bit<2> f1, bit<2> f2) {
+        hdr.dummy.f1 = f1;
+        hdr.dummy.f2 = f2;
+    }
+    table t {
+	actions = {
+	    action_one((bit<2>)1);
+            action_two(z);
+	}
+        const default_action = action_two(z,(bit<2>)1);
+        key = {
+            hdr.dummy.f1: exact;
+        }
+        size = 512;
+        const entries = {
+            (0x00) : action_one((bit<2>)1, (bit<2>)1);
+            (0x01) : action_two(z, (bit<2>)2);
+        }
+    }
     apply {
-       //Version 1: working
-       //data d = {~hdr.dummy.f2.first, ~hdr.dummy.f2.second, ~hdr.dummy.f2.third, ~hdr.dummy.f2.fourth};
-       //Version 2: working
-       //data d = {1,1,1,1};
-       //Version 3: C compile error
-       data d = {~hdr.dummy.f2.fourth, ~hdr.dummy.f2.third, ~hdr.dummy.f2.second, ~hdr.dummy.f2.first};
-       hdr.dummy.f1 = (bit<1>)hdr.empty.isValid();
-       hdr.dummy.f2 = d;
-       hdr.dummy3.setInvalid();
-       hdr.dummy4.setInvalid();
+        t.apply();
     }
 }
 
@@ -76,7 +75,9 @@ control ingress(inout headers hdr,
                 in    psa_ingress_input_metadata_t  istd,
                 inout psa_ingress_output_metadata_t ostd)
 {
-    apply { }
+    apply { 
+        ostd.egress_port = (PortId_t)12345;
+    }
 }
 
 parser EgressParserImpl(packet_in buffer,
@@ -101,10 +102,7 @@ control IngressDeparserImpl(packet_out buffer,
                             in psa_ingress_output_metadata_t istd)
 {
     apply {
-       buffer.emit(hdr.dummy);
-       buffer.emit(hdr.dummy2);
-       buffer.emit(hdr.dummy3);
-       buffer.emit(hdr.dummy4);
+        buffer.emit(hdr.dummy);
     }
 }
 

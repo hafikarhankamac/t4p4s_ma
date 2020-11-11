@@ -102,7 +102,7 @@ control IngressDeparserImpl(packet_out buffer,
     apply {
         option_A_t tmp = { 8w3 };
         if (hdr.option_stack[0].isValid() && hdr.option_stack[1].isValid() && hdr.option_stack[2].isValid() && !hdr.option_stack[3].isValid()) {
-		buffer.emit(tmp);
+            buffer.emit(tmp);
         }
     }
 }

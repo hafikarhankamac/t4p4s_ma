@@ -119,7 +119,7 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
 //    sheep((uint32_t) length);
 //}
 
-void verify(bool check, enum error_error toSignal, SHORT_STDPARAMS) {
+void verify(bool check, error_error_t toSignal, SHORT_STDPARAMS) {
     // TODO implement call to extern
     debug("    : Called extern " T4LIT(verify,extern) "\n");
 }

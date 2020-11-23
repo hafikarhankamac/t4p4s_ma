@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2016 Eotvos Lorand University, Budapest, Hungary
 
+from utils.codegen import is_primitive
+
 #[ #include <unistd.h>
 
 #[ #include "dpdk_lib.h"
@@ -88,9 +90,8 @@ for table in hlir.tables:
         #[ for(c = 0; c < ${byte_idx}; c++) *(key+c) = *(reverse_buffer+c);
         #[ lpm_add_promote(TABLE_${table.name}, (uint8_t*)key, prefix_length, (uint8_t*)&action, has_fields);
 
-    if table.matchType == "exact":
+    if table.matchType == "exact" or table.matchType == "exact_inplace":
         #[ exact_add_promote(TABLE_${table.name}, (uint8_t*)key, (uint8_t*)&action, has_fields);
-
     if table.matchType == "ternary":
         #[ ternary_add_promote(TABLE_${table.name}, (uint8_t*)key, (uint8_t*)mymask, (uint8_t*)&action);
 
@@ -119,8 +120,7 @@ for table in hlir.tables:
         #[     action.action_id = action_${action.action_object.name};
         for j, p in enumerate(action.action_object.parameters.parameters):
             #[ uint8_t* bitmap_${p.name} = (uint8_t*)((struct p4_action_parameter*)ctrl_m->action_params[$j])->bitmap;
-            #[ memcpy(action.${action.action_object.name}_params.${p.name}, bitmap_${p.name}, ${(p.urtype.size+7)//8});
-
+            #[ memcpy(${'&' if is_primitive(p.type) else ''}action.${action.action_object.name}_params.${p.name}, bitmap_${p.name}, ${(p.urtype.size+7)//8});
         params = []
         for i, k in enumerate(table.key.keyElements):
             if 'header' not in k:
@@ -155,7 +155,7 @@ for table in hlir.tables:
 
         for j, p in enumerate(action.action_object.parameters.parameters):
             #[ uint8_t* ${p.name} = (uint8_t*)((struct p4_action_parameter*)ctrl_m->action_params[$j])->bitmap;
-            #[ memcpy(action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.urtype.size+7)//8});
+            #[ memcpy(${'&' if is_primitive(p.type) else ''}action.${action.action_object.name}_params.${p.name}, ${p.name}, ${(p.urtype.size+7)//8});
 
         #{     if (${"false" if table.is_hidden else "true"}) {
         #[         debug(" " T4LIT(ctl>,incoming) " " T4LIT(Set default action,action) " for $$[table]{table.name}: $$[action]{action.action_object.name}\n");
@@ -243,6 +243,9 @@ for table in hlir.tables:
 #} }
 
 
+
+#[ extern int master_socket_id;
+
 #[ ctrl_plane_backend bg;
 #[ void init_control_plane()
 #[ {
@@ -252,7 +255,7 @@ for table in hlir.tables:
 #[     #ifdef T4P4S_DEBUG
 #[     for (int i = 0; i < NB_TABLES; i++) {
 #[         lookup_table_t t = table_config[i];
-#[         if (state[0].tables[t.id][0]->init_entry_count > 0)
+#[         if (state[master_socket_id].tables[t.id][0]->init_entry_count > 0)
 #[             debug("    " T4LIT(:,incoming) " Table " T4LIT(%s,table) " got " T4LIT(%d) " entries from the control plane\n", state[0].tables[t.id][0]->name, state[0].tables[t.id][0]->init_entry_count);
 #[         }
 #[     #endif

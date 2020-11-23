@@ -98,10 +98,15 @@ def unique_stable(items):
     return list(OrderedDict.fromkeys(items))
 
 
+def lockAction(action, table):
+    return action.has_write_table_parameter and table.synced
+
+
 for type in unique_stable([comp['type'] for table in hlir.tables for smem in table.direct_meters + table.direct_counters for comp in smem.components]):
     #[ void apply_direct_smem_$type(register_uint32_t* smem, uint32_t value, char* table_name, char* smem_type_name, char* smem_name) {
     #[    debug("     : applying apply_direct_smem_$type(register_uint32_t (*smem)[1], uint32_t value, char* table_name, char* smem_type_name, char* smem_name)");
     #[ }
+
 
 
 for table in hlir.tables:
@@ -171,7 +176,11 @@ for table in hlir.tables:
     for action in table.actions:
         action_name = action.action_object.name
         #{         case action_${action_name}:
-        #[           action_code_${action_name}(entry->action.${action_name}_params, SHORT_STDPARAMS_IN);
+        if lockAction(action.action_object, table):
+            #[           LOCK(&entry->lock);
+        #[           action_code_${action_name}(&(entry->action.${action_name}_params), SHORT_STDPARAMS_IN);
+        if lockAction(action.action_object, table):
+            #[           UNLOCK(&entry->lock);
         #}           break;
     #[       }
     #}     }

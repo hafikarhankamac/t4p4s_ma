@@ -11,6 +11,7 @@ enum lookup_t {
     LOOKUP_none,
 
     LOOKUP_exact,
+    LOOKUP_exact_inplace,
     LOOKUP_lpm,
     LOOKUP_ternary,
 };
@@ -47,6 +48,9 @@ typedef struct lookup_table_s {
 
     int socketid;
     int instance;
+
+    bool access_locked;
+    bool has_replicas;
 
     lookup_table_entry_info_t entry;
 #ifdef T4P4S_DEBUG

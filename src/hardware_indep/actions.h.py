@@ -4,11 +4,11 @@
 from utils.codegen import format_type
 from compiler_common import unique_everseen
 
-#[ #ifndef __ACTIONS_H__
-#[ #define __ACTIONS_H__
+#[ #pragma once
 
 #[ #include "dataplane.h"
 #[ #include "common.h"
+#[ #include "gen_include.h"
 
 #[ #include "util_packet.h"
 
@@ -21,12 +21,12 @@ from compiler_common import unique_everseen
 #[ #define WIDEFIELD(name, length) uint8_t name[(length + 7) / 8];
 
 
-#{ enum actions {
+#{ typedef enum actions_e {
 for table in hlir.tables:
     for action in unique_everseen(table.actions):
         #[     action_${action.action_object.name},
 #[      action_,
-#} };
+#} } actions_t;
 
 for ctl in hlir.controls:
     for act in ctl.actions:
@@ -44,14 +44,14 @@ for ctl in hlir.controls:
         #} } action_${act.name}_params_t;
 
 for table in hlir.tables:
-    #{ struct ${table.name}_action {
+    #{ typedef struct ${table.name}_action_s {
     #[     int action_id;
     #{     union {
     for action in table.actions:
         action_method_name = action.expression.method.path.name
         #[         action_${action.action_object.name}_params_t ${action_method_name}_params;
     #}     };
-    #} };
+    #} } ${table.name}_action_t;
 
 
 
@@ -67,13 +67,12 @@ non_ctr_locals = ('counter', 'direct_counter', 'meter')
 
 for ctl in hlir.controls:
     #{ typedef struct control_locals_${ctl.name}_s {
-    for local_var_decl in ctl.controlLocals.filter('node_type', ('Declaration_Variable', 'Declaration_Instance')).filterfalse('urtype.name', non_ctr_locals):
-        #[ ${format_type(local_var_decl.type, varname = local_var_decl.name, resolve_names = False)};
+    for local_var_decl in ctl.local_var_decls:
+        #[     ${format_type(local_var_decl.type, varname = local_var_decl.name, resolve_names = False)};
 
     # TODO is there a more appropriate way to store registers?
     for reg in hlir.registers:
-        #[ ${format_type(reg.type, resolve_names = False)} ${reg.name};
+        #[     ${format_type(reg.type, resolve_names = False)} register_${reg.name};
 
     #} } control_locals_${ctl.name}_t;
-
-#[ #endif
+    #[

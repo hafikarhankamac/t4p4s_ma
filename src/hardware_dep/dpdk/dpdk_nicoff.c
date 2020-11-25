@@ -9,6 +9,8 @@
 #include "util_debug.h"
 #include "util_packet.h"
 
+#include "main.h"
+
 extern int get_socketid(unsigned lcore_id);
 
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
@@ -116,15 +118,19 @@ int total_fake_byte_count(const char* texts[MAX_SECTION_COUNT]) {
 struct rte_mbuf* fake_packet(const char* texts[MAX_SECTION_COUNT], LCPARAMS) {
     int byte_count = total_fake_byte_count(texts);
 
-    debug("Creating fake " T4LIT(packet #%d,packet) " (" T4LIT(%d) " bytes)\n", lcdata->pkt_idx + 1, byte_count);
-
+    // debug("Creating fake " T4LIT(packet #%d,packet) " (" T4LIT(%d) " bytes)\n", lcdata->pkt_idx + 1, byte_count);
     struct rte_mbuf* p  = rte_pktmbuf_alloc(pktmbuf_pool[get_socketid(rte_lcore_id())]);
-    uint8_t*         p2 = (uint8_t*)rte_pktmbuf_prepend(p, byte_count);
+    uint8_t*         p2 = (uint8_t*)rte_pktmbuf_append(p, byte_count);
+
+    if (p2 == NULL) {
+        rte_exit(3, "Could not allocate space for fake packet\n");
+    }
+
     while (strlen(*texts) > 0) {
         uint8_t* dst = p2;
         p2 = str2bytes(*texts, p2);
 
-        dbg_bytes(dst, strlen(*texts) / 2, " :::: " T4LIT(%2zd) " bytes: ", strlen(*texts) / 2);
+        // dbg_bytes(dst, strlen(*texts) / 2, " :::: " T4LIT(%2zd) " bytes: ", strlen(*texts) / 2);
 
         ++texts;
     }
@@ -427,6 +433,8 @@ void initialize_nic() {
 }
 
 void t4p4s_abnormal_exit(int retval, int idx) {
+    t4p4s_print_stats();
+
     if (launch_count() == 1) {
         debug(T4LIT(Abnormal exit,error) ", code " T4LIT(%d) ".\n", retval);
     } else {
@@ -443,6 +451,8 @@ void t4p4s_after_launch(int idx) {
 }
 
 int t4p4s_normal_exit() {
+    t4p4s_print_stats();
+
     if (encountered_error) {
         debug(T4LIT(Normal exit,success) " but " T4LIT(errors in processing packets,error) "\n");
         return 3;

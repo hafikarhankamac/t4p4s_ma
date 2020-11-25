@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2018 Eotvos Lorand University, Budapest, Hungary
 
-#[ #ifndef __TABLES_H__
-#[ #define __TABLES_H__
+#[ #pragma once
 
 #[ #include "stateful_memory.h"
 #[ #include "actions.h"
@@ -11,14 +10,12 @@
 
 for table in hlir.tables:
     #{ typedef struct table_entry_${table.name}_s {
-    #[     struct ${table.name}_action  action;
+    #[     ${table.name}_action_t  action;
     #[     entry_validity_t         is_entry_valid;
     if (table.used_writable and table.synced):
         #[     lock_t                   lock;
     #} } table_entry_${table.name}_t;
 
-
-#[ #define NB_TABLES ${len(hlir.tables)}
 
 #{ enum table_names {
 for table in hlir.tables:
@@ -26,4 +23,8 @@ for table in hlir.tables:
 #[ TABLE_,
 #} };
 
-#[ #endif
+
+#[ void exact_add_promote(int tableid, uint8_t* key, uint8_t* value, bool is_const_entry, bool should_print);
+#[ void lpm_add_promote(int tableid, uint8_t* key, uint8_t depth, uint8_t* value, bool is_const_entry, bool should_print);
+#[ void ternary_add_promote(int tableid, uint8_t* key, uint8_t* mask, uint8_t* value, bool is_const_entry, bool should_print);
+#[ void table_setdefault_promote(int tableid, uint8_t* value);

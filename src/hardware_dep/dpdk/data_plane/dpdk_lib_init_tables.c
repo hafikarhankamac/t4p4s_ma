@@ -46,11 +46,14 @@ void create_tables_on_lcore(unsigned lcore_id)
     }
 }
 
+#ifdef T4P4S_DEBUG
 void init_print_table_info()
 {
     char table_names[64*NB_TABLES+256];
     char* nameptr = table_names;
     nameptr += sprintf(nameptr, " :::: Init tables on all cores (" T4LIT(%d) " replicas each): ", NB_REPLICA);
+
+    int common_count = 0;
     int hidden_count = 0;
     for (int i = 0; i < NB_TABLES; i++) {
         lookup_table_t t = table_config[i];
@@ -58,15 +61,20 @@ void init_print_table_info()
             ++hidden_count;
             continue;
         }
-        nameptr += sprintf(nameptr, "%s" T4LIT(%s,table), i == 0 ? "" : ", ", t.name);
+        ++common_count;
+        nameptr += sprintf(nameptr, "%s" T4LIT(%s,table), i == 0 ? "" : ", ", t.short_name);
     }
 
     if (hidden_count > 0) {
-        nameptr += sprintf(nameptr, " and " T4LIT(%d) " hidden tables", hidden_count);
+        if (common_count > 0) {
+            nameptr += sprintf(nameptr, " and ");
+        }
+        nameptr += sprintf(nameptr, T4LIT(%d) " hidden tables", hidden_count);
     }
 
     debug("%s\n", table_names);
 }
+#endif
 
 void init_tables()
 {

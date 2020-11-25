@@ -11,6 +11,8 @@ from compiler_common import types, unique_everseen
 #[ #include "util_debug.h"
 #[ #include "util_packet.h"
 
+# [ #include "dpdk_primitives_impl.h" // TODO remove
+
 #[ extern ctrl_plane_backend bg;
 
 ################################################################################
@@ -20,6 +22,18 @@ from compiler_common import types, unique_everseen
 for table in hlir.tables:
     for action in unique_everseen(table.actions):
         #[     "${action.action_object.name}",
+#} };
+
+#{ char* action_canonical_names[] = {
+for table in hlir.tables:
+    for action in unique_everseen(table.actions):
+        #[     "${action.action_object.canonical_name}",
+#} };
+
+#{ char* action_short_names[] = {
+for table in hlir.tables:
+    for action in unique_everseen(table.actions):
+        #[     "${action.action_object.short_name}",
 #} };
 
 

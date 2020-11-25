@@ -28,7 +28,7 @@ void fill_ipv4_lpm_table(uint8_t ip[4],uint8_t prefix, uint32_t nhgrp)
 	printf("ipv4_lpm\n");
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "ipv4_lpm_0");
+    strcpy(te->table_name, ".ipv4_lpm");
 
     lpm = add_p4_field_match_lpm(te, 2048);
     strcpy(lpm->header.name, "ipv4.dstAddr");
@@ -36,7 +36,7 @@ void fill_ipv4_lpm_table(uint8_t ip[4],uint8_t prefix, uint32_t nhgrp)
     lpm->prefix_length = prefix;
 
     a = add_p4_action(h, 2048);
-    strcpy(a->description.name, "set_nhop");
+    strcpy(a->description.name, ".set_nhop");
 
     printf("add nhgrp\n");
     ap = add_p4_action_parameter(h, a, 2048);	
@@ -72,7 +72,7 @@ void fill_nexthops_table(uint32_t nhgroup, uint8_t port, uint8_t smac[6], uint8_
 
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "nexthops_0");
+    strcpy(te->table_name, ".nexthops");
 
     exact = add_p4_field_match_exact(te, 2048);
     strcpy(exact->header.name, "routing_metadata.nhgroup");
@@ -80,7 +80,7 @@ void fill_nexthops_table(uint32_t nhgroup, uint8_t port, uint8_t smac[6], uint8_
     exact->length = 4*8+0;
 
     a = add_p4_action(h, 2048);
-    strcpy(a->description.name, "forward");
+    strcpy(a->description.name, ".forward");
 
     ap = add_p4_action_parameter(h, a, 2048);	
     strcpy(ap->name, "dmac");
@@ -121,10 +121,10 @@ void set_default_action_nexthops()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "nexthops_0");
+    strcpy(sda->table_name, ".nexthops");
 
     a = &(sda->action);
-    strcpy(a->description.name, "_drop_2");
+    strcpy(a->description.name, "._drop");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);
@@ -145,10 +145,10 @@ void set_default_action_ipv4_lpm()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "ipv4_lpm_0");
+    strcpy(sda->table_name, ".ipv4_lpm");
 
     a = &(sda->action);
-    strcpy(a->description.name, "_drop");
+    strcpy(a->description.name, "._drop");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);

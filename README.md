@@ -12,39 +12,65 @@ Find out more [about the P4 language](https://p4.org/).
 
 ### Preparation
 
-To start working with the compiler, simply download the `bootstrap-t4p4s.sh` script and execute it with the following command. It should work on Debian based systems, e.g. the latest LTS edition of Linux Mint or Ubuntu.
+To start working with the compiler, simply download the `bootstrap-t4p4s.sh` script and execute it in the following way.
+The script installs all necessary libraries ([DPDK](https://www.dpdk.org/), [P4C](https://github.com/p4lang/p4c), `P4Runtime` and more) and T₄P₄S itself, and sets up environment variables.
 
+    wget https://raw.githubusercontent.com/P4ELTE/t4p4s/master/bootstrap-t4p4s.sh
+    chmod +x bootstrap-t4p4s.sh
     . ./bootstrap-t4p4s.sh
 
-The script installs all necessary software including T₄P₄S itself, and sets up environment variables.
+Notes.
 
-- Note: without the `.` at the beginning of the line, the environment variables will not be usable immediately.
-    - In that case, you can either start a new terminal, or run `. ./t4p4s_environment_variables.sh`
+- ⚠ The purpose of the script is to setup a convenient environment for you if you're just starting out.
+  Therefore, you *only need to execute it once*.
+  If you already have a working environment, you *don't need to run the script again*, and you *probably shouldn't*.
+
+    - To get T₄P₄S only without the third party libraries: `git clone --recursive https://github.com/P4ELTE/t4p4s`
+    - To update a previous T₄P₄S checkout, execute this command in its directory: `git pull --recurse-submodules`
+
+- Without the `.` at the beginning of the line, the environment variables will not be usable immediately.
+    - In that case, you can either open a new terminal, or run `. ./t4p4s_environment_variables.sh`
+
+- The script is intended to work on recent Debian based systems, e.g. the latest LTS edition of Linux Mint or Ubuntu.
+    - Legacy systems such as Ubuntu 18.04 and 16.04 are not supported by the script, as they do not come with out-of-the-box support for sufficiently recent libraries (such as Meson 0.47.1 or newer required for building DPDK, or Python 3.8 or newer required for building T₄P₄S).
+    - Even on legacy systems, the script may still be useful to you. You may disable stages of the script, and manually install the software.
+
+    INSTALL_STAGE2_DPDK=no INSTALL_STAGE3_PROTOBUF=no INSTALL_STAGE4_P4C=no . ./bootstrap-t4p4s.sh
+
+    - It is also useful if you are not interested in using `P4Runtime` features.
+
+    INSTALL_STAGE5_P4RT=no . ./bootstrap-t4p4s.sh
+
+- To see all possible options (including available stages), run the script the following way.
+
+    ./bootstrap-t4p4s.sh showenvs
+
+- If you happen to have some of the dependencies locally checked out, you can speed up the installation process by letting the script clone them locally.
+
+    LOCAL_REPO_CACHE=/my/cache/dir . ./bootstrap-t4p4s.sh
+
+- At this stage of development, T₄P₄S will not compile and run all P4 programs properly. In particular, header stacks are not supported currently.
+
 
 Overriding defaults.
 
-- To increase efficiency, the script runs jobs on all cores on the system in parallel. Should you experience any problems (for example, your system may run out of memory), you can override the number of jobs.
+- To increase efficiency, the script runs jobs on all cores of the system in parallel. Should you experience any problems (for example, your system may run out of memory), you can override the number of jobs.
 
     MAX_MAKE_JOBS=4 . ./bootstrap-t4p4s.sh
 
 - By default, the script runs downloads in parallel. You can force it to work sequentially.
 
-    PARALLEL_INSTALL=0 . ./bootstrap-t4p4s.sh
+    PARALLEL_INSTALL=no . ./bootstrap-t4p4s.sh
 
 - The script installs the newest versions of DPDK and P4C unless overridden by the user.
 
     DPDK_VERSION=20.05 . ./bootstrap-t4p4s.sh
     DPDK_VERSION=20.05 DPDK_FILEVSN=20.05.0 . ./bootstrap-t4p4s.sh
+    P4C_COMMIT_DATE=20201101 . ./bootstrap-t4p4s.sh
 
-- The script will use `clang` by default if it is installed. Using another target like `gcc` is possible, too.
+- The script uses `clang`, `clang++` and `lld` by default if they are installed unless overridden. It also uses `ccache`.
 
-    RTE_TARGET=x86_64-native-linuxapp-gcc . ./bootstrap-t4p4s.sh
-
-To download T₄P₄S only, make sure to get it with its submodule like this: `git clone --recursive https://github.com/P4ELTE/t4p4s`
-
-- When you pull further commits, you will need to update the submodules as well: `git submodule update --init --recursive` or `git submodule update --rebase --remote`
-
-Note: at this stage, not all P4 programs will compile and run properly. In particular, header stacks are not supported currently.
+    T4P4S_CC=gcc T4P4S_CXX=g++ T4P4S_LD=bfd . ./bootstrap-t4p4s.sh
 
 
 ### Options
@@ -161,6 +187,8 @@ Note that for non-testing examples, you will have to setup your network card, an
         `./t4p4s.sh :l2fwd verbose`
     - Verbose output for the switch
         `./t4p4s.sh :l2fwd dbg`
+    - In addition, statistics can be displayed at the end
+        `./t4p4s.sh :l2fwd dbg stats`
     - Suppress EAL messages from the switch output
         `./t4p4s.sh :l2fwd noeal`
     - No output at all (both terminal and switch) except for errors
@@ -232,7 +260,7 @@ To see detailed output about compilation and execution, use the following option
 To run all available test cases, execute `./run_tests.sh`.
 You can also give this script any number of additional options.
 
-    ./run_tests.sh verbose dbg
+    ./run_tests.sh verbose dbg stats
 
 As its name implies, `run_tests.sh` runs each test case in the offline (`nicoff`, meaning no NIC present) mode.
 You may set the `PREFIX` and `POSTFIX` environment variables to make the script start `t4p4s.sh` with a different setup for the test case.

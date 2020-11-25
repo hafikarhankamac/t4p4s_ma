@@ -10,7 +10,19 @@ from compiler_common import statement_buffer_value
 #[ #include "util_packet.h"
 #[ #include "gen_include.h"
 
+#{ #ifdef T4P4S_STATS
+#[     extern t4p4s_stats_t t4p4s_stats;
+#} #endif
+
 ################################################################################
+
+#{ void drop_packet(STDPARAMS) {
+#[     uint32_t value32; (void)value32;
+#[     uint32_t res32; (void)res32;
+#[     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_DROP_VALUE);
+#[     debug("    " T4LIT(:,status) " " T4LIT(Dropping package,status) "\n");
+#} }
+
 
 # TODO more than one parser can be present
 parser = hlir.parsers[0]
@@ -22,7 +34,10 @@ for local in parser.parserLocals.filter('node_type', 'Declaration_Instance'):
 #} }
 
 for s in parser.states:
-    #[ static void parser_state_${s.name}(STDPARAMS);
+    if s.is_reachable:
+        #[ static void parser_state_${s.name}(STDPARAMS);
+    else:
+        #[ // state ${s.name} is not reachable
 
 for hdr in hlir.header_instances.filterfalse(lambda hdr: hdr.urtype.is_metadata):
     #{ static int parser_extract_${hdr.name}(STDPARAMS) {
@@ -39,7 +54,14 @@ for hdr in hlir.header_instances.filterfalse(lambda hdr: hdr.urtype.is_metadata)
     #[ uint32_t vwlen = 0;
     #[ uint32_t hdrlen = (${hdr.urtype.size} + vwlen) / 8;
     #{ if (unlikely(pd->parsed_length + hdrlen > pd->wrapper->pkt_len)) {
-    #[     debug("    " T4LIT(!,warning) " ${"variable width " if is_vw else ""} header " T4LIT(${hdr.name},header) " is " T4LIT(too long,warning) " (" T4LIT(%d,warning) " bytes @ offset " T4LIT(%d) " => " T4LIT(%d,warning) "/" T4LIT(%d) " bytes)\n", hdrlen, pd->parsed_length, pd->parsed_length + hdrlen, pd->wrapper->pkt_len);
+    #{     #ifdef T4P4S_DEBUG
+    #{         if (pd->parsed_length == pd->wrapper->pkt_len) {
+    #[             debug("    " T4LIT(!,warning) " Missing ${"variable width " if is_vw else ""}header $$[header]{hdr.name}/" T4LIT(%d) "B @ offset " T4LIT(%d) "\n", hdrlen, pd->parsed_length);
+    #[         } else {
+    #[             debug("    " T4LIT(!,warning) " Trying to parse ${"variable width " if is_vw else ""}header $$[header]{hdr.name}/" T4LIT(%d) "B at offset " T4LIT(%d) ", " T4LIT(missing %d bytes,warning) "\n", hdrlen, pd->parsed_length, pd->parsed_length + hdrlen - pd->wrapper->pkt_len);
+    #}         }
+    #}     #endif
+    #[
     #[     return -1; // parsed after end of packet
     #} }
 
@@ -59,7 +81,7 @@ for hdr in hlir.header_instances.filterfalse(lambda hdr: hdr.urtype.is_metadata)
             #[ pd->fields.ATTRFLD(${hdr.name},${fld.name}) = NOT_MODIFIED;
 
     #[     dbg_bytes(hdr->pointer, hdr->length,
-    #[               "   :: Extracted ${"variable width " if is_vw else ""}header instance " T4LIT(#%d) " $$[header]{hdr.name}/$${}{%dB}: ", hdr_infos[HDR(${hdr.name})].idx, hdr->length);
+    #[               "   :: Parsed ${"variable width " if is_vw else ""}header" T4LIT(#%d) " $$[header]{hdr.name}/$${}{%dB}: ", hdr_infos[HDR(${hdr.name})].idx, hdr->length);
 
     #[     pd->parsed_length += hdrlen;
     #[     pd->extract_ptr += hdrlen;
@@ -69,15 +91,7 @@ for hdr in hlir.header_instances.filterfalse(lambda hdr: hdr.urtype.is_metadata)
     #} }
 
 
-#{ void drop_packet(STDPARAMS) {
-#[     uint32_t value32; (void)value32;
-#[     uint32_t res32; (void)res32;
-#[     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_DROP_VALUE);
-#[     debug("    " T4LIT(:,status) " " T4LIT(Dropping package,status) "\n");
-#} }
-
-
-# TODO find a less convoluted way to get to the header instance
+# TODO find a less convoluted way to get to the header
 def get_hdrinst(arg0, component):
     if 'path' in arg0:
         hdrinst_name = arg0.path.name
@@ -92,7 +106,7 @@ def get_hdrinst(arg0, component):
                 # note: it is defined as a local variable
                 return dvar.urtype
             else:
-                addError("Finding header instance", f"There is no single header instance that corresponds to {hdrtype.name}")
+                addError("Finding header", f"There is no single header that corresponds to {hdrtype.name}")
         else:
             return hlir.header_instances.get(hdrinst_name, 'Declaration_Variable', lambda hi: hi.urtype.name == hdrtype.name)
     elif 'hdr_ref' in (mexpr := component.methodCall.method.expr):
@@ -111,11 +125,37 @@ def get_hdrinst(arg0, component):
 
 
 for s in parser.states:
+    if not s.is_reachable:
+        continue
+
     #{ static void parser_state_${s.name}(STDPARAMS) {
+
+    #{ #ifdef T4P4S_STATS
+    #[     t4p4s_stats.parser_state__${s.name} = true;
+    #} #endif
+
     #[     uint32_t value32; (void)value32;
     #[     uint32_t res32; (void)res32;
     #[     parser_state_t* local_vars = pstate;
-    #[     debug(" :::: Parser state $$[parserstate]{s.name}\n");
+
+    if s.name == 'accept':
+        #[     pd->payload_length = packet_length(pd) - (pd->extract_ptr - (void*)pd->data);
+
+        #{     if (pd->payload_length > 0) {
+        #[         dbg_bytes(pd->data + pd->parsed_length, pd->payload_length, " " T4LIT(%%%%%%%%,success) " Packet is $$[success]{}{accepted}, " T4LIT(%d) "B of headers, " T4LIT(%d) "B of payload: ", pd->parsed_length, pd->payload_length);
+        #[     } else {
+        #[         debug(" " T4LIT(%%%%%%%%,success) " Packet is $$[success]{}{accepted}, " T4LIT(%d) "B of headers, " T4LIT(empty payload) "\n", pd->parsed_length);
+        #}     }
+        #} }
+        continue
+
+    if s.name == 'reject':
+        #[     debug(" " T4LIT(%%%%%%%%,status) " Parser state $$[parserstate]{s.name}, packet is $$[status]{}{dropped}\n");
+        #[     drop_packet(STDPARAMS_IN);
+        #} }
+        continue
+
+    #[     debug(" %%%%%%%% Parser state $$[parserstate]{s.name}\n");
 
     for component in s.components:
         if 'call' not in component:
@@ -128,22 +168,28 @@ for s in parser.states:
         arg0 = component.methodCall.arguments['Argument'][0]
         hdr = get_hdrinst(arg0, component)
         if hdr is None:
-            size = (arg0.expression.hdr_ref.urtype.size+7)/8
-            #[ // extracting to underscore argument, $size bytes
-            #[ pd->parsed_length += $size;
+            hdrt = arg0.expression.hdr_ref.urtype
+            if hdrt.size % 8 != 0:
+                addWarning('extracting underscore header', f'Extracting non-byte-aligned header type {hdrt.name}/{hdrt.size}b as noname header')
+            size = (hdrt.size+7)//8
+            #[ // extracting to underscore argument, $size bytes (${hdrt.size} bits)
+            #[ debug("   :: Extracting " T4LIT(${hdrt.name},header) "/" T4LIT($size) " as " T4LIT(noname header,header) "\n");
+            #[ pd->extract_ptr += $size;
+            #[ pd->is_emit_reordering = true; // a noname header cannot be emitted
         else:
             #[ int offset_${hdr.name} = parser_extract_${hdr.name}(STDPARAMS_IN);
             #{ if (unlikely(offset_${hdr.name}) < 0) {
             #[     drop_packet(STDPARAMS_IN);
             #[     return;
             #} }
+        #[ 
 
 
     if 'selectExpression' not in s:
         if s.name == 'accept':
             #[ debug("   " T4LIT(::,success) " Packet is $$[success]{}{accepted}, total length of headers: " T4LIT(%d) " bytes\n", pd->parsed_length);
 
-            #[ pd->payload_length = packet_length(pd) - pd->parsed_length;
+            #[ pd->payload_length = packet_length(pd) - (pd->extract_ptr - (void*)pd->data);
 
             #{ if (pd->payload_length > 0) {
             #[     dbg_bytes(pd->data + pd->parsed_length, pd->payload_length, "    : " T4LIT(Payload,header) " is $${}{%d} bytes: ", pd->payload_length);

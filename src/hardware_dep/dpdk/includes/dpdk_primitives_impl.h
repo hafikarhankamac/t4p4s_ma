@@ -183,7 +183,7 @@ static int set_field(fldT f[], bufT b[], uint32_t value32, int bit_width) {
 
     if (f != 0) {
         fldT fld = f[0];
-        debug("    " T4LIT(=,field) " Modifying field " T4LIT(%s,header) "." T4LIT(%s,field) "/" T4LIT(%d) "b (" T4LIT(%d) "B) = " T4LIT(%d) " (0x" T4LIT(%0*x) ")\n",
+        debug("    " T4LIT(=,field) " Set " T4LIT(%s,header) "." T4LIT(%s,field) "/" T4LIT(%d) "b (" T4LIT(%d) "B) = " T4LIT(%d) " (0x" T4LIT(%0*x) ")\n",
               header_instance_names[fld.hdr],
               field_names[fld.fld],
               bit_width,
@@ -193,7 +193,11 @@ static int set_field(fldT f[], bufT b[], uint32_t value32, int bit_width) {
               bit_width <= 8 ? (uint8_t)value32 : bit_width <= 16 ? (uint16_t)value32 : value32);
 
         int res32;
-        MODIFY_INT32_INT32_AUTO(handle(header_desc_ins(fld.pd, fld.hdr), fld.fld), value32);
+        if ((handle(header_desc_ins(fld.pd , fld.hdr), fld.fld)).bytecount == 32) {
+            *(int*)((handle(header_desc_ins(fld.pd , fld.hdr), fld.fld)).byte_addr) = value32;
+        } else {
+            MODIFY_INT32_INT32_AUTO(handle(header_desc_ins(fld.pd, fld.hdr), fld.fld), value32);
+        }
         return res32;
     }
 

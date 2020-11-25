@@ -56,7 +56,6 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     if (t->type == LOOKUP_exact_inplace) {
         make_table_entry(&(ext->content.inplace[index]), value, t);
     }
-    // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }
 
 void exact_change(lookup_table_t* t, uint8_t* key, uint8_t* value) {

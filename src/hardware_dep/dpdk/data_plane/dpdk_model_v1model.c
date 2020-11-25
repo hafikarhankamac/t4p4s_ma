@@ -6,6 +6,9 @@
 #include "sheep_precise_timer.h"
 #include "util_debug.h"
 
+#include "dpdk_lib.h"
+#include "stateful_memory.h"
+
 #include <rte_ip.h>
 
 void transfer_to_egress(packet_descriptor_t* pd)
@@ -100,7 +103,7 @@ void mark_to_drop(SHORT_STDPARAMS) {
     uint32_t res32;
     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_DROP_VALUE)
 
-    debug("       : " T4LIT(standard_metadata,header) "." T4LIT(EGRESS_META_FLD,field) " = " T4LIT(EGRESS_DROP_VALUE,bytes) "\n");
+    debug("       : " T4LIT(all_metadatas,header) "." T4LIT(EGRESS_META_FLD,field) " = " T4LIT(EGRESS_DROP_VALUE,bytes) "\n");
 }
 
 
@@ -132,4 +135,23 @@ void verify_checksum_with_payload(bool condition, struct uint8_buffer_s data, bi
 void update_checksum_with_payload(bool condition, struct uint8_buffer_s data, bitfield_handle_t checksum, enum_HashAlgorithm_t algo, SHORT_STDPARAMS) {
     // TODO implement call to extern
     debug("    : Called extern " T4LIT(update_checksum_with_payload,extern) "\n");
+}
+
+
+extern void do_counter_count(counter_t* counter, int index, uint32_t value);
+
+void extern_counter_count(uint32_t counter_array_size, enum_CounterType_t ct, uint32_t index, counter_t* counter, SHORT_STDPARAMS) {
+    do_counter_count(counter, index, ct == enum_CounterType_packets ? 1 : packet_length(pd));
+}
+
+void extern_meter_execute_meter(uint32_t index, enum_MeterType_t b, uint32_t c, uint8_t d, meter_t e, SHORT_STDPARAMS) {
+    debug("    : Executing extern_meter_execute_meter#" T4LIT(%d) "\n", index);
+}
+
+void extern_register_read(uint32_t index, uint32_t a, uint32_t b, register_t c, SHORT_STDPARAMS) {
+    debug("    : Executing extern_register_read#" T4LIT(%d) "\n", index);
+}
+
+void extern_register_write(uint32_t index, uint32_t a, uint32_t b, register_t* c, SHORT_STDPARAMS) {
+    debug("    : Executing extern_register_write#" T4LIT(%d) "\n", index);
 }

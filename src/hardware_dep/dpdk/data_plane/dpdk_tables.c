@@ -8,6 +8,7 @@
 #include "tables.h"
 
 extern char* action_names[];
+extern char* action_canonical_names[];
 
 // ============================================================================
 // LOOKUP TABLE IMPLEMENTATIONS
@@ -28,9 +29,15 @@ extern char* action_names[];
 // Returns the action id stored in the table entry parameter.
 // Table entries have different types (${table.name}_action),
 // but all of them have to start with an int, the action id.
-char* get_entry_action_name(void* entry) {
-    int action_id = *((int*)entry);
-    return action_names[action_id];
+int get_entry_action_id(const void* entry) {
+    return *((int*)entry);
+}
+
+// Returns the action id stored in the table entry parameter.
+// Table entries have different types (${table.name}_action),
+// but all of them have to start with an int, the action id.
+char* get_entry_action_name(const void* entry) {
+    return action_canonical_names[get_entry_action_id(entry)];
 }
 
 // Computes the location of the validity field of the entry.
@@ -99,7 +106,7 @@ uint8_t* make_table_entry_on_socket(lookup_table_t* t, uint8_t* value) {
     int length = t->entry.entry_size;
     uint8_t* entry = rte_malloc_socket("uint8_t", sizeof(uint8_t)*length, 0, t->socketid);
     if (unlikely(entry == NULL)) {
-        rte_exit_with_errno(t->type == 0 ? "create hash table" : t->type == 1 ? "create lpm table" : "cretate ternary table", t->name);
+        rte_exit_with_errno(t->type == 0 ? "create hash table" : t->type == 1 ? "create lpm table" : "cretate ternary table", t->canonical_name);
     }
     make_table_entry(entry, value, t);
     return entry;
@@ -127,7 +134,7 @@ void create_ext_table(lookup_table_t* t, void* rte_table, int socketid)
     if (t->type == LOOKUP_lpm) {
         ext->content.pointer = rte_malloc_socket("uint8_t*", sizeof(uint8_t * ) * t->max_size, 0, socketid);
         if (unlikely(ext->content.pointer == NULL)) {
-            rte_exit_with_errno(t->type == 0 ? "create hash table" : t->type == 1 ? "create lpm table" : "cretate ternary table", t->name);
+            rte_exit_with_errno(t->type == 0 ? "create hash table" : t->type == 1 ? "create lpm table" : "cretate ternary table", t->canonical_name);
         }
     }
 

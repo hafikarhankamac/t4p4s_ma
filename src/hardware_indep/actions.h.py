@@ -25,7 +25,8 @@ from compiler_common import unique_everseen
 for table in hlir.tables:
     for action in unique_everseen(table.actions):
         #[     action_${action.action_object.name},
-#[      action_,
+if len(table.actions) == 0:
+    #[      action_,
 #} } actions_t;
 
 for ctl in hlir.controls:
@@ -38,7 +39,7 @@ for ctl in hlir.controls:
                 typeString += 'int%s_t' % paramtype.size
                 #[ ${typeString} ${param.name};
             else:
-                #[ WIDEFIELD(${param.name}, ${paramtype.size});
+                #[     ${format_type(param.urtype, varname = param.name)};
         if len(act.parameters.parameters) == 0:
             #[ WIDEFIELD(DUMMY_FIELD, 0);
         #} } action_${act.name}_params_t;
@@ -67,7 +68,7 @@ non_ctr_locals = ('counter', 'direct_counter', 'meter')
 
 for ctl in hlir.controls:
     #{ typedef struct control_locals_${ctl.name}_s {
-    for local_var_decl in ctl.local_var_decls:
+    for local_var_decl in ctl.local_var_decls.filterfalse('urtype.node_type', 'Type_Header'):
         #[     ${format_type(local_var_decl.type, varname = local_var_decl.name, resolve_names = False)};
 
     # TODO is there a more appropriate way to store registers?

@@ -131,7 +131,7 @@ for table in hlir.tables:
             #[               ${table.key_length_bytes},
             #[               ${table.key_length_bytes} == 0 ? "$$[bytes]{}{(empty key)}" : "");
 
-            #[     table_entry_${table.name}_t* entry = (table_entry_${table.name}_t*)${table.matchType.name}_lookup(tables[TABLE_${table.name}], (uint8_t*)key);
+            #[     table_entry_${table.name}_t* entry = (table_entry_${table.name}_t*)${table.matchType.name.split('_')[0]}_lookup(tables[TABLE_${table.name}], (uint8_t*)key);
             #[     bool hit = entry != NULL && entry->is_entry_valid != INVALID_TABLE_ENTRY;
             #{     if (unlikely(!hit)) {
             #[         entry = (table_entry_${table.name}_t*)tables[TABLE_${table.name}]->default_val;

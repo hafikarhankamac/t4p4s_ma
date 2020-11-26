@@ -38,11 +38,10 @@ for table in hlir.tables:
 
     #[      .key_size = $ks,
 
-    #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(entry_validity_t),
     if table.used_writable and table.synced:
-        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(entry_validity_t),
-    else:
         #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(entry_validity_t) + sizeof(lock_t),
+    else:
+        #[      .entry_size = sizeof(struct ${table.name}_action) + sizeof(entry_validity_t),
     #[      .action_size   = sizeof(struct ${table.name}_action),
     #[      .validity_size = sizeof(entry_validity_t),
     #[  },

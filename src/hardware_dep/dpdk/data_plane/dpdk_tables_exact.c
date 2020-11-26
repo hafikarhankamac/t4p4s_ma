@@ -16,8 +16,8 @@ struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rt
         .hash_func = hashfunc,
         .hash_func_init_val = 0,
    };
-    if (has_replicas) {
-        hash_params.extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY;
+    if (!has_replicas) {
+        hash_params.extra_flag = RTE_HASH_EXTRA_FLAGS_RW_CONCURRENCY_LF;
     }
     hash_params.name = name;
     hash_params.socket_id = socketid;
@@ -54,7 +54,7 @@ void exact_add(lookup_table_t* t, uint8_t* key, uint8_t* value)
     }
 
     if (t->type == LOOKUP_exact_inplace) {
-        make_table_entry(&(ext->content.inplace[index]), value, t);
+        make_table_entry(ext->content.inplace + index * t->entry.entry_size, value, t);
     }
     // dbg_bytes(key, t->entry.key_size, "   :: Add " T4LIT(exact) " entry to " T4LIT(%s,table) " (hash " T4LIT(%d) "): " T4LIT(%s,action) " <- ", t->name, index, get_entry_action_name(value));
 }
@@ -91,7 +91,7 @@ uint8_t* exact_lookup(lookup_table_t* t, uint8_t* key)
     uint8_t* data;
     if (t->type == LOOKUP_exact_inplace) {
         int32_t index = rte_hash_lookup(ext->rte_table, key);
-        return (index < 0) ? t->default_val : &(ext->content.inplace[index]);
+        return (index < 0) ? t->default_val : ext->content.inplace + index * t->entry.entry_size;
     } else if (t->type == LOOKUP_exact) {
         int32_t ret = rte_hash_lookup_data(ext->rte_table, key, (void**) &data);
         return (ret < 0)? t->default_val : data;

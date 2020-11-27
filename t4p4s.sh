@@ -30,7 +30,7 @@ save_envs() {
 
 exit_program() {
     echo -e "$nn"
-    [ "${OPTS[ctr]}" != "" ] && verbosemsg "(Terminating controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn)" && sudo killall -q "dpdk_${OPTS[ctr]}_controller"
+    [ "${OPTS[ctr]}" != "" ] && verbosemsg "(Terminating controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn)" && sudo pkill -f "dpdk_${OPTS[ctr]}_controller"
     [ "${PYTHON_PARSE_HELPER_PROCESS}" != "" ] && verbosemsg "(Terminating the $(cc 0)parse helper process$nn, port $(cc 1)$PYTHON_PARSE_HELPER_PORT$nn, pid $(cc 1)$PYTHON_PARSE_HELPER_PROCESS$nn)" && (echo "exit_parse_helper" | netcat localhost "${PYTHON_PARSE_HELPER_PORT}")
     [ "$1" != "" ] && errmsg "$(cc 3)Error$nn: $*"
     exit $ERROR_CODE
@@ -733,7 +733,7 @@ if [ "$(optvalue run)" != off ]; then
         CONTROLLER="dpdk_${OPTS[ctr]}_controller"
         CONTROLLER_LOG=${T4P4S_LOG_DIR}/controller.log
 
-        sudo killall -q "$CONTROLLER"
+        sudo pkill -f "$CONTROLLER"
 
         msg "[$(cc 0)RUN CONTROLLER$nn] $(cc 1)${CONTROLLER}$nn (default for $(cc 0)${OPTS[example]}$nn@$(cc 1)${OPTS[variant]}$nn)"
 
@@ -822,7 +822,7 @@ if [ "$(optvalue run)" != off ]; then
 
     DBGWAIT=1
     if [ $ERROR_CODE -ne 0 ] && [ "$(optvalue autodbg)" != off ]; then
-        [ "${OPTS[ctr]}" != "" ] && verbosemsg "Restarting controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn" && sudo killall -q "dpdk_${OPTS[ctr]}_controller"
+        [ "${OPTS[ctr]}" != "" ] && verbosemsg "Restarting controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn" && sudo pkill -f "dpdk_${OPTS[ctr]}_controller"
         (stdbuf -o 0 $CTRL_PLANE_DIR/$CONTROLLER ${OPTS[ctrcfg]} &)
 
         msg "Running $(cc 1)debugger $DEBUGGER$nn in $(cc 0)$DBGWAIT$nn seconds"

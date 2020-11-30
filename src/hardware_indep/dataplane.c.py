@@ -25,9 +25,6 @@ from utils.misc import addError, addWarning
 #[ #include "util_packet.h"
 #[ #include "tables.h"
 
-#[ uint8_t* emit_addr;
-#[ uint32_t ingress_pkt_len;
-
 #[ extern ctrl_plane_backend bg;
 #[ extern char* action_names[];
 
@@ -470,7 +467,6 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[     pd->parsed_length = 0;
 #[     parse_packet(STDPARAMS_IN);
 #[
-#[     emit_addr = pd->data;
 #[     pd->emit_hdrinst_count = 0;
 #[     pd->is_emit_reordering = false;
 #[

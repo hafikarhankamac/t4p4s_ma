@@ -35,12 +35,12 @@ char* get_entry_action_name(void* entry) {
 
 // Computes the location of the validity field of the entry.
 bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t) {
-    return (bool*)(entry + t->entry.action_size + t->entry.state_size);
+    return (bool*)(entry + t->entry.action_size + t->entry.lock_size);
 }
 
 // Computes the location of the lock field of the entry.
 lock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t) {
-    return (lock_t*)(entry + t->entry.action_size + t->entry.state_size + t->entry.validity_size);
+    return (lock_t*)(entry + t->entry.action_size);
 }
 
 // ============================================================================
@@ -82,7 +82,6 @@ void rte_exit_with_errno(const char* msg, const char* table_name)
 // Sets up the fields of a table entry.
 void make_table_entry(uint8_t* entry, uint8_t* value, lookup_table_t* t) {
     memcpy(entry, value, t->entry.action_size);
-    memset(entry + t->entry.action_size, 0, t->entry.state_size);
     *entry_validity_ptr(entry, t) = VALID_TABLE_ENTRY;
 
     if (t->access_locked) {

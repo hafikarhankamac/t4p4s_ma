@@ -8,7 +8,7 @@ struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rt
 {
     struct rte_hash_parameters hash_params = {
         .name = NULL,
-        .entries = size,
+        .entries = size >= 8 ? size : 8,
 #if RTE_VER_MAJOR == 2 && RTE_VER_MINOR == 0
         .bucket_entries = 4,
 #endif

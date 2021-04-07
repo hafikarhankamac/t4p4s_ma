@@ -6,7 +6,6 @@
 
 #include <rte_ethdev.h>
 
-
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
     uint32_t port_mask = get_port_mask();
@@ -108,7 +107,7 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
 }
 
-void do_single_event(unsigned queue_idx, unsigned pkt_idx, event* e, LCPARAMS)
+void do_single_event(unsigned queue_idx, unsigned pkt_idx, event* event, LCPARAMS)
 {
     bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
 
@@ -142,16 +141,16 @@ void do_rx(LCPARAMS)
 
 void recv_events(LCPARAMS)
 {
-    uint8_t queue_id = lcdata->conf->hw.rx_queue_list[queue_idx].queue_id;
+    uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
     unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->event_queue, lcdata->event_burst, MAX_EVENT_BURST, NULL);
 
-    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkt_burst, event_count);
+    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
     if (unlikely(alloc != 0)) {
         //error
     }
 
     for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-        do_single_event(queue_idx, event_idx, LCPARAMS_IN);
+        do_single_event(0, event_idx, lcdata->event_burst[event_idx], LCPARAMS_IN);
     }
 }
 

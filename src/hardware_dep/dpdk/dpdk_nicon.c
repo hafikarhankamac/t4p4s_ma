@@ -156,8 +156,8 @@ struct lcore_data init_lcore_data() {
         .conf     = &lcore_conf[rte_lcore_id()],
         .mempool  = pktmbuf_pool[get_socketid(rte_lcore_id())], // TODO: Check for MULTI-SOCKET CASE !!!!
 
-        .event_queue = ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
-        .event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event), 0, get_socketid(rte_lcore_id()))
+        .event_queue = rte_ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ),
+        .event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event), 0, get_socketid(rte_lcore_id())),
 
         .is_valid  = lcdata.conf->hw.n_rx_queue != 0,
     };

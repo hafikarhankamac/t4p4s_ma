@@ -11,13 +11,6 @@
 
 void set_event_metadata(packet_descriptor_t* pd, uint8_t event, uint64_t args);
 
-struct event_s {
-    enum EVENTS event;
-    uint64_t args;
-} event_t;
-
-typedef event_s event;
-
 enum EVENTS {
     NONE = 0,
     EVENT1 = 1,
@@ -25,3 +18,11 @@ enum EVENTS {
 };
 
 typedef enum EVENTS event_e;
+
+struct event_s {
+    event_e event;
+    uint64_t args;
+};
+
+typedef struct event_s event;
+

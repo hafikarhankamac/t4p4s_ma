@@ -15,6 +15,7 @@
     #include <stdio.h>
 #endif
 
+extern struct rte_mempool* pktmbuf_pool[NB_SOCKETS];
 
 void initialize_args(int argc, char **argv);
 void initialize_nic();
@@ -33,6 +34,7 @@ void init_control_plane();
 
 // defined in the generated file dataplane.c
 void handle_packet(uint32_t portid, STDPARAMS);
+void handle_event(event_e event, uint64_t args, STDPARAMS);
 
 // defined separately for each example
 bool core_is_working(LCPARAMS);

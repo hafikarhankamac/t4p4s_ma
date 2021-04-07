@@ -108,6 +108,25 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
 }
 
+void do_single_event(unsigned queue_idx, unsigned pkt_idx, event* e, LCPARAMS)
+{
+    bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
+
+    if (got_packet) {
+        if (likely(is_packet_handled(LCPARAMS_IN))) {
+            struct lcore_state state = lcdata->conf->state;
+            lookup_table_t** tables = state.tables;
+            parser_state_t* pstate = &(state.parser_state);
+
+            init_parser_state(&(state.parser_state));
+            handle_event(event->event, event->args, STDPARAMS_IN);
+            do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
+        }
+    }
+
+    main_loop_post_single_rx(got_packet, LCPARAMS_IN);
+}
+
 void do_rx(LCPARAMS)
 {
     unsigned queue_count = get_queue_count(lcdata);
@@ -120,6 +139,24 @@ void do_rx(LCPARAMS)
         }
     }
 }
+
+void recv_events(LCPARAMS)
+{
+    uint8_t queue_id = lcdata->conf->hw.rx_queue_list[queue_idx].queue_id;
+    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->event_queue, lcdata->event_burst, MAX_EVENT_BURST, NULL);
+
+    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkt_burst, event_count);
+    if (unlikely(alloc != 0)) {
+        //error
+    }
+
+    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
+        do_single_event(queue_idx, event_idx, LCPARAMS_IN);
+    }
+}
+
+
+
 
 bool dpdk_main_loop()
 {
@@ -139,6 +176,7 @@ bool dpdk_main_loop()
     //uint64_t rx_cnt = 0;
     while (core_is_working(LCPARAMS_IN)) {
         main_loop_pre_rx(LCPARAMS_IN);
+        recv_events(LCPARAMS_IN);
         do_rx(LCPARAMS_IN);
         main_loop_post_rx(LCPARAMS_IN);
 

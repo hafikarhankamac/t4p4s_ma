@@ -417,3 +417,27 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[
 #[     emit_packet(STDPARAMS_IN);
 #} }
+
+#[ void handle_event(uint8_t event, uint64_t args, STDPARAMS)
+#{ {
+#[     int value32;
+#[     int res32;
+#[
+#[     reset_headers(SHORT_STDPARAMS_IN);
+#[     set_handle_packet_metadata(pd, EVENT_PORT);
+#[     set_event_metadata(pd, event, args);
+#[
+#[     dbg_bytes(pd->data, packet_length(pd), "Handling packet (port " T4LIT(%d,port) ", $${}{%02d} bytes)  : ", extract_ingress_port(pd), packet_length(pd));
+#[
+#[     pd->parsed_length = 0;
+#[     parse_packet(STDPARAMS_IN);
+#[
+#[     //emit_addr = pd->data;
+#[     pd->emit_hdrinst_count = 0;
+#[     pd->is_emit_reordering = false;
+#[
+#[     process_packet(STDPARAMS_IN);
+#[
+#[     emit_packet(STDPARAMS_IN);
+#} }
+

@@ -7,6 +7,9 @@
 #include "actions.h"
 #include "util_debug.h"
 
+#include "dpdk_model_event.h"
+
+
 extern struct all_metadatas_t all_metadatas;
 
 void InternetChecksum_t_init() {

@@ -92,6 +92,9 @@ struct mbuf_table {
 
 #define NB_SOCKETS 8
 
+#define EVENT_QUEUE_SIZE 1024
+#define EVENT_PORT UINT32_MAX
+
 struct lcore_rx_queue {
 	uint8_t port_id;
 	uint8_t queue_id;

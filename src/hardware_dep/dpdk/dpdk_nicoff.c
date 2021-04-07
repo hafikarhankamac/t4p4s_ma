@@ -419,6 +419,8 @@ struct lcore_data init_lcore_data() {
         .idx      = 0,
         .pkt_idx  = 0,
         .mempool  = pktmbuf_pool[0],
+        .event_queue = ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
+        .event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event), 0, get_socketid(rte_lcore_id()))
     };
 }
 

@@ -23,6 +23,7 @@
 #define T4P4S_BROADCAST_PORT    100
 
 #define MAX_PKT_BURST     32  /* note: this equals to MBUF_TABLE_SIZE in dpdk_lib.h */
+#define MAX_EVENT_BURST    8
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
 
 #define MAX_PORTS               16
@@ -48,6 +49,9 @@ struct lcore_data {
     struct lcore_conf*  conf;
 
     packet*             pkts_burst[MAX_PKT_BURST];
+    struct rte_ring*    event_queue;
+    event**             event_burst;
+
     unsigned            nb_rx;
 
     bool                is_valid;

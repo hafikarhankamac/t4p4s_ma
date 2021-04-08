@@ -9,7 +9,6 @@
 #include "util_packet.h"
 #include "common.h"
 
-#include "dpdk_model_event.h"
 
 #define INGRESS_META_FLD    FLD(all_metadatas,ingress_port)
 #define EGRESS_META_FLD     FLD(all_metadatas,egress_port)

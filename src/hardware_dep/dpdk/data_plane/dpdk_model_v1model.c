@@ -29,14 +29,6 @@ void set_handle_packet_metadata(packet_descriptor_t* pd, uint32_t portid)
     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), INGRESS_META_FLD, portid);
 }
 
-void set_event_metadata(packet_descriptor_t* pd, uint8_t event, uint64_t args)
-{
-    uint8_t res8; // needed for the macro
-    uint64_t res64; // needed for the macro
-    MODIFY_INT8_INT8_BITS_PACKET(pd, HDR(all_metadatas), EVENT_META_FLD, event);
-    MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), EVENT_ARG_META_FLD, args);
-}
-
 void verify_checksum(bool cond, struct uint8_buffer_s data, bitfield_handle_t cksum_field_handle, enum_HashAlgorithm_t algorithm, SHORT_STDPARAMS) {
     debug("    : Called extern " T4LIT(verify_checksum,extern) "\n");
     uint32_t res32, current_cksum = 0, calculated_cksum = 0;

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <inttypes.h>
+
 #define SHORT_STDPARAMS packet_descriptor_t* pd, lookup_table_t** tables
 #define SHORT_STDPARAMS_IN pd, tables
 #define STDPARAMS SHORT_STDPARAMS, parser_state_t* pstate

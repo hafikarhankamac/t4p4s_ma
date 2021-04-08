@@ -107,7 +107,7 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
 }
 
-void do_single_event(unsigned queue_idx, unsigned pkt_idx, event* event, LCPARAMS)
+void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPARAMS)
 {
     bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
 
@@ -142,7 +142,7 @@ void do_rx(LCPARAMS)
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->event_queue, lcdata->event_burst, MAX_EVENT_BURST, NULL);
+    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->event_queue, (void**) lcdata->event_burst, MAX_EVENT_BURST, NULL);
 
     int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
     if (unlikely(alloc != 0)) {

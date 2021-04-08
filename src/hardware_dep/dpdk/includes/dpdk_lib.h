@@ -38,7 +38,6 @@
 #include "dpdk_tables.h"
 #include "tables.h"
 #include "ctrl_plane_backend.h"
-#include "dpdk_model_event.h"
 
 //=============================================================================
 // Backend-specific aliases

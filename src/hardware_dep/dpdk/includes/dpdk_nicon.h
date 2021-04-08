@@ -18,7 +18,6 @@
 #define T4P4S_NIC_VARIANT on
 
 #include "dpdk_lib.h"
-#include "dpdk_model_event.h"
 #include <stdbool.h>
 
 #define T4P4S_BROADCAST_PORT    100
@@ -42,7 +41,6 @@
 // note: this much space MUST be able to hold all deparsed content
 #define DEPARSE_BUFFER_SIZE     1024
 
-
 struct lcore_data {
     const uint64_t      drain_tsc;
     uint64_t            prev_tsc;
@@ -51,7 +49,7 @@ struct lcore_data {
 
     packet*             pkts_burst[MAX_PKT_BURST];
     struct rte_ring*    event_queue;
-    event**             event_burst;
+    void**           event_burst; //TODO event_t**
 
     unsigned            nb_rx;
 

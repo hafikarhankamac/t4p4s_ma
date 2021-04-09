@@ -6,6 +6,9 @@
 
 #include <rte_ethdev.h>
 
+extern timer_t timer;
+extern enabled_timer_module;
+
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
     uint32_t port_mask = get_port_mask();
@@ -124,6 +127,7 @@ void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPAR
     }
 
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
+    rte_free(event);
 }
 
 void do_rx(LCPARAMS)
@@ -154,7 +158,33 @@ void recv_events(LCPARAMS)
     }
 }
 
+bool dpdk_timer_loop()
+{
+    struct lcore_data lcdata_content = init_lcore_data();
+    packet_descriptor_t pd_content;
 
+    struct lcore_data* lcdata = &lcdata_content;
+    packet_descriptor_t* pd = &pd_content;
+
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
+
+    uint64_t lcore_id = rte_lcore_id();
+    printf("Starting timer loop on core %u\n", lcore_id);
+
+    rte_timer_subsystem_init();
+
+    timer = create_timer(LCPARAMS_IN, lcore_id);
+
+    while (core_is_working(LCPARAMS_IN)) {
+        cur_tsc = rte_rdtsc();
+        diff_tsc = cur_tsc - prev_tsc;
+
+        if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
+            rte_timer_manage();
+            prev_tsc = cur_tsc;
+        }
+    }
+}
 
 
 bool dpdk_main_loop()
@@ -208,6 +238,12 @@ int launch_dpdk()
             return -1;
     }
 
+    if (enabled_timer_module) {
+        pthread_t thread;
+        int ret = rte_ctrl_thread_create(&thread, "timer_thread", NULL, dpdk_timer_loop, NULL);
+        if (ret < 0)
+            return -1;
+    }
     return 0;
 }
 

@@ -13,8 +13,7 @@
 
 enum EVENTS {
     NONE = 0,
-    EVENT1 = 1,
-    EVENT2 = 2
+    TIMER = 1,
 };
 
 typedef enum EVENTS event_e;
@@ -27,3 +26,4 @@ struct event_s {
 typedef struct event_s event_t;
 
 void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t args);
+void enque_event(uint32_t lcore_id, event_e event, uint32_t args);

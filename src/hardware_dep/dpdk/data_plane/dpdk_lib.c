@@ -28,6 +28,10 @@ struct lcore_params lcore_params[MAX_LCORE_PARAMS];
 
 int master_socket_id;
 
+bool enabled_timer_module = false;
+
+timer_t timer;
+
 //=============================================================================
 // Locals
 

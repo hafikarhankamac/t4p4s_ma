@@ -4,6 +4,8 @@
 #include "dpdk_model_event.h"
 #include "util_packet.h"
 
+#include <rte_ring.h>
+
 void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t args)
 {
     int32_t res32; // needed for the macro
@@ -11,4 +13,10 @@ void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t args)
     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EVENT_ARG_META_FLD, args);
 }
 
-
+void enque_event(rte_ring *event_queue, event_e event, uint32_t args)
+{
+    event_t *event = (event_t*) rte_malloc_socket("event", sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+    event->event = event;
+    event->args = args;
+    rte_ring_enque(event_queue, event);
+}

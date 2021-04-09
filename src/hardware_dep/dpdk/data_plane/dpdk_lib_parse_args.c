@@ -20,6 +20,7 @@ static void print_usage(const char *prgname)
         "  --no-numa: optional, disable numa awareness\n"
         " which max packet len is PKTLEN in decimal (64-9600)\n"
         "  --hash-entry-num: specify the hash entry number in hexadecimal to be setup\n",
+        "  -t: enable timer"
         prgname);
 }
 
@@ -139,6 +140,11 @@ static int parse_args(int argc, char **argv)
         case 'P':
             printf("Promiscuous mode on by default\n");
             break;
+        case 't':
+            enabled_timer_module = true;
+            printf("Enabled timer module\n");
+
+
 
         /* long options */
         case 0:

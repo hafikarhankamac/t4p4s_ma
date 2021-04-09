@@ -26,4 +26,4 @@ struct event_s {
 typedef struct event_s event_t;
 
 void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t args);
-void enque_event(uint32_t lcore_id, event_e event, uint32_t args);
+void enque_event(struct rte_ring *event_queue, event_e event, uint32_t args);

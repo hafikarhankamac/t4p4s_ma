@@ -7,7 +7,7 @@
 #include <rte_ethdev.h>
 #include <rte_ip.h>
 #include <unistd.h>
-
+#include "timer.h"
 
 extern int numa_on;
 

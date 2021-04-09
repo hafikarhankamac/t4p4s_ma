@@ -19,8 +19,8 @@ static void print_usage(const char *prgname)
         "  --config (port,queue,lcore): rx queues configuration\n"
         "  --no-numa: optional, disable numa awareness\n"
         " which max packet len is PKTLEN in decimal (64-9600)\n"
-        "  --hash-entry-num: specify the hash entry number in hexadecimal to be setup\n",
-        "  -t: enable timer"
+        "  --hash-entry-num: specify the hash entry number in hexadecimal to be setup\n"
+        "  -t: enable timer\n",
         prgname);
 }
 

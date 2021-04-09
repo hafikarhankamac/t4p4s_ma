@@ -5,9 +5,9 @@
 #include "main.h"
 
 #include <rte_ethdev.h>
+#include <rte_timer.h>
 
-extern timer_t timer;
-extern enabled_timer_module;
+extern bool enabled_timer_module;
 
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
@@ -158,7 +158,7 @@ void recv_events(LCPARAMS)
     }
 }
 
-bool dpdk_timer_loop()
+void* dpdk_timer_loop(__attribute__((unused)) void *dummy)
 {
     struct lcore_data lcdata_content = init_lcore_data();
     packet_descriptor_t pd_content;
@@ -168,12 +168,10 @@ bool dpdk_timer_loop()
 
     uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
 
-    uint64_t lcore_id = rte_lcore_id();
+    uint32_t lcore_id = rte_lcore_id();
     printf("Starting timer loop on core %u\n", lcore_id);
 
     rte_timer_subsystem_init();
-
-    timer = create_timer(LCPARAMS_IN, lcore_id);
 
     while (core_is_working(LCPARAMS_IN)) {
         cur_tsc = rte_rdtsc();
@@ -184,6 +182,8 @@ bool dpdk_timer_loop()
             prev_tsc = cur_tsc;
         }
     }
+
+    return NULL;
 }
 
 

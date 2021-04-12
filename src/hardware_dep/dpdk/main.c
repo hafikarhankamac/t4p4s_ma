@@ -8,6 +8,7 @@
 #include <rte_timer.h>
 
 extern bool enabled_timer_module;
+extern uint64_t hz_millis;
 
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
@@ -146,7 +147,7 @@ void do_rx(LCPARAMS)
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->event_queue, (void**) lcdata->event_burst, MAX_EVENT_BURST, NULL);
+    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
 
     int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
     if (unlikely(alloc != 0)) {
@@ -154,7 +155,7 @@ void recv_events(LCPARAMS)
     }
 
     for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-        do_single_event(0, event_idx, lcdata->event_burst[event_idx], LCPARAMS_IN);
+        do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
     }
 }
 
@@ -240,6 +241,7 @@ int launch_dpdk()
 
     if (enabled_timer_module) {
         pthread_t thread;
+	hz_millis = rte_get_timer_hz()/1000;
         int ret = rte_ctrl_thread_create(&thread, "timer_thread", NULL, dpdk_timer_loop, NULL);
         if (ret < 0)
             return -1;

@@ -38,7 +38,7 @@
 #include "dpdk_tables.h"
 #include "tables.h"
 #include "ctrl_plane_backend.h"
-#include "timer.h" 
+#include "timer_extern.h" 
 
 //=============================================================================
 // Backend-specific aliases
@@ -112,6 +112,8 @@ struct lcore_params {
 struct lcore_state {
     lookup_table_t* tables[NB_TABLES];
     parser_state_t parser_state;
+    struct rte_ring* event_queue;
+    void**           event_burst; //TODO event_t**
 };
 
 struct socket_state {

@@ -868,8 +868,8 @@ def gen_fmt_MethodCallExpression(e, format_as_value=True, expand_parameters=Fals
         #    #[    SHORT_STDPARAMS_IN)
         elif mname == 'timer':
             fmt_params = format_method_parameters(e.arguments, method_params)
-            #[ extern void timer(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
-            #[ timer($fmt_params, SHORT_STDPARAMS_IN)
+            #[ extern void timer_extern(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+            #[ timer_extern($fmt_params, SHORT_STDPARAMS_IN)
         else:
             args = e.arguments
             #= gen_format_call_extern(args, mname, m)

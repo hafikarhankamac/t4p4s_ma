@@ -48,8 +48,6 @@ struct lcore_data {
     struct lcore_conf*  conf;
 
     packet*             pkts_burst[MAX_PKT_BURST];
-    struct rte_ring*    event_queue;
-    void**           event_burst; //TODO event_t**
 
     unsigned            nb_rx;
 

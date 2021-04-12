@@ -146,6 +146,10 @@ void init_queues(struct lcore_data* lcdata) {
         uint8_t queueid = lcdata->conf->hw.rx_queue_list[i].queue_id;
         RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
     }
+
+    //init event queues
+    lcdata->conf->state.event_queue = rte_ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
+    lcdata->conf->state.event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
 }
 
 struct lcore_data init_lcore_data() {
@@ -156,15 +160,12 @@ struct lcore_data init_lcore_data() {
         .conf     = &lcore_conf[rte_lcore_id()],
         .mempool  = pktmbuf_pool[get_socketid(rte_lcore_id())], // TODO: Check for MULTI-SOCKET CASE !!!!
 
-        .event_queue = rte_ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ),
-        .event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id())),
-
         .is_valid  = lcdata.conf->hw.n_rx_queue != 0,
     };
 
-    if (lcdata.is_valid && lcdata.event_queue != NULL) {
+    if (lcdata.is_valid) {
         RTE_LOG(INFO, P4_FWD, "entering main loop on lcore %u\n", rte_lcore_id());
-
+	
         init_queues(&lcdata);
     } else {
         RTE_LOG(INFO, P4_FWD, "lcore %u has nothing to do\n", rte_lcore_id());

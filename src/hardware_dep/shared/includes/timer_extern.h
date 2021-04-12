@@ -2,6 +2,8 @@
 
 #include <inttypes.h>
 
+static uint64_t hz_millis;
+
 struct timer_event_s {
     uint32_t lcore;
     uint32_t id;

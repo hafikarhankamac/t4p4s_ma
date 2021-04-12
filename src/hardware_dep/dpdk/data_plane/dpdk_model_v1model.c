@@ -4,6 +4,7 @@
 #include "dpdk_model_v1model.h"
 #include "util_packet.h"
 #include "sheep_precise_timer.h"
+#include "timer_extern.h"
 #include "util_debug.h"
 
 #include <rte_ip.h>
@@ -109,8 +110,8 @@ void sheep(uint32_t duration, SHORT_STDPARAMS) {
     wait_cycles(duration);
 }
 
-void timer(uint32_t duration, uint32_t id, SHORT_STDPARAMS) {
-    debug(" :::: Called extern " T4LIT(timer,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration);
+void timer_ext(uint32_t duration, uint32_t id, SHORT_STDPARAMS) {
+    debug(" :::: Called extern " T4LIT(timer,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
     single_timer(duration, id);
 }
 

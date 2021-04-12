@@ -38,6 +38,7 @@
 #include "dpdk_tables.h"
 #include "tables.h"
 #include "ctrl_plane_backend.h"
+#include "timer.h" 
 
 //=============================================================================
 // Backend-specific aliases

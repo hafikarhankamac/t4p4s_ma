@@ -777,7 +777,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             #[ (GET_INT32_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${e.member})))
         else:
             hdrname = "all_metadatas" if hdr.urtype('is_metadata', False) else hdr.name
-            #[ FLD($hdrname, ${e.member})
+            #[ (GET_INT32_AUTO_PACKET(pd, HDR($hdrname), FLD(${hdrname}, ${e.member})))
     else:
         if e.type.node_type in {'Type_Enum', 'Type_Error'}:
             #[ ${e.type.members.get(e.member).c_name}

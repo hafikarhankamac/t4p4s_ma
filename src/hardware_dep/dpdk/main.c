@@ -158,36 +158,6 @@ void recv_events(LCPARAMS)
         do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
     }
 }
-
-void* dpdk_timer_loop(__attribute__((unused)) void *dummy)
-{
-    struct lcore_data lcdata_content = init_lcore_data();
-    packet_descriptor_t pd_content;
-
-    struct lcore_data* lcdata = &lcdata_content;
-    packet_descriptor_t* pd = &pd_content;
-
-    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
-
-    uint32_t lcore_id = rte_lcore_id();
-    printf("Starting timer loop on core %u\n", lcore_id);
-
-    rte_timer_subsystem_init();
-
-    while (core_is_working(LCPARAMS_IN)) {
-        cur_tsc = rte_rdtsc();
-        diff_tsc = cur_tsc - prev_tsc;
-
-        if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
-            rte_timer_manage();
-            prev_tsc = cur_tsc;
-        }
-    }
-
-    return NULL;
-}
-
-
 bool dpdk_main_loop()
 {
     struct lcore_data lcdata_content = init_lcore_data();
@@ -203,9 +173,19 @@ bool dpdk_main_loop()
 
     init_dataplane(pd, lcdata->conf->state.tables);
 
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
     //uint64_t rx_cnt = 0;
     while (core_is_working(LCPARAMS_IN)) {
-        main_loop_pre_rx(LCPARAMS_IN);
+        if (enabled_timer_module) {
+            cur_tsc = rte_rdtsc();
+	    diff_tsc = cur_tsc - prev_tsc;
+            if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
+                rte_timer_manage();
+                prev_tsc = cur_tsc;
+            }
+	}
+	    
+	main_loop_pre_rx(LCPARAMS_IN);
         recv_events(LCPARAMS_IN);
         do_rx(LCPARAMS_IN);
         main_loop_post_rx(LCPARAMS_IN);
@@ -231,6 +211,10 @@ launch_one_lcore(__attribute__((unused)) void *dummy)
 
 int launch_dpdk()
 {
+    if (enabled_timer_module) {
+    	rte_timer_subsystem_init();
+    }
+    
     rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);
 
     unsigned lcore_id;
@@ -239,13 +223,6 @@ int launch_dpdk()
             return -1;
     }
 
-    if (enabled_timer_module) {
-        pthread_t thread;
-	hz_millis = rte_get_timer_hz()/1000;
-        int ret = rte_ctrl_thread_create(&thread, "timer_thread", NULL, dpdk_timer_loop, NULL);
-        if (ret < 0)
-            return -1;
-    }
     return 0;
 }
 
@@ -317,7 +294,6 @@ int main(int argc, char** argv)
         #endif
 
         init_table_default_actions();
-
         t4p4s_pre_launch(idx);
 
         int retval = launch_dpdk();

@@ -5,7 +5,7 @@
 #include <rte_malloc.h>
 
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
-
+extern bool enabled_timer_module;
 
 void finalize_timer(struct rte_timer *tim, timer_event_t *timer_event)
 {
@@ -47,8 +47,9 @@ void single_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore)
     struct rte_timer *rtetimer = rte_malloc("rte_timer", sizeof(struct rte_timer), 0);
     timer_event->repeat = 0;
     timer_event->lcore = lcore;
+    timer_event->id = id;
     rte_timer_init(rtetimer);
-    rte_timer_reset(rtetimer, hz_millis * ms, SINGLE, lcore, timer_callback_single, (void*) id);
+    rte_timer_reset(rtetimer, hz_millis * ms, SINGLE, lcore, timer_callback_single, (void*) timer_event);
 }
 
 void periodic_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore)
@@ -57,8 +58,9 @@ void periodic_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore)
     struct rte_timer *rtetimer = rte_malloc("rte_timer", sizeof(struct rte_timer), 0);
     timer_event->repeat = 0;
     timer_event->lcore = lcore;
+    timer_event->id = id;
     rte_timer_init(rtetimer);
-    rte_timer_reset(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_periodic, (void*) id);
+    rte_timer_reset(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_periodic, (void*) timer_event);
 }
 
 void multiple_timer_lcore(uint32_t ms, uint32_t count, uint32_t id, uint32_t lcore)
@@ -67,8 +69,9 @@ void multiple_timer_lcore(uint32_t ms, uint32_t count, uint32_t id, uint32_t lco
     struct rte_timer *rtetimer = rte_malloc("rte_timer", sizeof(struct rte_timer), 0);
     timer_event->repeat = count;
     timer_event->lcore = lcore;
+    timer_event->id = id;
     rte_timer_init(rtetimer);
-    rte_timer_reset(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_multiple, (void*) id);
+    rte_timer_reset(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_multiple, (void*) timer_event);
 }
 
 void single_timer(uint32_t ms, uint32_t id)

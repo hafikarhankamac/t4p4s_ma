@@ -124,7 +124,7 @@ static int parse_args(int argc, char **argv)
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "p:P",
+    while ((opt = getopt_long(argc, argvopt, "p:Pt",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
@@ -143,7 +143,7 @@ static int parse_args(int argc, char **argv)
         case 't':
             enabled_timer_module = true;
             printf("Enabled timer module\n");
-
+	    break;
 
 
         /* long options */

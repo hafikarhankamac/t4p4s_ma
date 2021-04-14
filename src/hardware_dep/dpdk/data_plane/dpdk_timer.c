@@ -88,3 +88,8 @@ void multiple_timer(uint32_t ms, uint32_t count, uint32_t id)
 {
     multiple_timer_lcore(ms, count, id, rte_lcore_id());
 }
+
+void timer_init(uint64_t hz) 
+{
+	hz_millis = hz / 1000;
+}

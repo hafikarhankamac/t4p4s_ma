@@ -147,7 +147,7 @@ void do_rx(LCPARAMS)
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    uint32_t event_count = rte_ring_sc_dequeue_bulk(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
+    uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
 
     if (event_count > 0) {
 	    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
@@ -215,6 +215,7 @@ int launch_dpdk()
 {
     if (enabled_timer_module) {
     	rte_timer_subsystem_init();
+	timer_init(rte_get_timer_hz());
     }
     
     rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);

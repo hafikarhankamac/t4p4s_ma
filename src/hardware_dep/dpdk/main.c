@@ -147,16 +147,18 @@ void do_rx(LCPARAMS)
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    unsigned event_count = rte_ring_sc_dequeue_bulk(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
+    uint32_t event_count = rte_ring_sc_dequeue_bulk(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
 
-    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
-    if (unlikely(alloc != 0)) {
-        //error
+    if (event_count > 0) {
+	    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
+	    if (unlikely(alloc != 0)) {
+		//error
+	    }
+	    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
+		do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
+	    }
     }
 
-    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-        do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
-    }
 }
 bool dpdk_main_loop()
 {

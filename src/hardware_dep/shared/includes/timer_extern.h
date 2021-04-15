@@ -21,6 +21,6 @@ void multiple_timer_lcore(uint32_t ms, uint32_t count, uint32_t id, uint32_t lco
 
 void single_timer(uint32_t ms, uint32_t id);
 void periodic_timer(uint32_t ms, uint32_t id);
-void multiple_timer(uint32_t ms, uint32_t count, uint32_t id);
+void multiple_timer(uint32_t ms, uint32_t id, uint32_t count);
 
 void timer_init(uint64_t hz);

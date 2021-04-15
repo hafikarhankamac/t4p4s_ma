@@ -122,7 +122,7 @@ void timer_periodic(uint32_t duration, uint32_t id, SHORT_STDPARAMS) {
 
 void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(timer,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
-    multiple_timer(duration, id);
+    multiple_timer(duration, id, count);
 }
 
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {

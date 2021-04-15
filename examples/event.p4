@@ -91,7 +91,7 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
         standard_metadata.egress_port = 9w3;
         hdr.custom.payload1 = count;
         count = hdr.custom.payload2;
-	timer_ext(100, 2);
+	timer_multiple(1, 2, 1000);
     }
 
     @name(".timer") action timeraction() {
@@ -117,14 +117,15 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
 
     apply {
     	if (standard_metadata.event != 0) {
-	hdr.ethernet.setValid();
-	hdr.ethernet.dstAddr = 0x010203040506;
-	hdr.ethernet.srcAddr = 0x0708090a0b0c;
-	hdr.ethernet.etherType = 0x8000;
-	hdr.ipv4.setValid();
-	hdr.ipv4.srcAddr = 0x0a000001;
-	hdr.ipv4.dstAddr = 0x0a000002;
-	hdr.ipv4.protocol = 6;
+		hdr.ethernet.setValid();
+		hdr.ethernet.dstAddr = 0x010203040506;
+		hdr.ethernet.srcAddr = 0x0708090a0b0c;
+		hdr.ethernet.etherType = 0x0800;
+		hdr.ipv4.setValid();
+		hdr.ipv4.srcAddr = 0x0a000001;
+		hdr.ipv4.dstAddr = 0x0a000002;
+		hdr.ipv4.protocol = 6;
+		hdr.ipv4.versionIhl = 0x45;
 		standard_metadata.egress_port = 9w3;
 	} else {
 	        table0.apply();

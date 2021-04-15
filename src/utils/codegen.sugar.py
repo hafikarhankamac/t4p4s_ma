@@ -866,10 +866,18 @@ def gen_fmt_MethodCallExpression(e, format_as_value=True, expand_parameters=Fals
         #    #[ encrypt_bytes(
         #    #[    $fmt_params,
         #    #[    SHORT_STDPARAMS_IN)
-        elif mname == 'timer':
+        elif mname == 'single_timer':
             fmt_params = format_method_parameters(e.arguments, method_params)
-            #[ extern void timer_extern(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
-            #[ timer_extern($fmt_params, SHORT_STDPARAMS_IN)
+            #[ extern void single_timer_extern(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+            #[ single_timer_extern($fmt_params, SHORT_STDPARAMS_IN)
+        elif mname == 'periodic_timer':
+            fmt_params = format_method_parameters(e.arguments, method_params)
+            #[ extern void periodic_timer_extern(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+            #[ periodic_timer_extern($fmt_params, SHORT_STDPARAMS_IN)
+        elif mname == 'multiple_timer':
+            fmt_params = format_method_parameters(e.arguments, method_params)
+            #[ extern void multiple_timer_extern(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+            #[ multiple_timer_extern($fmt_params, SHORT_STDPARAMS_IN)
         else:
             args = e.arguments
             #= gen_format_call_extern(args, mname, m)

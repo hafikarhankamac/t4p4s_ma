@@ -38,3 +38,6 @@ void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPAR
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length,
 //                     packet_descriptor_t* pd, lookup_table_t** tables);
 
+#ifdef EVENT_MODULE
+void raise_event(uint8_t event_id, uint32_t arg);
+#endif

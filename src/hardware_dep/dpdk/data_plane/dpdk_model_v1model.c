@@ -8,9 +8,14 @@
 	#include "timer_extern.h"
 #endif
 
+
 #include "util_debug.h"
 
 #include <rte_ip.h>
+
+#ifdef EVENT_MODULE
+extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
+#endif
 
 void transfer_to_egress(packet_descriptor_t* pd)
 {
@@ -107,6 +112,12 @@ void mark_to_drop(SHORT_STDPARAMS) {
     debug("       : " T4LIT(standard_metadata,header) "." T4LIT(EGRESS_META_FLD,field) " = " T4LIT(EGRESS_DROP_VALUE,bytes) "\n");
 }
 
+#ifdef TIMER_MODULE
+void raise_event(uint8_t event_id, uint32_t args) {
+    debug(" :::: Called extern " T4LIT(raise_event,extern) " raising event " T4LIT(%d) " with args " T4LIT(%d) "\n", event_id, args);
+    enque_event(lcore_conf[rte_lcore_id()].state.event_queue, event_id, arg)
+}
+#endif
 
 void sheep(uint32_t duration, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(sheep,extern) " waiting " T4LIT(%d) " cycles\n", duration);

@@ -5,7 +5,6 @@
 #include <rte_malloc.h>
 
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
-extern bool enabled_timer_module;
 
 void finalize_timer(struct rte_timer *tim, timer_event_t *timer_event)
 {

@@ -5,7 +5,10 @@
 #include "main.h"
 
 #include <rte_ethdev.h>
+
+#ifdef TIMER_MODULE
 #include <rte_timer.h>
+#endif
 
 extern bool enabled_timer_module;
 extern uint64_t hz_millis;
@@ -111,6 +114,7 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
 }
 
+#ifdef EVENT_MODULE
 void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPARAMS)
 {
     bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
@@ -130,6 +134,7 @@ void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPAR
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
     rte_free(event);
 }
+#endif
 
 void do_rx(LCPARAMS)
 {
@@ -144,6 +149,7 @@ void do_rx(LCPARAMS)
     }
 }
 
+#ifdef EVENT_MODULE
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
@@ -160,6 +166,9 @@ void recv_events(LCPARAMS)
     }
 
 }
+#endif
+
+
 bool dpdk_main_loop()
 {
     struct lcore_data lcdata_content = init_lcore_data();

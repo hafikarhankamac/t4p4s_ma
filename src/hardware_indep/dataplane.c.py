@@ -24,7 +24,10 @@ from compiler_common import types
 #[ extern void parse_packet(STDPARAMS);
 #[ extern void increase_counter(int counterid, int index);
 #[ extern void set_handle_packet_metadata(packet_descriptor_t* pd, uint32_t portid);
+
+#[ #ifdef EVENT_MODULE
 #[ extern void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t arg);
+#[ #endif
 
 # note: 0 is for the special case where there are no tables
 max_key_length = max([t.key_length_bytes for t in hlir.tables] + [0])
@@ -419,6 +422,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[     emit_packet(STDPARAMS_IN);
 #} }
 
+#[ #ifdef EVENT_MODULE
 #[ void handle_event(event_e event, uint32_t args, STDPARAMS)
 #{ {
 #[     int value32;
@@ -441,4 +445,4 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[
 #[     emit_packet(STDPARAMS_IN);
 #} }
-
+#[ #endif

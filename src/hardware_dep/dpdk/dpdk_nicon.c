@@ -147,9 +147,11 @@ void init_queues(struct lcore_data* lcdata) {
         RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
     }
 
+    #ifdef EVENT_MODULE
     //init event queues
     lcdata->conf->state.event_queue = rte_ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
     lcdata->conf->state.event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+    #endif
 }
 
 struct lcore_data init_lcore_data() {

@@ -35,8 +35,10 @@ int t4p4s_normal_exit();
 void init_control_plane();
 
 // defined in the generated file dataplane.c
+#ifdef EVENT_MODULE
 void handle_packet(uint32_t portid, STDPARAMS);
 void handle_event(event_e event, uint32_t args, STDPARAMS);
+#endif
 
 // defined separately for each example
 bool core_is_working(LCPARAMS);

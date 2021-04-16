@@ -112,8 +112,10 @@ struct lcore_params {
 struct lcore_state {
     lookup_table_t* tables[NB_TABLES];
     parser_state_t parser_state;
+    #ifdef EVENT_MODULE
     struct rte_ring* event_queue;
     void**           event_burst; //TODO event_t**
+    #endif
 };
 
 struct socket_state {

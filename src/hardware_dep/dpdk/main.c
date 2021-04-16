@@ -155,7 +155,7 @@ void recv_events(LCPARAMS)
 		//error
 	    }
 	    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-		do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
+		    do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
 	    }
     }
 
@@ -178,17 +178,19 @@ bool dpdk_main_loop()
     uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
     //uint64_t rx_cnt = 0;
     while (core_is_working(LCPARAMS_IN)) {
-        if (enabled_timer_module) {
+        #ifdef TIMER_MODULE
             cur_tsc = rte_rdtsc();
-	    diff_tsc = cur_tsc - prev_tsc;
+	        diff_tsc = cur_tsc - prev_tsc;
             if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
-                rte_timer_manage();
-                prev_tsc = cur_tsc;
+            rte_timer_manage();
+            prev_tsc = cur_tsc;
             }
-	}
+	    #endif
 	    
-	main_loop_pre_rx(LCPARAMS_IN);
-        recv_events(LCPARAMS_IN);
+    	main_loop_pre_rx(LCPARAMS_IN);
+        #ifdef EVENT_MODULE
+            recv_events(LCPARAMS_IN);
+        #endif
         do_rx(LCPARAMS_IN);
         main_loop_post_rx(LCPARAMS_IN);
 
@@ -213,10 +215,10 @@ launch_one_lcore(__attribute__((unused)) void *dummy)
 
 int launch_dpdk()
 {
-    if (enabled_timer_module) {
+    #ifdef TIMER_MODULE
     	rte_timer_subsystem_init();
-	timer_init(rte_get_timer_hz());
-    }
+	    timer_init(rte_get_timer_hz());
+    #endif
     
     rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);
 

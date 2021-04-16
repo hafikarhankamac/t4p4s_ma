@@ -39,5 +39,5 @@ void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPAR
 //                     packet_descriptor_t* pd, lookup_table_t** tables);
 
 #ifdef EVENT_MODULE
-void raise_event(uint8_t event_id, uint32_t arg);
+void raise_event(uint8_t event_id, uint32_t arg, SHORT_STDPARAMS);
 #endif

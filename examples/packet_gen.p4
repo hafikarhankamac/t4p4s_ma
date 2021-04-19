@@ -1,6 +1,10 @@
 #include <core.p4>
 #include <v1model.p4>
 
+
+struct metadata {
+}
+
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -118,7 +122,7 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
 		hdr.udp.len = 3;
 		standard_metadata.egress_port = 9w3;
 	} else {
-	        table0.apply();
+	        set_timer.apply();
 	}
     }
 }

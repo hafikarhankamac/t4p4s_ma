@@ -47,6 +47,8 @@ dpdk_state-machine-table_controller: handlers.c controller.c messages.c sock_hel
 dpdk_test_controller: controllers_common dpdk_test_controller.c
 	$(CC) $(CFLAGS) $(LIB) dpdk_ctrl.o dpdk_test_controller.c -o dpdk_test_controller
 
+dpdk_gen_controller: controllers_common dpdk_gen_controller.c
+	$(CC) $(CFLAGS) $(LIB) dpdk_ctrl.o dpdk_gen_controller.c -o dpdk_gen_controller -g 
 clean:
 	rm -f handlers.o controller.o messages.o sock_helpers.o threadpool.o fifo.o \
 	      dpdk_ctrl_common.o dpdk_ctrl_common.o dpdk_ctrl.o dpdk_controller_dictionary.o \

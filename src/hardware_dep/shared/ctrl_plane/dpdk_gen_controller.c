@@ -8,7 +8,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define MAX_ENTRIES 2097152
+#define MAX_ENTRIES 10
 
 #define SINGLE 0
 #define MULTIPLE 1
@@ -16,12 +16,17 @@
 
 controller c;
 
-const uint32_t number_params[] = { 3, 4, 3};
-const char[] action_names = { "SINGLE", "MULTIPLE", "PERIODIC"};
-
-const char[] param_names = {"time", "id", "count"};
+static uint32_t number_params[] = { 3, 4, 3};
+static char *action_names[] = { "single", "multiple", "periodic"};
+static char *param_names[] = {"time", "id", "count"};
 
 extern void notify_controller_initialized();
+
+uint32_t actions[MAX_ENTRIES];
+uint32_t keys[MAX_ENTRIES];
+uint32_t parammap[MAX_ENTRIES][3];
+
+int entry_count = -1;
 
 void fill_table(uint32_t action, uint32_t key, uint32_t params[])
 {
@@ -29,13 +34,13 @@ void fill_table(uint32_t action, uint32_t key, uint32_t params[])
     struct p4_header* h;
     struct p4_add_table_entry* te;
     struct p4_action* a;
-    struct p4_action_parameter* ap[SIZE];
+    struct p4_action_parameter* ap[number_params[action]];
     // struct p4_field_match_header* fmh;
     struct p4_field_match_exact* exact;
 
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "set_timer");
+    strcpy(te->table_name, "set_timer_0");
 
     exact = add_p4_field_match_exact(te, 2048);
     strcpy(exact->header.name, "ipv4.protocol");
@@ -45,11 +50,11 @@ void fill_table(uint32_t action, uint32_t key, uint32_t params[])
 
 
     a = add_p4_action(h, 2048);
-    strcpy(a->description.name, actions[action]);
+    strcpy(a->description.name, action_names[action]);
 
     for (uint32_t i = 0; i < number_params[action]; i++) {
         ap[i] = add_p4_action_parameter(h, a, 2048);
-        strcpy(ap[i]->name, param_names[i]);
+        strcpy(ap[i]->name, param_names[action]);
         memcpy(ap[i]->bitmap, &params[i], (sizeof(uint32_t)));
         ap[i]->length = (sizeof(uint32_t)) * 8;
     }
@@ -59,7 +64,7 @@ void fill_table(uint32_t action, uint32_t key, uint32_t params[])
     netconv_p4_field_match_exact(exact);
     netconv_p4_action(a);
     
-    for (uint32_t i = 0; i < SIZE; i++) {
+    for (uint32_t i = 0; i < number_params[action]; i++) {
 	    netconv_p4_action_parameter(ap[i]);
     }
 
@@ -92,7 +97,7 @@ void set_default_action_set_timer()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "set_timer");
+    strcpy(sda->table_name, "set_timer_0");
 
     a = &(sda->action);
     strcpy(a->description.name, "_drop");
@@ -104,16 +109,10 @@ void set_default_action_set_timer()
     send_p4_msg(c, buffer, sizeof(buffer));
 }
 
-uint32_t actions[MAX_ENTRIES];
-uint32_t keys[MAX_ENTRIES];
-uint32_t parammap[MAX_ENTRIES][3];
-
-int entry_count = -1;
-
 int read_entries_from_file(char *filename) {
     FILE *f;
     char line[200];
-    TYPE key;
+    uint32_t key;
     int i;
     char* ptr;
 
@@ -132,18 +131,17 @@ int read_entries_from_file(char *filename) {
 	    uint32_t c;
 	    i = 0;
 	    if (ptr != NULL) {
-		    sscanf(ptr, "%d", &c);
-		    ptr = strtok(NULL, " ");
-		    if (strcmp(c, "SINGLE") == 0) {
+		    if (strcmp(ptr, "SINGLE") == 0) {
 		        actions[entry_count] = SINGLE;
-		    } else if (strcmp(c, "MULTIPLE") == 0) {
-                actions[entry_count] = MULTIPLE;
-		    } else if (strcmp(c, "PERIODIC") == 0) {
+		    } else if (strcmp(ptr, "MULTIPLE") == 0) {
+	                actions[entry_count] = MULTIPLE;
+		    } else if (strcmp(ptr, "PERIODIC") == 0) {
 		        actions[entry_count] = PERIODIC;
 		    } else {
 		        printf("Invalid action name..\n");
 		        break;
 		    }
+		    ptr = strtok(NULL, " ");
 	    }
 
 	    if (ptr != NULL) {
@@ -155,8 +153,8 @@ int read_entries_from_file(char *filename) {
 	    while(ptr != NULL) {
 		    sscanf(ptr, "%d", &c);
 		    ptr = strtok(NULL, " ");
-		    if (i >= SIZE) {
-    		    printf("Too many entries...\n");
+		    if (i >= number_params[actions[entry_count]]) {
+    		    printf("Too many args...\n");
     		    break;
     		}
 	    	    parammap[entry_count][i++] = (uint32_t) c;
@@ -174,9 +172,10 @@ void init() {
     printf("Set default actions.\n");
     set_default_action_set_timer();
 
+    sleep(20);
     for (i=0;i<=entry_count;++i)
     {
-        printf("Filling tables with action %s and key %i\n", action);
+        printf("Filling tables with action %s and key %i\n", action_names[actions[i]], keys[i]);
         fill_table(actions[i], keys[i], parammap[i]);
 	if (i % 5000 == 0) {
 	    sleep(2);

@@ -115,7 +115,7 @@ void mark_to_drop(SHORT_STDPARAMS) {
 #ifdef EVENT_MODULE
 void raise_event(uint8_t event_id, uint32_t args, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(raise_event,extern) " raising event " T4LIT(%d) " with args " T4LIT(%d) "\n", event_id, args);
-    enque_event(lcore_conf[rte_lcore_id()].state.event_queue, event_id, arg)
+    enque_event(lcore_conf[rte_lcore_id()].state.event_queue, event_id, args);
 }
 #endif
 

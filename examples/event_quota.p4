@@ -24,6 +24,8 @@ header udp_t {
     bit<16> dstPort;
     bit<16> len;
     bit<16> chkSum;
+    bit<32> reserved;
+    bit<32> count;
 }
 
 struct headers {
@@ -36,23 +38,27 @@ struct headers {
 }
 
 
-
+const bool twice = false;
+const bit<32> frequency = 10;
 
 // parser
 parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
+    @name(".parse_udp") state parse_udp {
+	packet.extract(hdr.udp);
+	transition accept;
+    }
     @name(".parse_ipv4") state parse_ipv4 {
 	packet.extract(hdr.ipv4);
-	transition accept;
+	transition parse_udp;
     }
     @name(".parse_ethernet") state parse_ethernet {
         packet.extract(hdr.ethernet);
-        transition parse_ipv4;	
+        transition parse_ipv4;
     }
     @name(".start") state start {
         transition select (standard_metadata.event) {
-		0 : parse_ethernet;
-		default: accept;
-	}
+            0 : parse_ethernet;
+            default: accept;
     }
 }// parser parse
 
@@ -60,66 +66,19 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
 
 // control
 control ingress(inout headers hdr, inout metadata data, inout standard_metadata_t standard_metadata) {
-    @name("._drop") action _drop() {
-        mark_to_drop();
-    }
-
-    @name(".single") action single(bit<32> time, bit<32> id) {
-    	standard_metadata.egress_port = 9w3;
-	timer_single(time, id);
-    }
-
-    @name(".multiple") action multiple(bit<32> time, bit<32> id, bit<32> count) {
-    	standard_metadata.egress_port = 9w3;
-	timer_multiple(time, id, count);
-    }
-
-    @name(".periodic") action periodic(bit<32> time, bit<32> id) {
-    	standard_metadata.egress_port = 9w3;
-	timer_periodic(time, id);
-    }
-
-
-    @name(".set_timer") table set_timer {
-        actions = {
-            single;
-	    multiple;
-	    periodic;
-            _drop;
-        }
-        key = {
-            hdr.ipv4.protocol: exact;
-        }
-        size = 4;
-        default_action = _drop();
-    }
-
-
     apply {
-    	if (standard_metadata.event != 0) {
-		hdr.ethernet.setValid();
-		hdr.ethernet.dstAddr = 0x010203040506;
-		hdr.ethernet.srcAddr = 0x0708090a0b0c;
-		hdr.ethernet.etherType = 0x0800;
-		hdr.ipv4.setValid();
-		hdr.ipv4.srcAddr = 0x0a000001;
-		hdr.ipv4.dstAddr = 0x0a000002;
-		hdr.ipv4.protocol = 6;
-		hdr.ipv4.versionIhl = 0x45;
-		hdr.ipv4.diffserv = 1;
-		hdr.ipv4.totalLen = 1;
-		hdr.ipv4.identification = 1;
-		hdr.ipv4.fragOffset = 1;
-		hdr.ipv4.ttl = 1;
-		hdr.ipv4.hdrChecksum = 2;
-		hdr.udp.setValid();
-		hdr.udp.dstPort = 1;
-		hdr.udp.srcPort = 2;
-		hdr.udp.len = 3;
-		standard_metadata.egress_port = 9w3;
-	} else {
-	        table0.apply();
-	}
+    	standard_metadata.egress_port = 9w3;
+    	if (standard_metadata.event == 2) {
+    	    mark_to_drop();
+    	} else {
+    	    standard_metadata.egress_port = 9w3;
+    	    if (hdr.udp.count % frequency == 0) {
+    	        raise_event(2, 1);
+    	    }
+    	    if (hdr.udp.count % frequency == 0 && twice) {
+    	        raise_event(2, 1);
+    	    }
+    	}
     }
 }
 

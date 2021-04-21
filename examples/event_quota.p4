@@ -59,6 +59,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
         transition select (standard_metadata.event) {
             0 : parse_ethernet;
             default: accept;
+        }
     }
 }// parser parse
 
@@ -75,9 +76,9 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
     	    if (hdr.udp.count % frequency == 0) {
     	        raise_event(2, 1);
     	    }
-    	    if (hdr.udp.count % frequency == 0 && twice) {
-    	        raise_event(2, 1);
-    	    }
+    	    //if (hdr.udp.count % frequency == 0 && twice) {
+    	    //    raise_event(2, 1);
+    	    //}
     	}
     }
 }

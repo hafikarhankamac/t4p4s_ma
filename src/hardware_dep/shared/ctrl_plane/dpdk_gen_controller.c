@@ -172,7 +172,6 @@ void init() {
     printf("Set default actions.\n");
     set_default_action_set_timer();
 
-    sleep(20);
     for (i=0;i<=entry_count;++i)
     {
         printf("Filling tables with action %s and key %i\n", action_names[actions[i]], keys[i]);

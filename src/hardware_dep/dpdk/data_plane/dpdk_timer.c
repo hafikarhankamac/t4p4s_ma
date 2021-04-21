@@ -59,7 +59,7 @@ void periodic_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore)
     timer_event->lcore = lcore;
     timer_event->id = id;
     rte_timer_init(rtetimer);
-    rte_timer_reset(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_periodic, (void*) timer_event);
+    rte_timer_reset_sync(rtetimer, hz_millis * ms, PERIODICAL, lcore, timer_callback_periodic, (void*) timer_event);
 }
 
 void multiple_timer_lcore(uint32_t ms, uint32_t id, uint32_t count, uint32_t lcore)
@@ -90,5 +90,5 @@ void multiple_timer(uint32_t ms, uint32_t id, uint32_t count)
 
 void timer_init(uint64_t hz) 
 {
-	hz_millis = hz / 1000;
+	hz_millis = hz / 1000000;
 }

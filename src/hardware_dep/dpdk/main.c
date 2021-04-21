@@ -10,6 +10,14 @@
 #include <rte_timer.h>
 #endif
 
+#ifdef T4P4S_DEBUG
+#include <signal.h>
+#define BREAKPOINT raise(SIGINT);
+#else
+#define BREAKPOINT ;
+#endif
+
+
 extern bool enabled_timer_module;
 extern uint64_t hz_millis;
 
@@ -191,7 +199,7 @@ bool dpdk_main_loop()
             cur_tsc = rte_rdtsc();
 	        diff_tsc = cur_tsc - prev_tsc;
             if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
-            rte_timer_manage();
+            	rte_timer_manage();
             prev_tsc = cur_tsc;
             }
 	    #endif
@@ -225,8 +233,10 @@ launch_one_lcore(__attribute__((unused)) void *dummy)
 int launch_dpdk()
 {
     #ifdef TIMER_MODULE
-    	rte_timer_subsystem_init();
-	    timer_init(rte_get_timer_hz());
+	sleep(20);
+	BREAKPOINT
+	rte_timer_subsystem_init();
+    	timer_init(rte_get_timer_hz());
     #endif
     
     rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);

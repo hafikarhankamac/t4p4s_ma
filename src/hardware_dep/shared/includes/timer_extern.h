@@ -12,7 +12,9 @@ struct timer_event_s {
 
 typedef struct timer_event_s timer_event_t;
 
+#ifndef TIMER_RESOLUTION_CYCLES
 #define TIMER_RESOLUTION_CYCLES 20000000ULL
+#endif
 
 void single_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore);
 void periodic_timer_lcore(uint32_t ms, uint32_t id, uint32_t lcore);

@@ -233,8 +233,6 @@ launch_one_lcore(__attribute__((unused)) void *dummy)
 int launch_dpdk()
 {
     #ifdef TIMER_MODULE
-	sleep(20);
-	BREAKPOINT
 	rte_timer_subsystem_init();
     	timer_init(rte_get_timer_hz());
     #endif

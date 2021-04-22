@@ -296,7 +296,6 @@ void print_rte_xstats(uint32_t port_id)
 int main(int argc, char** argv)
 {
     debug("Init switch\n");
-
     initialize_args(argc, argv);
     initialize_nic();
 

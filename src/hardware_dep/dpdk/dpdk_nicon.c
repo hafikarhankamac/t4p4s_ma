@@ -149,8 +149,11 @@ void init_queues(struct lcore_data* lcdata) {
 
     #ifdef EVENT_MODULE
     //init event queues
-    lcdata->conf->state.event_queue = rte_ring_create("event_queue", EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
-    lcdata->conf->state.event_burst = rte_malloc_socket("event_burst", MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+    char name[15];
+    snprintf(&name, 15, "event_queue_%02u", rte_lcore_id()); 
+    lcdata->conf->state.event_queue = rte_ring_create(name, EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
+    snprintf(&name, 15, "event_burst_%02u", rte_lcore_id());
+    lcdata->conf->state.event_burst = rte_malloc_socket(name, MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
     #endif
 }
 

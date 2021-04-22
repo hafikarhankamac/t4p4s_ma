@@ -6,6 +6,8 @@
 
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
+bool already[RTE_MAX_LCORE];
+
 void finalize_timer(struct rte_timer *tim, timer_event_t *timer_event)
 {
     rte_timer_stop(tim);
@@ -90,5 +92,6 @@ void multiple_timer(uint32_t ms, uint32_t id, uint32_t count)
 
 void timer_init(uint64_t hz) 
 {
-	hz_millis = hz / 1000000;
+	hz_millis = hz / 1000;
+	memset(already, false, RTE_MAX_LCORE);
 }

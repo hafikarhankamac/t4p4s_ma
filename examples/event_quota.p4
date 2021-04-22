@@ -74,7 +74,9 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
     	    mark_to_drop();
     	} else {
     	    standard_metadata.egress_port = 9w3;
-    	    if (hdr.udp.count % frequency == 0) {
+	    bit<32> c = hdr.udp.count % frequency;
+
+    	    if (c == 0) {
     	        raise_event(2, 1);
     	    }
     	    //if (hdr.udp.count % frequency == 0 && twice) {

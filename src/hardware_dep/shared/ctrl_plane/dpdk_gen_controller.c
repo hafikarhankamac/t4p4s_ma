@@ -100,7 +100,7 @@ void set_default_action_set_timer()
     strcpy(sda->table_name, "set_timer_0");
 
     a = &(sda->action);
-    strcpy(a->description.name, "_drop");
+    strcpy(a->description.name, "forward");
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);

@@ -19,3 +19,15 @@ void enque_event(struct rte_ring *event_queue, event_e event, uint32_t args)
     e->args = args;
     rte_ring_enqueue(event_queue, e);
 }
+
+void fill_event_queue(struct rte_ring *event_queue, event_e event, uint32_t args, const uint16_t count)
+{
+    void* events [count];
+    for (uint16_t i = 0; i < count; i++) {
+    	event_t *e = (event_t*) rte_malloc_socket("event", sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+	e->event = event;
+	e->args = args;
+	events[i] = e;
+    }
+    rte_ring_mp_enqueue_bulk(event_queue, events, count, NULL);
+}

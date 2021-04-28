@@ -18,8 +18,13 @@
 #endif
 
 
-extern bool enabled_timer_module;
+
 extern uint64_t hz_millis;
+
+struct main_params {
+    bool do_events;
+    bool do_recv;
+}
 
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
@@ -176,8 +181,12 @@ void recv_events(LCPARAMS)
 #endif
 
 
-bool dpdk_main_loop()
+bool dpdk_main_loop(void *arg)
 {
+    struct main_params *args = (struct main_params*) arg;
+    const bool do_events = args->do_events;
+    const bool do_recv = args->do_recv;
+
     struct lcore_data lcdata_content = init_lcore_data();
     packet_descriptor_t pd_content;
 
@@ -195,19 +204,22 @@ bool dpdk_main_loop()
     //uint64_t rx_cnt = 0;
     while (core_is_working(LCPARAMS_IN)) {
         #ifdef TIMER_MODULE
+        if (do_events) {
             cur_tsc = rte_rdtsc();
 	        diff_tsc = cur_tsc - prev_tsc;
             if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
             	rte_timer_manage();
             prev_tsc = cur_tsc;
             }
+        }
 	    #endif
 	    
     	main_loop_pre_rx(LCPARAMS_IN);
-        #ifdef EVENT_MODULE
+        if (do_events)
             recv_events(LCPARAMS_IN);
-        #endif
-        do_rx(LCPARAMS_IN);
+
+        if (do_recv)
+            do_rx(LCPARAMS_IN);
         main_loop_post_rx(LCPARAMS_IN);
 
         /*rx_cnt++;
@@ -223,9 +235,9 @@ bool dpdk_main_loop()
 
 
 static int
-launch_one_lcore(__attribute__((unused)) void *dummy)
+launch_one_lcore(void *args)
 {
-    bool success = dpdk_main_loop();
+    bool success = dpdk_main_loop(args);
     return success ? 0 : -1;
 }
 
@@ -235,10 +247,16 @@ int launch_dpdk()
 	rte_timer_subsystem_init();
     	timer_init(rte_get_timer_hz());
     #endif
-    
-    rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);
 
     unsigned lcore_id;
+
+    struct main_params params = { .do_events = true, .do_recv = true};
+    RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+        rte_eal_remote_launch(launch_one_lcore, &args, lcore_id);
+    }
+
+    launch_one_lcore(&args);
+
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
         if (rte_eal_wait_lcore(lcore_id) < 0)
             return -1;

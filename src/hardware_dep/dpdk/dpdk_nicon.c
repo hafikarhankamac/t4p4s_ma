@@ -300,6 +300,11 @@ void t4p4s_post_launch(int idx) {
 
 }
 
+extern uint32_t handle_event_mask;
+uint32_t get_handle_event_mask() {
+    return handle_event_mask;
+}
+
 extern uint32_t enabled_port_mask;
 uint32_t get_port_mask() {
     return enabled_port_mask;

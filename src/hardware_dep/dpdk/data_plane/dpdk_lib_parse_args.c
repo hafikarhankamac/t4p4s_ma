@@ -20,7 +20,7 @@ static void print_usage(const char *prgname)
         "  --no-numa: optional, disable numa awareness\n"
         " which max packet len is PKTLEN in decimal (64-9600)\n"
         "  --hash-entry-num: specify the hash entry number in hexadecimal to be setup\n"
-        "  -t: enable timer\n",
+        "  -e EVENTMASK: hexadecimal bimask which lcores will handle events\n",
         prgname);
 }
 
@@ -133,6 +133,14 @@ static int parse_args(int argc, char **argv)
             enabled_port_mask = parse_portmask(optarg);
             if (enabled_port_mask == 0) {
                 printf("invalid portmask\n");
+                print_usage(prgname);
+                return -1;
+            }
+            break;
+	case 'e':
+            handle_event_mask = parse_portmask(optarg);
+            if (handle_event_mask == 0) {
+                printf("invalid event lcore mask\n");
                 print_usage(prgname);
                 return -1;
             }

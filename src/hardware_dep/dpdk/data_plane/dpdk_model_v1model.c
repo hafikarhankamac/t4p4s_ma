@@ -141,7 +141,7 @@ void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPAR
 }
 
 void timer_burst(uint32_t id, SHORT_STDPARAMS) {
-    debug(" :::: Called extern " T4LIT(timer_burst,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
+    debug(" :::: Called extern " T4LIT(timer_burst,extern) "with ID " T4LIT(%d) " \n", id);
     burst_timer(id);
 }
 #endif

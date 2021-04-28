@@ -20,11 +20,9 @@
 
 
 extern uint64_t hz_millis;
-
-struct main_params {
-    bool do_events;
-    bool do_recv;
-};
+extern uint32_t handle_event_mask;
+extern uint32_t nb_lcore_params;
+extern struct lcore_params lcore_params[];
 
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
@@ -278,10 +276,37 @@ bool dpdk_main_loop_rx_evt()
 
 
 static int
-launch_one_lcore()
+launch_one_lcore_rx_evt()
 {
     bool success = dpdk_main_loop_rx_evt();
     return success ? 0 : -1;
+}
+
+static int
+launch_one_lcore_rx()
+{
+    bool success = dpdk_main_loop_rx();
+    return success ? 0 : -1;
+}
+
+static int
+launch_one_lcore_evt()
+{
+    bool success = dpdk_main_loop_evt();
+    return success ? 0 : -1;
+}
+
+static int remote_launch_lcore(uint32_t lcore_id, bool recv_pkts, bool recv_events)
+{
+    if (recv_pkts && recv_events) {
+        return rte_eal_remote_launch(launch_one_lcore_rx_evt, NULL, lcore_id);
+    } else if (recv_pkts) {
+        return rte_eal_remote_launch(launch_one_lcore_rx, NULL, lcore_id);
+    } else if (recv_events) {
+        return rte_eal_remote_launch(launch_one_lcore_evt, NULL, lcore_id);
+    } else {
+	return -1;
+    }
 }
 
 int launch_dpdk()
@@ -293,11 +318,51 @@ int launch_dpdk()
 
     unsigned lcore_id;
 
-    RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-        rte_eal_remote_launch(launch_one_lcore, NULL, lcore_id);
+    bool master_defined = false;
+    bool master_recv_pkts;
+    bool master_handle_evts;
+
+    for (unsigned nb_lcore = 0; nb_lcore < nb_lcore_params; nb_lcore++) {
+	unsigned lcore_id = lcore_params[nb_lcore].lcore_id;
+	bool recv_pkts = true;
+	bool handle_evts = handle_event_mask & (1 << lcore_id);
+	
+	if (lcore_id == rte_get_master_lcore()) {
+		master_defined = true;
+		master_recv_pkts = recv_pkts;
+		master_handle_evts = handle_evts;
+	} else {
+		remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+	}
+    }    
+
+    for (unsigned lcore_id = nb_lcore_params; lcore_id < 32; lcore_id++) { // TODO lcore < 32
+	bool handle_evts = handle_event_mask & (1 << lcore_id);
+	bool recv_pkts = false;
+	if (lcore_id == rte_get_master_lcore()) {
+		master_defined = true;
+		master_recv_pkts = recv_pkts;
+		master_handle_evts = handle_evts;
+	} else {
+		if (handle_evts) {
+			remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+		}
+	}
     }
 
-    launch_one_lcore();
+    if (master_defined) {	
+	    if (master_recv_pkts && master_handle_evts) {
+		launch_one_lcore_rx_evt();
+	    } else if (master_recv_pkts) {
+		launch_one_lcore_rx();
+	    } else if (master_handle_evts) {
+		launch_one_lcore_evt();
+	    } else {
+		return -1;
+	    }
+    } else {
+	return -1;
+    }
 
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
         if (rte_eal_wait_lcore(lcore_id) < 0)

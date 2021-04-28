@@ -24,7 +24,7 @@ extern uint64_t hz_millis;
 struct main_params {
     bool do_events;
     bool do_recv;
-}
+};
 
 void get_broadcast_port_msg(char result[256], int ingress_port) {
     uint8_t nb_ports = get_port_count();
@@ -181,13 +181,35 @@ void recv_events(LCPARAMS)
 #endif
 
 
-bool dpdk_main_loop(void *arg)
+bool dpdk_main_loop_rx()
 {
-    struct main_params *args = (struct main_params*) arg;
-    const bool do_events = args->do_events;
-    const bool do_recv = args->do_recv;
+    struct lcore_data lcdata_content = init_lcore_data(true, false);
+    packet_descriptor_t pd_content;
 
-    struct lcore_data lcdata_content = init_lcore_data();
+    struct lcore_data* lcdata = &lcdata_content;
+    packet_descriptor_t* pd = &pd_content;
+
+    if (!lcdata->is_valid) {
+        debug("lcore data is invalid, exiting\n");
+        return false;
+    }
+
+    init_dataplane(pd, lcdata->conf->state.tables);
+
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
+    //uint64_t rx_cnt = 0;
+    while (core_is_working(LCPARAMS_IN)) {
+    	main_loop_pre_rx(LCPARAMS_IN);
+        do_rx(LCPARAMS_IN);
+        main_loop_post_rx(LCPARAMS_IN);
+    }
+
+    return lcdata->is_valid;
+}
+
+bool dpdk_main_loop_evt()
+{
+    struct lcore_data lcdata_content = init_lcore_data(false, true);
     packet_descriptor_t pd_content;
 
     struct lcore_data* lcdata = &lcdata_content;
@@ -204,30 +226,51 @@ bool dpdk_main_loop(void *arg)
     //uint64_t rx_cnt = 0;
     while (core_is_working(LCPARAMS_IN)) {
         #ifdef TIMER_MODULE
-        if (do_events) {
             cur_tsc = rte_rdtsc();
 	        diff_tsc = cur_tsc - prev_tsc;
             if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
             	rte_timer_manage();
             prev_tsc = cur_tsc;
-            }
         }
 	    #endif
 	    
     	main_loop_pre_rx(LCPARAMS_IN);
-        if (do_events)
-            recv_events(LCPARAMS_IN);
-
-        if (do_recv)
-            do_rx(LCPARAMS_IN);
+        recv_events(LCPARAMS_IN);
         main_loop_post_rx(LCPARAMS_IN);
+    }
 
-        /*rx_cnt++;
-        if (unlikely(rx_cnt % 1000000 == 0))
-        {
-            print_rte_xstats(1);
-            print_rte_xstats(2);
-        }*/
+    return lcdata->is_valid;
+}
+bool dpdk_main_loop_rx_evt()
+{
+    struct lcore_data lcdata_content = init_lcore_data(true, true);
+    packet_descriptor_t pd_content;
+
+    struct lcore_data* lcdata = &lcdata_content;
+    packet_descriptor_t* pd = &pd_content;
+
+    if (!lcdata->is_valid) {
+        debug("lcore data is invalid, exiting\n");
+        return false;
+    }
+
+    init_dataplane(pd, lcdata->conf->state.tables);
+
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
+    while (core_is_working(LCPARAMS_IN)) {
+        #ifdef TIMER_MODULE
+            cur_tsc = rte_rdtsc();
+	        diff_tsc = cur_tsc - prev_tsc;
+            if (diff_tsc > TIMER_RESOLUTION_CYCLES) {
+            	rte_timer_manage();
+            prev_tsc = cur_tsc;
+        }
+	    #endif
+	    
+    	main_loop_pre_rx(LCPARAMS_IN);
+	recv_events(LCPARAMS_IN);
+        do_rx(LCPARAMS_IN);
+        main_loop_post_rx(LCPARAMS_IN);
     }
 
     return lcdata->is_valid;
@@ -235,9 +278,9 @@ bool dpdk_main_loop(void *arg)
 
 
 static int
-launch_one_lcore(void *args)
+launch_one_lcore()
 {
-    bool success = dpdk_main_loop(args);
+    bool success = dpdk_main_loop_rx_evt();
     return success ? 0 : -1;
 }
 
@@ -250,12 +293,11 @@ int launch_dpdk()
 
     unsigned lcore_id;
 
-    struct main_params params = { .do_events = true, .do_recv = true};
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-        rte_eal_remote_launch(launch_one_lcore, &args, lcore_id);
+        rte_eal_remote_launch(launch_one_lcore, NULL, lcore_id);
     }
 
-    launch_one_lcore(&args);
+    launch_one_lcore();
 
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
         if (rte_eal_wait_lcore(lcore_id) < 0)

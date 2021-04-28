@@ -140,24 +140,28 @@ void send_single_packet(packet* pkt, int egress_port, int ingress_port, bool sen
 
 // ------------------------------------------------------
 
-void init_queues(struct lcore_data* lcdata) {
-    for (unsigned i = 0; i < lcdata->conf->hw.n_rx_queue; i++) {
-        unsigned portid = lcdata->conf->hw.rx_queue_list[i].port_id;
-        uint8_t queueid = lcdata->conf->hw.rx_queue_list[i].queue_id;
-        RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
+void init_queues(struct lcore_data* lcdata, const bool recv_pkts, const bool recv_evts) {
+    if (recv_pkts) {
+	for (unsigned i = 0; i < lcdata->conf->hw.n_rx_queue; i++) {
+		unsigned portid = lcdata->conf->hw.rx_queue_list[i].port_id;
+		uint8_t queueid = lcdata->conf->hw.rx_queue_list[i].queue_id;
+		RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
+	}
     }
 
     #ifdef EVENT_MODULE
     //init event queues
-    char name[15];
-    snprintf(&name, 15, "event_queue_%02u", rte_lcore_id()); 
-    lcdata->conf->state.event_queue = rte_ring_create(name, EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
-    snprintf(&name, 15, "event_burst_%02u", rte_lcore_id());
-    lcdata->conf->state.event_burst = rte_malloc_socket(name, MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+    if (recv_evts) {
+	    char name[15];
+	    snprintf(&name, 15, "event_queue_%02u", rte_lcore_id()); 
+	    lcdata->conf->state.event_queue = rte_ring_create(name, EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
+	    snprintf(&name, 15, "event_burst_%02u", rte_lcore_id());
+	    lcdata->conf->state.event_burst = rte_malloc_socket(name, MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+    }
     #endif
 }
 
-struct lcore_data init_lcore_data() {
+struct lcore_data init_lcore_data(bool recv_pkts, bool recv_evts) {
     struct lcore_data lcdata = {
         .drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US,
         .prev_tsc  = 0,
@@ -168,12 +172,12 @@ struct lcore_data init_lcore_data() {
         .is_valid  = lcdata.conf->hw.n_rx_queue != 0,
     };
 
-    if (lcdata.is_valid) {
-        RTE_LOG(INFO, P4_FWD, "entering main loop on lcore %u\n", rte_lcore_id());
+    if (lcdata.is_valid || !recv_pkts) {
+	RTE_LOG(INFO, P4_FWD, "entering main loop on lcore %u\n", rte_lcore_id());
 	
-        init_queues(&lcdata);
+	init_queues(&lcdata, recv_pkts, recv_evts);
     } else {
-        RTE_LOG(INFO, P4_FWD, "lcore %u has nothing to do\n", rte_lcore_id());
+	RTE_LOG(INFO, P4_FWD, "lcore %u has nothing to do\n", rte_lcore_id());
     }
 
     return lcdata;

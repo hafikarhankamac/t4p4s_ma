@@ -412,7 +412,7 @@ void init_storage() {
     storage_already_inited = true;
 }
 
-struct lcore_data init_lcore_data() {
+struct lcore_data init_lcore_data(const bool, const bool) {
     return (struct lcore_data) {
         .conf     = &lcore_conf[rte_lcore_id()],
         .is_valid = true,

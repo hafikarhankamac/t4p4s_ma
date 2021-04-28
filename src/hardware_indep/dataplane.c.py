@@ -26,7 +26,7 @@ from compiler_common import types
 #[ extern void set_handle_packet_metadata(packet_descriptor_t* pd, uint32_t portid);
 
 #[ #ifdef EVENT_MODULE
-#[ extern void set_event_metadata(packet_descriptor_t* pd, event_e event, uint32_t arg);
+#[ extern void set_event_metadata(packet_descriptor_t* pd, event_e event, uint64_t args);
 #[ #endif
 
 # note: 0 is for the special case where there are no tables
@@ -423,14 +423,14 @@ pkt_name_indent = " " * longest_hdr_name_len
 #} }
 
 #[ #ifdef EVENT_MODULE
-#[ void handle_event(event_e event, uint32_t args, STDPARAMS)
+#[ void handle_event(event_s event, STDPARAMS)
 #{ {
 #[     int value32;
 #[     int res32;
 #[
 #[     reset_headers(SHORT_STDPARAMS_IN);
 #[     set_handle_packet_metadata(pd, EVENT_PORT);
-#[     set_event_metadata(pd, event, args);
+#[     set_event_metadata(pd, event.event, event.args);
 #[
 #[     dbg_bytes(pd->data, packet_length(pd), "Handling packet (port " T4LIT(%d,port) ", $${}{%02d} bytes)  : ", extract_ingress_port(pd), packet_length(pd));
 #[

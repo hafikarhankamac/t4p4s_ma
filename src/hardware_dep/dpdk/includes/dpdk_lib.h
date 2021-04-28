@@ -114,7 +114,7 @@ struct lcore_state {
     parser_state_t parser_state;
     #ifdef EVENT_MODULE
     struct rte_ring* event_queue;
-    void**           event_burst; //TODO event_t**
+    void*    event_burst; // TODO event_t*
     #endif
 };
 

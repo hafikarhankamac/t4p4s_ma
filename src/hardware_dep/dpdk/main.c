@@ -123,7 +123,7 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
 }
 
 #ifdef EVENT_MODULE
-void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPARAMS)
+void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t event, LCPARAMS)
 {
     bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
 
@@ -134,13 +134,12 @@ void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t* event, LCPAR
             parser_state_t* pstate = &(state.parser_state);
 
             init_parser_state(&(state.parser_state));
-            handle_event(event->event, event->args, STDPARAMS_IN);
+            handle_event(event.as_event, STDPARAMS_IN);
             do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
         }
     }
 
     main_loop_post_single_rx(got_packet, LCPARAMS_IN);
-    rte_free(event);
 }
 #endif
 
@@ -161,7 +160,7 @@ void do_rx(LCPARAMS)
 void recv_events(LCPARAMS)
 {
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, (void**) lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
+    uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
 
     if (event_count > 0) {
 	    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
@@ -169,7 +168,7 @@ void recv_events(LCPARAMS)
 		//error
 	    }
 	    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-		    do_single_event(0, event_idx, lcdata->conf->state.event_burst[event_idx], LCPARAMS_IN);
+		    do_single_event(0, event_idx, ((event_t*) lcdata->conf->state.event_burst)[event_idx], LCPARAMS_IN);
 	    }
     }
 

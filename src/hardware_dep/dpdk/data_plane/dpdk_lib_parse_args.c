@@ -124,7 +124,7 @@ static int parse_args(int argc, char **argv)
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "p:Pt",
+    while ((opt = getopt_long(argc, argvopt, "p:Pe:",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
@@ -148,12 +148,6 @@ static int parse_args(int argc, char **argv)
         case 'P':
             printf("Promiscuous mode on by default\n");
             break;
-        case 't':
-            enabled_timer_module = true;
-            printf("Enabled timer module\n");
-	    break;
-
-
         /* long options */
         case 0:
             if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_CONFIG,

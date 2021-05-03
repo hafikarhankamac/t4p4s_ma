@@ -110,7 +110,7 @@ void multiple_timer(uint32_t ms, uint32_t id, uint32_t count)
 
 void burst_timer(uint32_t id)
 {
-    burst_timer_lcore(id, rte_lcore_id());
+    burst_timer_lcore(id, 10);
 }
 
 void timer_init(uint64_t hz) 

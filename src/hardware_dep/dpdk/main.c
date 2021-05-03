@@ -17,7 +17,7 @@
 #define BREAKPOINT ;
 #endif
 
-
+#define BOOL_TO_STRING(x) x ? "true" : "false"
 
 extern uint64_t hz_millis;
 extern uint32_t handle_event_mask;
@@ -213,11 +213,6 @@ bool dpdk_main_loop_evt()
     struct lcore_data* lcdata = &lcdata_content;
     packet_descriptor_t* pd = &pd_content;
 
-    if (!lcdata->is_valid) {
-        debug("lcore data is invalid, exiting\n");
-        return false;
-    }
-
     init_dataplane(pd, lcdata->conf->state.tables);
 
     uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
@@ -298,6 +293,8 @@ launch_one_lcore_evt()
 
 static int remote_launch_lcore(uint32_t lcore_id, bool recv_pkts, bool recv_events)
 {
+
+    RTE_LOG(INFO, P4_FWD, "remote launch lcore %u, receiving packets: %s, receiving events: %s\n", lcore_id, BOOL_TO_STRING(recv_pkts), BOOL_TO_STRING(recv_events));
     if (recv_pkts && recv_events) {
         return rte_eal_remote_launch(launch_one_lcore_rx_evt, NULL, lcore_id);
     } else if (recv_pkts) {
@@ -322,30 +319,42 @@ int launch_dpdk()
     bool master_recv_pkts;
     bool master_handle_evts;
 
+    volatile bool lcores[32];
+    memset(lcores, false, sizeof(bool) * 32);
+//    sleep(15);
+
     for (unsigned nb_lcore = 0; nb_lcore < nb_lcore_params; nb_lcore++) {
 	unsigned lcore_id = lcore_params[nb_lcore].lcore_id;
 	bool recv_pkts = true;
 	bool handle_evts = handle_event_mask & (1 << lcore_id);
-	
-	if (lcore_id == rte_get_master_lcore()) {
-		master_defined = true;
-		master_recv_pkts = recv_pkts;
-		master_handle_evts = handle_evts;
-	} else {
-		remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+	RTE_LOG(INFO, P4_FWD, "test\n");
+	if (!lcores[lcore_id]) {
+		lcores[lcore_id] = true;	
+		
+		if (lcore_id == rte_get_master_lcore()) {
+			master_defined = true;
+			master_recv_pkts = recv_pkts;
+			master_handle_evts = handle_evts;
+		} else {
+			remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+		}
+	RTE_LOG(INFO, P4_FWD, "%d %d\n", nb_lcore, nb_lcore_params);
 	}
     }    
 
-    for (unsigned lcore_id = nb_lcore_params; lcore_id < 32; lcore_id++) { // TODO lcore < 32
-	bool handle_evts = handle_event_mask & (1 << lcore_id);
-	bool recv_pkts = false;
-	if (lcore_id == rte_get_master_lcore()) {
-		master_defined = true;
-		master_recv_pkts = recv_pkts;
-		master_handle_evts = handle_evts;
-	} else {
-		if (handle_evts) {
-			remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+    for (int lcore_id = 0; lcore_id < 32; lcore_id++) { // TODO lcore < 32
+	if (!lcores[lcore_id]) {
+		lcores[lcore_id] = true;
+		bool handle_evts = handle_event_mask & (1 << lcore_id);
+		bool recv_pkts = false;
+		if (lcore_id == rte_get_master_lcore()) {
+			master_defined = true;
+			master_recv_pkts = recv_pkts;
+			master_handle_evts = handle_evts;
+		} else {
+			if (handle_evts) {
+				remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+			}
 		}
 	}
     }

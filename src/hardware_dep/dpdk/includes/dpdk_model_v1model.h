@@ -37,8 +37,14 @@ void timer_periodic(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
 void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPARAMS);
 void timer_burst(uint32_t id, SHORT_STDPARAMS);
 
-inline uint32_t modulo_32(uint32_t div, uint32_t mod, SHORT_STDPARAMS);
-inline uint64_t modulo_64(uint64_t div, uint64_t mod, SHORT_STDPARAMS);
+inline uint32_t modulo_32(uint32_t div, uint32_t mod, SHORT_STDPARAMS) 
+{
+    return div % mod;
+}
+inline uint64_t modulo_64(uint64_t div, uint64_t mod, SHORT_STDPARAMS)
+{
+    return div % mod;
+}
 
 
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length,

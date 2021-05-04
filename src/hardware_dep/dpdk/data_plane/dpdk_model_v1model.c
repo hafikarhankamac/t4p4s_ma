@@ -146,14 +146,6 @@ void timer_burst(uint32_t id, SHORT_STDPARAMS) {
 }
 #endif
 
-inline uint32_t modulo_32(uint32_t div, uint32_t mod, SHORT_STDPARAMS) {
-    return div % mod;
-}
-
-inline uint64_t modulo_64(uint64_t div, uint64_t mod, SHORT_STDPARAMS) {
-    return div % mod;
-}
-
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length, SHORT_STDPARAMS) {
 //    debug(" :::: Called extern " T4LIT(encrypt_bytes,extern) " (" T4LIT(%d) "-" T4LIT(%d) ") [" T4LIT(IV, field) " " T4LIT(%x) " " T4LIT(key, field) " " T4LIT(%x) "] starting at byte " T4LIT(%d) " (" T4LIT(%d) " bytes)\n", algorithm, mode, iv, key, start_byte, length);
 //

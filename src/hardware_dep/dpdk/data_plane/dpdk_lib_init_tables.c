@@ -82,6 +82,11 @@ void init_tables()
 #ifdef T4P4S_DEBUG
     init_print_table_info();
 #endif
+#if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
+    main_socket = get_socketid(rte_get_main_lcore());
+#else
+    main_socket= get_socketid(rte_get_master_lcore());
+#endif
 
     master_socket_id = get_master_socketid();
     for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {

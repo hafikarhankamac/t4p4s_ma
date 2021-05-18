@@ -5,18 +5,15 @@
 # Copyright 2019 Eotvos Lorand University, Budapest, Hungary
 
 import hlir16.hlir
-from hlir16.hlir_attrs import set_additional_attrs
 from compiler_log_warnings_errors import *
-
-from subprocess import call
 
 import os
 import os.path
 import sys
 import pkgutil
 import importlib
+import gzip
 
-import bz2
 import pickle
 
 import compiler_common
@@ -36,10 +33,19 @@ def is_cache_file_loadable(path):
 def import_modules(required_modules):
     for modname in required_modules:
         if not pkgutil.find_loader(modname):
-            print(f"missing {modname}")
             return None
 
     return [importlib.import_module(modname) for modname in required_modules]
+
+
+def open_for_write(filename):
+    # return open(filename, 'wb')
+    return gzip.open(filename, 'wb')
+
+
+def open_for_read(filename):
+    # return open(filename, 'rb')
+    return gzip.open(filename, 'rb')
 
 
 def load_cache(filename, is_compressed, required_modules, loader):
@@ -50,19 +56,25 @@ def load_cache(filename, is_compressed, required_modules, loader):
         return None
 
     if is_compressed:
-        with open(filename, 'rb') as cache_file:
-            return loader(cache_file, None)
+        try:
+            with open_for_read(filename) as cache_file:
+                return loader(cache_file, None)
+        except Exception as e:
+            print(f'The following exception occurred while loading cache file {filename}')
+            print(e)
+            return None
 
 
 def write_cache(cache, required_modules, saver, data):
     if import_modules(required_modules) is None:
         return
 
-    with open(cache, 'wb') as cache_file:
-        cache_file.write(saver(data))
+    with open_for_write(cache) as cache_file:
+        saver(data, cache_file)
 
 
 def p4_to_json(files, arg):
+    global args
     p4_filename, json_filename = arg
     return hlir16.hlir.p4_to_json(p4_filename, json_filename, args['p4v'], args['p4c_path'], args['p4opt'])
 
@@ -70,24 +82,38 @@ def p4_to_json(files, arg):
 def load_simdjson(file, data):
     import simdjson
     if file is not None:
+        args['verbose'] and print(f"Loading file using simdjson")
         return simdjson.load(file)
 
     with open(data, 'r') as f:
         return simdjson.load(f)
 
 
+def load_orjson(file, data):
+    import orjson
+    if file is not None:
+        args['verbose'] and print(f"Loading file using orjson")
+        return orjson.load(file)
+
+    with open(data, 'r') as f:
+        return orjson.load(f)
+
+
 def load_ujson(file, data):
     import ujson
     if file is not None:
+        args['verbose'] and print(f"Loading file using ujson")
         return ujson.load(file)
 
     with open(data, 'r') as f:
         return ujson.load(f)
 
 
-def load_json(filename, data):
-    if filename is not None:
-        return json.load(filename)
+def load_json(file, data):
+    import json
+    if file is not None:
+        args['verbose'] and print(f"Loading file using json")
+        return json.load(file)
 
     with open(data, 'r') as f:
         return json.load(f)
@@ -97,9 +123,11 @@ class RecursionLimit():
     """Temporarily increase the standard recursion limit."""
     def __init__(self, limit):
         self.limit = limit
+
     def __enter__(self):
         self.old_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(self.limit)
+
     def __exit__(self, type, value, traceback):
         sys.setrecursionlimit(self.old_limit)
 
@@ -142,28 +170,36 @@ def continue_stages(stages, stage_idx, data):
         compiler_common.current_compilation = { 'from': f"(cached) {stage['filename']}", 'to': "(generated content)", 'stage': stage }
 
         new_data = None
+        last_exception = None
         for required_modules, loader in stage['loaders']:
             if import_modules(required_modules) is None:
                 continue
 
-            new_data = loader(None, data)
+            try:
+                new_data = loader(None, data)
+            except Exception as e:
+                print(f'The following exception occurred while loading cache file {filename}')
+                print(e)
+                last_exception = e
+                continue
 
             if new_data is not None:
                 break
 
         if new_data is None:
-            return None
+            if last_exception is not None:
+                raise last_exception
+            raise Exception(f'Stage {stage["name"]} could not load data')
 
         data = new_data
 
-        if stage['saver'] is not None:
-            required_modules, save_data = stage['saver']
-            write_cache(stage['filename'], required_modules, save_data, data)
+        if 'saver' in stage and stage['saver'] is not None:
+            required_modules, saver = stage['saver']
+            write_cache(stage['filename'], required_modules, saver, data)
     return data
 
-    compiler_common.current_compilation = None
 
-def load_hlir(filename, cache_dir_name):
+def load_hlir(filename, cache_dir_name, recompile=False):
     p4cache = os.path.join(cache_dir_name, os.path.basename(filename))
 
     stages = [
@@ -173,7 +209,7 @@ def load_hlir(filename, cache_dir_name):
         stage_hlir_add_attributes(filename, p4cache),
         ]
 
-    stage_idx, data = load_latest_stage_from_cache(stages)
+    stage_idx, data = (0, None) if recompile else load_latest_stage_from_cache(stages)
     if stage_idx == 0:
         args['verbose'] and print(stages[0]['msgfmt'].format(filename))
         data = (filename, f"{p4cache}.json.cached")
@@ -183,8 +219,10 @@ def load_hlir(filename, cache_dir_name):
 def cache_loader(no_cache_loader):
     return ([], lambda file, data: pickle.load(file) if file is not None else no_cache_loader(data) if data is not None else None)
 
+
 def cache_saver():
-    return ([], lambda data: pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL))
+    return ([], lambda data, cache_file: cache_file.write(pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)))
+
 
 def stage_p4_to_json_file(filename, p4cache):
     return {
@@ -196,15 +234,17 @@ def stage_p4_to_json_file(filename, p4cache):
         'loaders': [([], p4_to_json)],
     }
 
+
 def stage_load_json(filename, p4cache):
     return {
         'name': 'stage_load_json',
         'msgfmt': "HLIR (cached: JSON) {}",
         'filename': f"{p4cache}.json.cached",
-        'loaders': [(['simdjson'], load_simdjson), (['ujson'], load_ujson), ([], load_json)],
+        'loaders': [(['simdjson'], load_simdjson), (['orjson'], load_orjson), (['ujson'], load_ujson), ([], load_json)],
         # This detects if the loaded JSON does not contain "main".
         'is_valid': lambda json_root: json_root['Node_ID'] is not None,
     }
+
 
 def stage_json_to_hlir(filename, p4cache):
     return {
@@ -216,12 +256,13 @@ def stage_json_to_hlir(filename, p4cache):
         'saver': cache_saver(),
     }
 
+
 def stage_hlir_add_attributes(filename, p4cache):
     return {
         'name': 'stage_hlir_add_attributes',
         'msgfmt': "HLIR (cached: stage hlir_add_attributes) {}",
         'filename': f"{p4cache}.hlir.attributed.cached",
-        'loaders': [cache_loader(lambda hlir: set_additional_attrs(hlir, filename, args['p4v']))],
+        'loaders': [cache_loader(lambda hlir: hlir16.hlir_attrs.set_additional_attrs(hlir, filename, args['p4v']))],
         'saver': cache_saver(),
     }
 
@@ -230,6 +271,7 @@ def check_file_exists(filename):
     if os.path.isfile(filename) is False:
         print("FILE NOT FOUND: %s" % filename, file=sys.stderr)
         sys.exit(1)
+
 
 def check_file_extension(filename):
     _, ext = os.path.splitext(filename)
@@ -251,7 +293,7 @@ def load_from_p4(compiler_args, cache_dir_name):
     check_file_extension(filename)
 
     with RecursionLimit(10000) as recursion_limit:
-        hlir = load_hlir(filename, cache_dir_name)
+        hlir = load_hlir(filename, cache_dir_name, args['recompile'])
 
         if hlir is None:
             print(f"P4 compilation failed for file {os.path.basename(__file__)}", file=sys.stderr)

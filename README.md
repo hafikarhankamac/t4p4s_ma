@@ -6,45 +6,80 @@ For publications and more, [see our homepage](http://p4.elte.hu/).
 
 An older version of the compiler is [also available](https://github.com/P4ELTE/t4p4s/tree/t4p4s-14).
 
-Find out more [about the P4 language](https://p4.org/).
+Find out more [about the P₄ language](https://p4.org/).
 
 ## Getting started
 
 ### Preparation
 
-To start working with the compiler, simply download the `bootstrap-t4p4s.sh` script and execute it with the following command. It should work on Debian based systems, e.g. the latest LTS edition of Linux Mint or Ubuntu.
+To start working with the compiler, simply download the `bootstrap-t4p4s.sh` script and execute it in the following way.
+The script installs all necessary libraries ([DPDK](https://www.dpdk.org/), [P4C](https://github.com/p4lang/p4c), `P4Runtime` and more) and T₄P₄S itself, and sets up environment variables.
 
+    wget https://raw.githubusercontent.com/P4ELTE/t4p4s/master/bootstrap-t4p4s.sh
+    chmod +x bootstrap-t4p4s.sh
     . ./bootstrap-t4p4s.sh
 
-The script installs all necessary software including T₄P₄S itself, and sets up environment variables.
+Notes.
 
-- Note: without the `.` at the beginning of the line, the environment variables will not be usable immediately.
-    - In that case, you can either start a new terminal, or run `. ./t4p4s_environment_variables.sh`
+- ⚠ The purpose of the script is to setup a convenient environment for you if you're just starting out.
+  Therefore, you *only need to execute it once*.
+  If you already have a working environment, you *don't need to run the script again*, and you *probably shouldn't*.
+
+    - To get T₄P₄S only without the third party libraries: `git clone --recursive https://github.com/P4ELTE/t4p4s`
+    - To update a previous T₄P₄S checkout, execute this command in its directory: `git pull --recurse-submodules`
+    - If you rerun `bootstrap-t4p4s.sh`, the previously installed content will be put in a backup directory.
+
+- Without the `.` at the beginning of the line, the environment variables will not be usable immediately.
+    - In that case, you can either open a new terminal, or run `. ./t4p4s_environment_variables.sh`
+
+- The script is intended to work on recent Debian based systems, e.g. the latest LTS edition of Linux Mint or Ubuntu.
+    - Legacy systems such as Ubuntu 18.04 and 16.04 are not supported by the script, as they do not come with out-of-the-box support for sufficiently recent libraries (such as Meson 0.47.1 or newer required for building DPDK, or Python 3.8 or newer required for building T₄P₄S).
+    - Even on legacy systems, the script may still be useful to you. You may disable stages of the script, and manually install the software.
+
+    INSTALL_STAGE2_DPDK=no INSTALL_STAGE3_PROTOBUF=no INSTALL_STAGE4_P4C=no . ./bootstrap-t4p4s.sh
+
+    - It is also useful if you are not interested in using `P4Runtime` features.
+
+    INSTALL_STAGE5_GRPC=no . ./bootstrap-t4p4s.sh
+
+- The following option quickens installation by turning off many features that may not be necessary for T₄P₄S use.
+
+    SLIM_INSTALL=yes . ./bootstrap-t4p4s.sh
+
+- You may customise the build process further. As the P₄ library is rather slow to compile to begin with, `CFLAGS` isn't passed to it, but you may use the specific `P4C_CFLAGS` variable. Here is a sample configuration.
+
+    CFLAGS="-march=native -mtune=native -O2" MESONFLAGS="-Db_pch=true -Ddebug=false -Doptimization=2 -Dstrip=true" P4C_CFLAGS="" . ./bootstrap-t4p4s.sh
+
+- To see all possible options (including available stages), run the script the following way.
+
+    ./bootstrap-t4p4s.sh showenvs
+
+- If you happen to have some of the dependencies locally checked out, you can speed up the installation process by letting the script clone them locally.
+
+    LOCAL_REPO_CACHE=/my/cache/dir . ./bootstrap-t4p4s.sh
+
+- At this stage of development, T₄P₄S will not compile and run all P₄ programs properly. In particular, header stacks are not supported currently.
+
 
 Overriding defaults.
 
-- To increase efficiency, the script runs jobs on all cores on the system in parallel. Should you experience any problems (for example, your system may run out of memory), you can override the number of jobs.
+- To increase efficiency, the script runs jobs on all cores of the system in parallel. Should you experience any problems (for example, your system may run out of memory), you can override the number of jobs.
 
     MAX_MAKE_JOBS=4 . ./bootstrap-t4p4s.sh
 
 - By default, the script runs downloads in parallel. You can force it to work sequentially.
 
-    PARALLEL_INSTALL=0 . ./bootstrap-t4p4s.sh
+    PARALLEL_INSTALL=no . ./bootstrap-t4p4s.sh
 
 - The script installs the newest versions of DPDK and P4C unless overridden by the user.
 
     DPDK_VERSION=20.05 . ./bootstrap-t4p4s.sh
     DPDK_VERSION=20.05 DPDK_FILEVSN=20.05.0 . ./bootstrap-t4p4s.sh
+    P4C_COMMIT_DATE=20201101 . ./bootstrap-t4p4s.sh
 
-- The script will use `clang` by default if it is installed. Using another target like `gcc` is possible, too.
+- The script uses `clang`, `clang++` and `lld` by default if they are installed unless overridden. It also uses `ccache`.
 
-    RTE_TARGET=x86_64-native-linuxapp-gcc . ./bootstrap-t4p4s.sh
-
-To download T₄P₄S only, make sure to get it with its submodule like this: `git clone --recursive https://github.com/P4ELTE/t4p4s`
-
-- When you pull further commits, you will need to update the submodules as well: `git submodule update --init --recursive` or `git submodule update --rebase --remote`
-
-Note: at this stage, not all P4 programs will compile and run properly. In particular, header stacks are not supported currently.
+    T4P4S_CC=gcc T4P4S_CXX=g++ T4P4S_LD=bfd . ./bootstrap-t4p4s.sh
 
 
 ### Options
@@ -58,8 +93,8 @@ The options are collected in the following phases.
     - `examples.cfg` sets options for each example.
     - `opts_${ARCH}.cfg` sets architecture specific options.
     - Currently, the only valid value for `${ARCH}` is `dpdk`.
-1. When the command line of the script is processed, anything not identifiable as a P4 program is considered an option.
-    - A P4 program is the name of an existing file whose extension begins with `p4`.
+1. When the command line of the script is processed, anything not identifiable as a P₄ program is considered an option.
+    - A P₄ program is the name of an existing file whose extension begins with `p4`.
     - Here, the options are separated by spaces, therefore their values are not allowed to contain spaces themselves.
 1. Option files come in two flavours.
     - Some files (e.g. `lights.cfg`) contain an option definition on a single line.
@@ -97,7 +132,35 @@ The format of option definitions is the following.
     | %myexample=mytestcase   | example=**myexample** variant=test testcase=**mytestcase**              |
     | %myexample              | example=**myexample** variant=test testcase=test                        |
     | %%myexample=mytestcase  | example=**myexample** variant=test verbose dbg testcase=**mytestcase**  |
-    | %%myexample             | example=**myexample** variant=test verbose dbg suite                    |
+    | %%myexample             | example=**myexample** variant=test verbose=lines dbg suite                    |
+
+### Crypto devices for cryptography operations
+
+It is hardcoded in the current prototype to create an OpenSSL-based virtual crypto device in DPDK in order to support encryption and decryption extern functions. The PMD for this virtual device is not compiled in DPDK by default.
+
+To enable the OpenSSL crypto PMD, edit **dpdk-19.02/config/common_base** by changing
+
+~~~
+CONFIG_RTE_LIBRTE_PMD_OPENSSL=n
+~~~
+
+to
+
+~~~
+CONFIG_RTE_LIBRTE_PMD_OPENSSL=y
+~~~
+
+and do a rebuild on DPDK.
+
+You can also activate a separate crypto node to run the commands with parameter `crypto_node=openssl`. If you run a crypto node, you have to configure an extra core that only will do the external job.
+
+If you want to test with a constant time external function, you can set `crypto_node=fake` and set for example the time with `fake_crypto_time=5000` that sets the external function to run until 5000 clock ticks.
+
+An example call of async mode:
+
+```
+./t4p4s.sh :l2fwd-gen cores=4 ports=3x2 async_mode=pd crypto_node=fake fake_crypto_time=3000
+```
 
 
 ### Execution
@@ -161,6 +224,12 @@ Note that for non-testing examples, you will have to setup your network card, an
         `./t4p4s.sh :l2fwd verbose`
     - Verbose output for the switch
         `./t4p4s.sh :l2fwd dbg`
+    - Even more verbose output for the switch
+        `./t4p4s.sh :l2fwd dbg=1`
+    - In addition, statistics can be displayed at the end
+        `./t4p4s.sh :l2fwd dbg stats`
+    - For per-packet statistics, use `stats=1`
+        `./t4p4s.sh :l2fwd dbg stats=1`
     - Suppress EAL messages from the switch output
         `./t4p4s.sh :l2fwd noeal`
     - No output at all (both terminal and switch) except for errors
@@ -184,14 +253,6 @@ Note that for non-testing examples, you will have to setup your network card, an
         `./t4p4s.sh %%l2fwd`
     - Stop the switch immediately upon encountering invalid data
         `./t4p4s.sh %l2fwd=payload strict`
-1. Redo
-    - `t4p4s.sh` saves the collected environment variables to `build/l2fwd-gen@test-test/redo.opts.txt` (when executed as `./t4p4s.sh %l2fwd`)
-    - This option loads the saved environment; can speed up rerunning test cases
-        - Mostly useful for development purposes
-    - Has to be the very first argument to `t4p4s.sh`
-    - `run_tests.sh` (see below) also uses this option
-        `./t4p4s.sh redo=%l2fwd`
-        `./t4p4s.sh redo=%l2fwd=test2`
 1. Hugepages
     - `examples.cfg` sets the required number of hugepages for each example
     - Set it to another value, e.g. make T₄P₄S use `1024 MB` of hugepages
@@ -206,20 +267,40 @@ Note that for non-testing examples, you will have to setup your network card, an
     - Many options can be overridden using environment variables.
         `EXAMPLES_CONFIG_FILE="my_config.cfg" ./t4p4s.sh my_p4 @test`
         `EXAMPLES_CONFIG_FILE="my_config.cfg" COLOUR_CONFIG_FILE="my_colors.txt" P4_SRC_DIR="../my_files" ARCH_OPTS_FILE="my_opts.cfg" ./t4p4s.sh %my_p4 dbg verbose`
-    - Running this command gives you the list of environment variables available for customisation.
     - To see which environment variables are available for customisation and what their default values are, run the following command.
         `./t4p4s.sh showenvs`
-    - If `showenvs` is not the first argument, it prints the argument values after they have been fully computed/substituted
+    - If `showenvs` is not the first argument, it prints the argument values after they have been fully computed/substituted.
         `./t4p4s.sh %l2fwd showenvs`
 1. Controller
     - Set the controller manually
         `./t4p4s.sh :l2fwd ctr=l2fwd`
     - Let the output of the controller be shown in a separate window. For this to work, `gnome-terminal` is used, as the more general `x-terminal-emulator` does not seem to work properly.
         `./t4p4s.sh %my_p4 ctrterm`
+1. Compilation: logging, recompilation, source file hints, optimisation
+    - If you add `extern void log(string s);` to your P₄ file, calls to `log("My message")` will produce a line in the debug output.
+        `./t4p4s.sh %my_p4 x_log`
+    - T₄P₄S caches compilation results and takes only those compilation steps that are necessary. Changes in included files are not taken into consideration, however. You can force full recompilation in this case.
+        `./t4p4s.sh %my_p4 recompile`
+    - Inquisitive users may want to investigate the generated C source code. To help with this, T₄P₄S can generate comments that hint about the origins of a generated expression or statement.
+        `./t4p4s.sh %my_p4 hint=all`
+        `./t4p4s.sh %my_p4 hint=nopath`
+        `./t4p4s.sh %my_p4 hint=noext`
+        `./t4p4s.sh %my_p4 hint=nofile`
+    - You may change the optimisation level for `meson`. [See more details here.](https://mesonbuild.com/Builtin-options.html#core-options)
+        `MESON_BUILDTYPE=release ./t4p4s.sh %my_p4`
+    - When using `clang`, you may make use of `thin-lto`.
+        `./t4p4s.sh %my_p4 lto`
+    - You may pass extra options to `meson` like this.
+        `./t4p4s.sh %my_p4 mopt+=-Db_ndebug=if-release mopt+=-Doptimization=3 mopt+=-Ddebug=false`
+    - Reduce the output file size by about 85% using [`upx`](https://github.com/upx/upx). This is a reasonable compromise between compression ratio and speed.
+        `./t4p4s.sh %my_p4 upx`
+    - To further adjust `upx`, you can pass options to the command. Note that `--brute` and `--ultra-brute` will probably break the executable.
+        `UPX_OPTS=-1 ./t4p4s.sh %my_p4`
+        `./t4p4s.sh %my_p4 upx=--best`
 1. Miscellaneous options
-    - Specify the P4 version manually (usually decided by other options or P4 file extension)
+    - Specify the P₄ version manually (usually decided by other options or P₄ file extension)
         `./t4p4s.sh :l2fwd vsn=14`
-    - Pass a test option to the P4 compiler. This defines a macro called `T4P4S_TEST_1` that is available during P4 preprocessing.
+    - Pass a test option to the P₄ compiler. This defines a macro called `T4P4S_TEST_1` that is available during P₄ preprocessing.
         `./t4p4s.sh %my_p4 p4testcase=1`
 
 ### Testing
@@ -232,7 +313,7 @@ To see detailed output about compilation and execution, use the following option
 To run all available test cases, execute `./run_tests.sh`.
 You can also give this script any number of additional options.
 
-    ./run_tests.sh verbose dbg
+    ./run_tests.sh verbose dbg stats
 
 As its name implies, `run_tests.sh` runs each test case in the offline (`nicoff`, meaning no NIC present) mode.
 You may set the `PREFIX` and `POSTFIX` environment variables to make the script start `t4p4s.sh` with a different setup for the test case.
@@ -245,7 +326,11 @@ grouped by the types of failures.
 You may indicate which tests are to be skipped by listing them in a file.
 See the default skip file, `tests_to_skip.txt`, for further details.
 
-    SKIP_FILE="my_skip_file" ./run_tests.sh verbose dbg
+    SKIP_FILE="my_skip_file" ./run_tests.sh verbose dbg stats
+
+The batch file processes all P4 files from the folder `examples` and its subfolders (including symlinked ones) by default. You can override it like this.
+
+    START_DIR=examples/test/testcases-v1/ ./run_tests.sh verbose dbg stats
 
 
 # Using Docker with T₄P₄S

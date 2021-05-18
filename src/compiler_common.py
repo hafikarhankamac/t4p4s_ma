@@ -173,28 +173,31 @@ def statement_buffer_value():
 
 ################################################################################
 
-def is_control_local_var(var_name):
-    global enclosing_control
+def is_control_local_var(var_name, start_node=None):
+    if start_node:
+        ctl = start_node.parents.filter('node_type', ('P4Parser', 'P4Control'))[0]
+    else:
+        global enclosing_control
+        ctl = enclosing_control
 
-    def get_locals(node):
-        if node.node_type == 'P4Parser':  return node.parserLocals
-        if node.node_type == 'P4Control': return node.controlLocals
-        return []
-
-    return enclosing_control is not None and [] != [cl for cl in get_locals(enclosing_control) if cl.name == var_name]
+    if ctl.node_type == 'P4Parser':
+        return ctl.parserLocals.get(var_name) is not None
+    if ctl.node_type == 'P4Control':
+        return ctl.controlLocals.get(var_name) is not None
+    return False
 
 ################################################################################
 
 var_name_counter = 0
 generated_var_names = set()
 
-def generate_var_name(var_name_part = "var", var_id = None):
+def generate_var_name(var_name_part, var_id = None):
     global var_name_counter
     global generated_var_names
 
     var_name_counter += 1
 
-    var_name = f"{var_name_part}_{var_name_counter}"
+    var_name = f"{var_name_part}_{var_name_counter:04d}"
     if var_id is not None:
         simpler = f"{var_name_part}_{var_id}"
         var_name = simpler
@@ -211,3 +214,62 @@ def dlog(num, base=2):
     """Returns the discrete logarithm of num.
     For the standard base 2, this is the number of bits required to store the range 0..num."""
     return [n for n in range(32) if num < base**n][0]
+
+# ################################################################################
+
+def unspecified_value(size):
+    """Called when an unspecified value of `size` bytes is needed.
+    Generates either a value that is consistent for subsequent executions,
+    or a properly random value each time it is called."""
+    import hashlib
+
+    max_val = 2 ** size - 1
+    if current_compilation['use_real_random']:
+        return f'0x{randint(0, max_val):x} /* random {size} bit value */'
+    else:
+        txt = current_compilation['from'] + current_compilation['to']
+        hashed = int(hashlib.md5(txt.encode('utf-8')).hexdigest(), 16) % max_val
+        return f'0x{hashed:x} /* pseudorandom {size} bit value */'
+
+# ################################################################################
+
+def is_meta(node):
+    return 'hdr_ref' in node and node.hdr_ref.urtype('is_metadata', False)
+    # return 'is_metadata' in node and node.is_metadata
+
+def get_raw_hdr_name(e):
+    nt = e.node_type
+    if e.node_type == 'ArrayIndex':
+        idx = e.right.value
+        return f'{e.left.member}_{idx}'
+    if 'expr' in e and e.expr.urtype == 'Type_Stack':
+        # TODO implement this properly
+        last_idx = 0
+        return f'{e.left.member}_{last_idx}'
+    if nt == 'PathExpression':
+        return e._expr.path.name
+
+    return e.member
+
+def get_hdr_name(e):
+    if 'expr' in e and is_meta(e.expr):
+        return 'all_metadatas'
+
+    raw = get_raw_hdr_name(e)
+    return raw
+
+def get_hdrfld_name(e):
+    if 'member' not in e:
+        return None, None
+
+    if is_meta(e.expr):
+        fldname = e.member
+        return 'all_metadatas', fldname
+
+    if e.expr.node_type == 'PathExpression':
+        if e.expr.urtype.node_type == 'Type_Header':
+            return e.expr.path.name, e.member
+        return e.member, None
+
+    fldname = e.member
+    return get_hdr_name(e.expr), fldname

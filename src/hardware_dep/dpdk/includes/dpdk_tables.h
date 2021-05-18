@@ -6,12 +6,12 @@
 #include <rte_version.h>    // for conditional compilation
 
 #if RTE_VERSION >= RTE_VERSION_NUM(17,05,0,0)
-typedef uint32_t table_index_t;
+	typedef uint32_t table_index_t;
 #else
-typedef uint8_t table_index_t;
+	typedef uint8_t table_index_t;
 #endif
 
-typedef struct extended_table_s {
+typedef struct {
     void*          rte_table;
     table_index_t  size;
     union {

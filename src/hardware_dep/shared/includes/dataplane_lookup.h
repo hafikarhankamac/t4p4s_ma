@@ -22,7 +22,7 @@ struct type_field_list {
     uint8_t* field_widths;
 };
 
-typedef struct lookup_table_entry_info_s {
+typedef struct {
     int entry_count;
 
     uint8_t key_size;
@@ -34,8 +34,10 @@ typedef struct lookup_table_entry_info_s {
     uint8_t lock_size;
 } lookup_table_entry_info_t;
 
-typedef struct lookup_table_s {
-    char* name;
+typedef struct {
+    const char* name;
+    const char* canonical_name;
+
     unsigned id;
     uint8_t type;
     bool is_hidden;
@@ -55,5 +57,6 @@ typedef struct lookup_table_s {
     lookup_table_entry_info_t entry;
 #ifdef T4P4S_DEBUG
     int init_entry_count;
+    const char* short_name;
 #endif
 } lookup_table_t;

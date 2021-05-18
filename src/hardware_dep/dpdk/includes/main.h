@@ -31,9 +31,6 @@ int t4p4s_normal_exit();
 
 void init_control_plane();
 
-// defined in the generated file dataplane.c
-void handle_packet(uint32_t portid, STDPARAMS);
-
 // defined separately for each example
 bool core_is_working(LCPARAMS);
 bool receive_packet(unsigned pkt_idx, LCPARAMS);
@@ -41,7 +38,7 @@ void free_packet(LCPARAMS);
 bool is_packet_handled(LCPARAMS);
 void init_storage();
 void main_loop_pre_rx(LCPARAMS);
-void main_loop_post_rx(LCPARAMS);
+void main_loop_post_rx(bool, LCPARAMS);
 void main_loop_post_single_rx(bool got_packet, LCPARAMS);
 uint32_t get_portid(unsigned queue_idx, LCPARAMS);
 void main_loop_rx_group(unsigned queue_idx, LCPARAMS);
@@ -53,6 +50,13 @@ struct lcore_data init_lcore_data();
 packet* clone_packet(packet* pd, struct rte_mempool* mempool);
 void init_parser_state(parser_state_t*);
 void init_table_default_actions();
+int get_packet_idx(LCPARAMS);
 
 uint32_t get_port_mask();
 uint8_t get_port_count();
+
+void t4p4s_print_global_stats();
+void t4p4s_print_per_packet_stats();
+void t4p4s_init_global_stats();
+void t4p4s_init_per_packet_stats();
+bool check_controlflow_requirements(fake_cmd_t cmd);

@@ -7,8 +7,6 @@
 //=============================================================================
 // Shared
 
-extern struct socket_state state[NB_SOCKETS];
-
 struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 
@@ -31,14 +29,21 @@ rte_eth_addr_t ports_eth_addr[RTE_MAX_ETHPORT_COUNT];
 uint16_t t4p4s_nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t t4p4s_nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
+#ifndef T4P4S_RTE_RSS_HF
+#define T4P4S_RTE_RSS_HF (ETH_RSS_IPV4 | ETH_RSS_NONFRAG_IPV4_TCP | ETH_RSS_NONFRAG_IPV4_UDP | ETH_RSS_IPV6 | ETH_RSS_NONFRAG_IPV6_TCP | ETH_RSS_NONFRAG_IPV6_UDP | ETH_RSS_IPV6_EX | ETH_RSS_IPV6_TCP_EX | ETH_RSS_IPV6_UDP_EX)
+#endif
 
 struct rte_eth_conf port_conf = {
+#ifndef T4P4S_VETH_MODE
     .rxmode = {
         .mq_mode = ETH_MQ_RX_RSS,
         .max_rx_pkt_len = RTE_ETH_MAX_LEN,
         .split_hdr_size = 0,
 #if RTE_VERSION >= RTE_VERSION_NUM(18,11,0,0)
-        .offloads = DEV_RX_OFFLOAD_CHECKSUM,
+	#ifndef T4P4S_RTE_OFFLOADS
+	#define T4P4S_RTE_OFFLOADS DEV_RX_OFFLOAD_CHECKSUM
+	#endif
+        .offloads = T4P4S_RTE_OFFLOADS,
 #elif RTE_VERSION >= RTE_VERSION_NUM(18,05,0,0)
         .offloads = DEV_RX_OFFLOAD_CRC_STRIP | DEV_RX_OFFLOAD_CHECKSUM,
 #else
@@ -52,15 +57,13 @@ struct rte_eth_conf port_conf = {
     .rx_adv_conf = {
         .rss_conf = {
             .rss_key = NULL,
-            .rss_hf = 
-		// 0x38d34,
-		ETH_RSS_IPV4 | ETH_RSS_NONFRAG_IPV4_TCP | ETH_RSS_NONFRAG_IPV4_UDP | ETH_RSS_IPV6 | ETH_RSS_NONFRAG_IPV6_TCP | ETH_RSS_NONFRAG_IPV6_UDP | ETH_RSS_IPV6_EX | ETH_RSS_IPV6_TCP_EX | ETH_RSS_IPV6_UDP_EX,
-		// ETH_RSS_IP, // 0xa38c
+            .rss_hf = T4P4S_RTE_RSS_HF,
         },
     },
     .txmode = {
         .mq_mode = ETH_MQ_TX_NONE,
     },
+#endif
 };
 
 //=============================================================================
@@ -199,9 +202,11 @@ void dpdk_init_port(uint8_t nb_ports, uint32_t nb_lcores, uint8_t portid) {
     fflush(stdout);
 
     uint16_t nb_rx_queue = get_port_n_rx_queues(portid);
+    #ifdef T4P4S_VETH_MODE
+    uint32_t n_tx_queue = 1;
+    #else
     uint32_t n_tx_queue = min(nb_lcores, MAX_TX_QUEUE_PER_PORT);
-    //uint32_t n_tx_queue = 4;
-
+    #endif
     debug(" :::: Creating queues: nb_rxq=%d nb_txq=%u\n",
           nb_rx_queue, (unsigned)n_tx_queue );
     int ret = rte_eth_dev_configure(portid, nb_rx_queue,
@@ -214,10 +219,14 @@ void dpdk_init_port(uint8_t nb_ports, uint32_t nb_lcores, uint8_t portid) {
     print_port_mac((unsigned)portid, ports_eth_addr[portid].addr_bytes);
 
     uint16_t queueid = 0;
-    for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
-        if (init_tx_on_lcore(lcore_id, portid, queueid))
-            ++queueid;
-    }
+    #ifdef T4P4S_VETH_MODE
+        init_tx_on_lcore(0, portid, queueid);
+    #else
+        for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
+            if (init_tx_on_lcore(lcore_id, portid, queueid))
+                ++queueid;
+        }
+    #endif
 
     debug("\n");
 }
@@ -228,7 +237,7 @@ void dpdk_init_rx_queue(uint8_t queue, unsigned lcore_id, struct lcore_conf* qco
 
     int socketid = get_socketid(lcore_id);
 
-    debug("rxq=%d,%d,%d \n", portid, queueid, socketid);
+    debug("rxq=" T4LIT(%d,port) "," T4LIT(%d,queue) "," T4LIT(%d,socket) "\n", portid, queueid, socketid);
     fflush(stdout);
 
     int ret = rte_eth_rx_queue_setup(portid, queueid, t4p4s_nb_rxd,

@@ -99,7 +99,7 @@ void exact_add_promote(table_name_t tableid, uint8_t* key, uint8_t* value, bool 
     FORALLNUMANODES("Add", "/" T4LIT(exact), CHANGE_TABLE(exact_add, key, value), is_const_entry, should_print)
 }
 void exact_change_promote(table_name_t tableid, uint8_t* key, uint8_t* value, bool is_const_entry, bool should_print) {
-    FORALLNUMANODES(Add, "/" T4LIT(exact), CHANGE_TABLE(exact_change, key, value), is_const_entry, should_print)
+    FORALLNUMANODES("Change", "/" T4LIT(exact), CHANGE_TABLE(exact_change, key, value), is_const_entry, should_print)
 }
 void lpm_add_promote(table_name_t tableid, uint8_t* key, uint8_t depth, uint8_t* value, bool is_const_entry, bool should_print) {
     FORALLNUMANODES("Add", "/" T4LIT(LPM), CHANGE_TABLE(lpm_add, key, depth, value), is_const_entry, should_print)

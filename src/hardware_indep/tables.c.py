@@ -222,6 +222,13 @@ for table in hlir.tables:
 #[     return action_canonical_names[get_entry_action_id(entry)];
 #[ }
 
+#[// Computes the location of the validity field of the entry.
 #[ bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t) {
-#[     return (bool*)(entry + t->entry.action_size + t->entry.state_size);
+#[     return (bool*)(entry + t->entry.action_size + t->entry.lock_size);
 #[ }
+
+#[ // Computes the location of the lock field of the entry.
+#[ lock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t) {
+#[     return (lock_t*)(entry + t->entry.action_size);
+#[ }
+

@@ -25,27 +25,6 @@
 #include <rte_errno.h>
 
 // ============================================================================
-// Getters
-
-// Returns the action id stored in the table entry parameter.
-// Table entries have different types (${table.name}_action),
-// but all of them have to start with an int, the action id.
-char* get_entry_action_name(void* entry) {
-    int action_id = *((int*)entry);
-    return action_names[action_id];
-}
-
-// Computes the location of the validity field of the entry.
-bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t) {
-    return (bool*)(entry + t->entry.action_size + t->entry.lock_size);
-}
-
-// Computes the location of the lock field of the entry.
-lock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t) {
-    return (lock_t*)(entry + t->entry.action_size);
-}
-
-// ============================================================================
 // Error messages
 
 void rte_exit_with_errno_text(const char* errno_txt, const char* msg, const char* table_name, const char* error_text)

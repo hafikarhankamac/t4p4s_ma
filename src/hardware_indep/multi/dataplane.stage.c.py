@@ -13,6 +13,10 @@ table_infos = list(ti for idx, ti in enumerate(all_table_infos) if idx % part_co
 all_ctl_stages = ((ctl, idx, comp) for ctl in hlir.controls for idx, comp in enumerate(ctl.body.components))
 ctl_stages = list(cic for idx, cic in enumerate(all_ctl_stages) if (idx + len(all_table_infos)) % part_count == multi_idx)
 
+
+def lockAction(action, table):
+    return action.has_write_table_parameter and table.synced
+
 if table_infos == [] and ctl_stages == []:
     compiler_common.current_compilation['skip_output'] = True
 else:
@@ -65,10 +69,10 @@ else:
         if len(table.actions) == 1:
             ao = table.actions[0].action_object
             if len(ao.body.components) != 0:
-                if lockAction(action.action_object, table):
+                if lockAction(ao, table):
                     #[           LOCK(&entry->lock);
                 #[         action_code_${ao.name}(&(entry->action.${ao.name}_params), SHORT_STDPARAMS_IN);
-                if lockAction(action.action_object, table):
+                if lockAction(ao, table):
                     #[           UNLOCK(&entry->lock);
             #[         return (apply_result_t) { hit, action_${ao.name} };
         else:
@@ -77,10 +81,10 @@ else:
                 ao = action.action_object
                 #{       case action_${ao.name}:
                 if len(ao.body.components) != 0:
-                    if lockAction(action.action_object, table):
+                    if lockAction(ao, table):
                         #[           LOCK(&entry->lock);
                     #[               action_code_${ao.name}(&(entry->action.${ao.name}_params), SHORT_STDPARAMS_IN);
-                    if lockAction(action.action_object, table):
+                    if lockAction(ao, table):
                         #[           UNLOCK(&entry->lock);
                 #}               return (apply_result_t) { hit, action_${ao.name} };
             #[         }

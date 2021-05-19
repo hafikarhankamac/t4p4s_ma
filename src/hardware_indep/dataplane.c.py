@@ -16,9 +16,6 @@ table_infos = [(table, table.short_name + ("/keyless" if table.key_length_bits =
 
 ################################################################################
 # Table application
-def lockAction(action, table):
-    return action.has_write_table_parameter and table.synced
-
 
 for type in unique_everseen([comp['type'] for table in hlir.tables for smem in table.direct_meters + table.direct_counters for comp in smem.components]):
     #[ void apply_direct_smem_$type(register_uint32_t* smem, uint32_t value, char* table_name, char* smem_type_name, char* smem_name) {

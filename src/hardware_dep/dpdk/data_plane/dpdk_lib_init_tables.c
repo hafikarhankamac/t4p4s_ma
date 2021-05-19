@@ -87,8 +87,6 @@ void init_tables()
 #else
     main_socket= get_socketid(rte_get_master_lcore());
 #endif
-
-    master_socket_id = get_master_socketid();
     for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
         create_tables_on_lcore(lcore_id);
     }

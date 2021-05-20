@@ -217,7 +217,7 @@ for table in hlir.tables:
 
     extra_params = "".join(f'{p}, ' for p in extra_names[tmt])
     has_fields = "false" if len(action.action_object.parameters.parameters) == 0 else "true"
-    #[     ${table.matchType.name}_add_promote(TABLE_${table.name}, (uint8_t*)&key, ${extra_params} (uint8_t*)&action, false, ${has_fields});
+    #[     ${table.matchType.name}_add_promote(TABLE_${table.name}, (uint8_t*)&key, ${extra_params} (uint8_t*)&action, false, true);
 
     #} }
     #[

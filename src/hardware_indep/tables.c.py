@@ -151,7 +151,7 @@ for table in hlir.tables:
         #}         },
         #}     };
 
-        mt = table.matchType.name
+        mt = table.match_type_code
         if mt == 'exact':
             #[     ${mt}_add_promote(TABLE_${table.name}, ${key_var}, (uint8_t*)&${action_var}, true, false);
         elif mt == 'lpm':

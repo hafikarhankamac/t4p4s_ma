@@ -41,7 +41,7 @@ else:
             #[         uint8_t* key[${table.key_length_bytes}];
             #[         table_${table.name}_key(pd, (uint8_t*)key);
 
-            #[         table_entry_${table.name}_t* entry = (table_entry_${table.name}_t*)${table.matchType.name}_lookup(tables[TABLE_${table.name}], (uint8_t*)key);
+            #[         table_entry_${table.name}_t* entry = (table_entry_${table.name}_t*)${table.match_type_code}_lookup(tables[TABLE_${table.name}], (uint8_t*)key);
             #[         bool hit = entry != NULL && entry->is_entry_valid != INVALID_TABLE_ENTRY;
             #{         if (unlikely(!hit)) {
             #[             entry = ${table.name}_get_default_entry(STDPARAMS_IN);

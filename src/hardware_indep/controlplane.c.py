@@ -134,7 +134,7 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt):
 
 
 for table in hlir.tables:
-    tmt = table.matchType.name.split('_')[0]
+    tmt = table.match_type_code
 
     return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'void'}
     extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': ''}
@@ -201,15 +201,15 @@ for table in hlir.tables:
     #[
 
 for table in hlir.tables:
-    tmt = table.matchType.name
+    tmt = table.match_type_code
     #{ void ${table.name}_add_table_entry(p4_ctrl_msg_t* ctrl_m) {
     #[     ${table.name}_action_t action;
     #[     bool success = ${table.name}_setup_action(&action, (p4_action_parameter_t**)ctrl_m->action_params, ctrl_m->action_name);
     #[     if (unlikely(!success))    return;
     #[
 
-    table_extra_t = {'exact': '', 'exact_inplace': '', 'lpm': 'int prefix_length = ', 'ternary': ''}
-    extra_names = {'exact': [], 'exact_inplace': [], 'lpm': ['prefix_length'], 'ternary': []}
+    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': ''}
+    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': []}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);
@@ -217,7 +217,7 @@ for table in hlir.tables:
 
     extra_params = "".join(f'{p}, ' for p in extra_names[tmt])
     has_fields = "false" if len(action.action_object.parameters.parameters) == 0 else "true"
-    #[     ${table.matchType.name}_add_promote(TABLE_${table.name}, (uint8_t*)&key, ${extra_params} (uint8_t*)&action, false, true);
+    #[     ${table.match_type_code}_add_promote(TABLE_${table.name}, (uint8_t*)&key, ${extra_params} (uint8_t*)&action, false, true);
 
     #} }
     #[

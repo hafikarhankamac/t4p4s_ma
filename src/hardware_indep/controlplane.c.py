@@ -134,11 +134,11 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt):
 
 
 for table in hlir.tables:
-    tmt = table.matchType.name
+    tmt = table.matchType.name.split('_')[0]
 
-    return_t     = {'exact': 'void', 'exact_inplace': 'void', 'lpm': 'uint8_t', 'ternary': 'void'}
-    extra_init   = {'exact': '', 'exact_inplace': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': ''}
-    extra_return = {'exact': '', 'exact_inplace': '', 'lpm': 'return prefix_length;', 'ternary': ''}
+    return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'void'}
+    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': ''}
+    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': ''}
 
     #[ // note: ${table.name}, $tmt, ${table.key_length_bytes}
     #{ ${return_t[tmt]} ${table.name}_setup_key(p4_field_match_${tmt}_t** field_matches, table_key_${table.name}_t* key) {

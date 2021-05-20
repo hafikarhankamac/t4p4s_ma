@@ -44,7 +44,7 @@ for table in hlir.tables:
     #[      .key_size = $ks,
 
     if table.used_writable and table.synced:
-        #[      .entry_size = RTE_ALIGN(sizeof(struct ${table.name}_action) + sizeof(entry_validity_t) + sizeof(lock_t), 16),
+        #[      .entry_size = RTE_ALIGN(sizeof(${table.name}_action_t) + sizeof(entry_validity_t) + sizeof(lock_t), 16),
         #[      .lock_size = sizeof(lock_t),
     else:
         #[      .entry_size = sizeof(${table.name}_action_t) + sizeof(entry_validity_t),

@@ -45,3 +45,6 @@ for table in hlir.tables:
 
 #[ // Computes the location of the validity field of the entry.
 #[ bool* entry_validity_ptr(uint8_t* entry, lookup_table_t* t);
+
+#[ // Computes the location of the lock field of the entry.
+#[ lock_t* entry_lock_ptr(uint8_t* entry, lookup_table_t* t);

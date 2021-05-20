@@ -127,7 +127,7 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt):
     else:
         #[     memcpy(&(key->${get_key_name(k, idx)}), &(field_matches[$idx]->bitmap), $byte_width);
         if tmt == "lpm":
-            if kmt == "exact":
+            if kmt == "exact" or kmt == "exact_inplace":
                 #[     prefix_length += ${get_key_byte_width(k)};
             if kmt == "lpm":
                 #[     prefix_length += $byte_width;
@@ -136,9 +136,9 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt):
 for table in hlir.tables:
     tmt = table.matchType.name
 
-    return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'void'}
-    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': ''}
-    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': ''}
+    return_t     = {'exact': 'void', 'exact_inplace': 'void', 'lpm': 'uint8_t', 'ternary': 'void'}
+    extra_init   = {'exact': '', 'exact_inplace': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': ''}
+    extra_return = {'exact': '', 'exact_inplace': '', 'lpm': 'return prefix_length;', 'ternary': ''}
 
     #[ // note: ${table.name}, $tmt, ${table.key_length_bytes}
     #{ ${return_t[tmt]} ${table.name}_setup_key(p4_field_match_${tmt}_t** field_matches, table_key_${table.name}_t* key) {
@@ -208,8 +208,8 @@ for table in hlir.tables:
     #[     if (unlikely(!success))    return;
     #[
 
-    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': ''}
-    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': []}
+    table_extra_t = {'exact': '', 'exact_inplace': '', 'lpm': 'int prefix_length = ', 'ternary': ''}
+    extra_names = {'exact': [], 'exact_inplace': [], 'lpm': ['prefix_length'], 'ternary': []}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);

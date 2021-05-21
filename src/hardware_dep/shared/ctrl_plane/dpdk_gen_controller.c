@@ -17,7 +17,7 @@
 controller c;
 
 static uint32_t number_params[] = { 3, 4, 3};
-static char *action_names[] = { "single", "multiple", "periodic"};
+static char *action_names[] = { ".single", ".multiple", ".periodic"};
 static char *param_names[] = {"time", "id", "count"};
 
 extern void notify_controller_initialized();
@@ -40,7 +40,7 @@ void fill_table(uint32_t action, uint32_t key, uint32_t params[])
 
     h = create_p4_header(buffer, 0, 2048);
     te = create_p4_add_table_entry(buffer,0,2048);
-    strcpy(te->table_name, "set_timer_0");
+    strcpy(te->table_name, "ingress.set_timer");
 
     exact = add_p4_field_match_exact(te, 2048);
     strcpy(exact->header.name, "ipv4.protocol");
@@ -97,7 +97,7 @@ void set_default_action_set_timer()
     h = create_p4_header(buffer, 0, sizeof(buffer));
 
     sda = create_p4_set_default_action(buffer,0,sizeof(buffer));
-    strcpy(sda->table_name, "set_timer_0");
+    strcpy(sda->table_name, "ingress.set_timer");
 
     a = &(sda->action);
     strcpy(a->description.name, "forward");

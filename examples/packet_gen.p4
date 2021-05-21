@@ -84,7 +84,7 @@ control ingress(inout headers hdr, inout metadata data, inout standard_metadata_
     }
 
 
-    @name(".set_timer") table set_timer {
+    @name("set_timer") table set_timer {
         actions = {
             single;
 	    multiple;

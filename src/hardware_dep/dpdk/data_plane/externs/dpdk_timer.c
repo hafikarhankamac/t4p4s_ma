@@ -4,6 +4,8 @@
 #include <rte_timer.h>
 #include <rte_malloc.h>
 
+#include "dpdk_lib.h"
+
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 bool already[RTE_MAX_LCORE];

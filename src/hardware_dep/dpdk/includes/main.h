@@ -36,7 +36,6 @@ void init_control_plane();
 
 // defined in the generated file dataplane.c
 #ifdef EVENT_MODULE
-void handle_packet(uint32_t portid, STDPARAMS);
 void handle_event(event_s event, STDPARAMS);
 #endif
 

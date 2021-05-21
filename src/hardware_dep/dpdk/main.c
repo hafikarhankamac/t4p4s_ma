@@ -24,6 +24,12 @@ volatile int packet_with_error_counter = 0;
 
 #define BOOL_TO_STRING(x) x ? "true" : "false"
 
+#if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
+	#define MAIN_CORE rte_get_main_lcore()
+#else
+	#define MAIN_CORE rte_get_master_lcore()
+#endif
+
 extern uint64_t hz_millis;
 extern uint32_t handle_event_mask;
 extern uint32_t nb_lcore_params;
@@ -126,14 +132,13 @@ void do_handle_packet(int portid, unsigned queue_idx, unsigned pkt_idx, LCPARAMS
     #endif
 }
 
-void do_handle_event(int portid, unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
+void do_handle_event(int portid, unsigned queue_idx, unsigned pkt_idx, event_t event, LCPARAMS)
 {
     struct lcore_state state = lcdata->conf->state;
     lookup_table_t** tables = state.tables;
     parser_state_t* pstate = &(state.parser_state);
     init_parser_state(&(state.parser_state));
-
-    handle_event(portid, get_packet_idx(LCPARAMS_IN), STDPARAMS_IN);
+    handle_event(event.as_event, STDPARAMS_IN);
     do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
 }
 
@@ -178,12 +183,13 @@ void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
 #ifdef EVENT_MODULE
 void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t event, LCPARAMS)
 {
+    init_pd_state(pd);
     bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
 
     if (got_packet) {
         if (likely(is_packet_handled(LCPARAMS_IN))) {
             int portid = get_portid(queue_idx, LCPARAMS_IN);
-            do_handle_event(portid, queue_idx, pkt_idx, LCPARAMS_IN);
+            do_handle_event(portid, queue_idx, pkt_idx, event, LCPARAMS_IN);
         }
     }
 
@@ -208,6 +214,32 @@ bool do_rx(LCPARAMS)
     return got_packet;
 }
 
+#ifdef EVENT_MODULE
+bool recv_events(LCPARAMS)
+{
+    bool got_packet = false;
+    extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
+    uint32_t lcore_id = rte_lcore_id();
+
+    struct lcore_data lcdata_content = init_lcore_data(false, true);
+    uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
+    uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
+    got_packet |= event_count > 0;
+
+    if (event_count > 0) {
+	    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
+	    if (unlikely(alloc != 0)) {
+		//error
+	    }
+	    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
+		    do_single_event(0, event_idx, ((event_t*) lcdata->conf->state.event_burst)[event_idx], LCPARAMS_IN);
+	    }
+    }
+	
+    return got_packet;
+}
+#endif
+
 void main_loop_pre_do_post_rx(LCPARAMS){
     main_loop_pre_rx(LCPARAMS_IN);
     bool got_packet = do_rx(LCPARAMS_IN);
@@ -223,7 +255,7 @@ void main_loop_evt_pre_do_post_rx(LCPARAMS) {
 void main_loop_evt_rx_pre_do_post_rx(LCPARAMS) {
     main_loop_pre_rx(LCPARAMS_IN);
     bool got_packet = recv_events(LCPARAMS_IN);
-    bool got_packet = do_rx(LCPARAMS_IN);
+    got_packet |= do_rx(LCPARAMS_IN);
     main_loop_post_rx(got_packet, LCPARAMS_IN);
 }
 
@@ -263,31 +295,6 @@ void init_stats(LCPARAMS)
     COUNTER_INIT(lcdata->conf->fwd_packet);
 }
 
-void dpdk_main_loop()
-#ifdef EVENT_MODULE
-void recv_events(LCPARAMS)
-{
-    extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
-    uint32_t lcore_id = rte_lcore_id();
-
-    struct lcore_data lcdata_content = init_lcore_data();
-    uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
-    uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
-
-    if (event_count > 0) {
-	    int alloc = rte_pktmbuf_alloc_bulk(pktmbuf_pool[get_socketid(rte_lcore_id())], lcdata->pkts_burst, event_count);
-	    if (unlikely(alloc != 0)) {
-		//error
-	    }
-	    for (unsigned event_idx = 0; event_idx < event_count; event_idx++) {
-		    do_single_event(0, event_idx, ((event_t*) lcdata->conf->state.event_burst)[event_idx], LCPARAMS_IN);
-	    }
-    }
-
-}
-#endif
-
-
 bool dpdk_main_loop_rx()
 {
     struct lcore_data lcdata_content = init_lcore_data(true, false);
@@ -296,7 +303,7 @@ bool dpdk_main_loop_rx()
     struct lcore_data* lcdata = &lcdata_content;
     packet_descriptor_t* pd = &pd_content;
 
-    if (!initial_check(LCPARAMS_IN))   return;
+    if (!initial_check(LCPARAMS_IN))   return false;
 
     init_dataplane(pd, lcdata->conf->state.tables);
 
@@ -333,6 +340,7 @@ bool dpdk_main_loop_evt()
 
     init_stats(LCPARAMS_IN);
 
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
     while (likely(core_is_working(LCPARAMS_IN))) {
         #ifdef START_CRYPTO_NODE
             if (is_crypto_node()) {
@@ -354,9 +362,9 @@ bool dpdk_main_loop_evt()
     }
 }
 
-bool dpdk_main_loop_evt_rx()
+bool dpdk_main_loop_rx_evt()
 {
-    struct lcore_data lcdata_content = init_lcore_data(true, false);
+    struct lcore_data lcdata_content = init_lcore_data(true, true);
     packet_descriptor_t pd_content;
 
     struct lcore_data* lcdata = &lcdata_content;
@@ -369,7 +377,8 @@ bool dpdk_main_loop_evt_rx()
     #endif
 
     init_stats(LCPARAMS_IN);
-
+ 
+    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
     while (likely(core_is_working(LCPARAMS_IN))) {
         #ifdef START_CRYPTO_NODE
             if (is_crypto_node()) {
@@ -405,7 +414,7 @@ launch_one_lcore_rx_evt()
 static int
 launch_one_lcore_rx()
 {
-    pdk_main_loop_rx();
+    dpdk_main_loop_rx();
     return 0;
 }
 
@@ -413,8 +422,6 @@ static int
 launch_one_lcore_evt()
 {
     dpdk_main_loop_evt();
-    return 0;
-    dpdk_main_loop();
     return 0;
 }
 
@@ -436,7 +443,7 @@ static int remote_launch_lcore(uint32_t lcore_id, bool recv_pkts, bool recv_even
 int launch_dpdk()
 {
     #ifdef TIMER_MODULE
-	    rte_timer_subsystem_init();
+	rte_timer_subsystem_init();
     	timer_init(rte_get_timer_hz());
     #endif
 
@@ -457,7 +464,7 @@ int launch_dpdk()
 	    if (!lcores[lcore_id]) {
 	    	lcores[lcore_id] = true;
 
-	    	if (lcore_id == rte_get_master_lcore()) {
+	    	if (lcore_id == MAIN_CORE) {
 	    		master_defined = true;
 	    		master_recv_pkts = recv_pkts;
 	    		master_handle_evts = handle_evts;
@@ -473,7 +480,7 @@ int launch_dpdk()
 		    lcores[lcore_id] = true;
 		    bool handle_evts = handle_event_mask & (1 << lcore_id);
 		    bool recv_pkts = false;
-		    if (lcore_id == rte_get_master_lcore()) {
+		    if (lcore_id == MAIN_CORE) {
 			    master_defined = true;
 			    master_recv_pkts = recv_pkts;
 			    master_handle_evts = handle_evts;
@@ -500,14 +507,15 @@ int launch_dpdk()
     }
 
     #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
-        RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-        if (rte_eal_wait_lcore(lcore_id) < 0)
-            return -1;
-    }
-    #else
         RTE_LCORE_FOREACH_WORKER(lcore_id) {
         if (rte_eal_wait_lcore(lcore_id) < 0)
             return -1;
+    	}
+    #else
+	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+        if (rte_eal_wait_lcore(lcore_id) < 0)
+            return -1;
+	}
     #endif
 
     return 0;

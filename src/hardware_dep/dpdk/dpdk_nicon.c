@@ -164,7 +164,7 @@ void init_queues(struct lcore_data* lcdata, const bool recv_pkts, const bool rec
 }
 
 extern void init_async_data(struct lcore_data *data);
-struct lcore_data init_lcore_data() {
+struct lcore_data init_lcore_data(const bool recv_pkts, const bool recv_evts) {
     struct lcore_data lcdata = {
         .drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US,
         .prev_tsc  = 0,

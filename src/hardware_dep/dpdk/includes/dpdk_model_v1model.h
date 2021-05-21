@@ -168,13 +168,15 @@ void extern_register_write__u16(uint16_t x, int idx, uint16_t value, register_ui
 void extern_register_write__u32(uint32_t x, int idx, uint32_t value, register_uint32_t* reg, SHORT_STDPARAMS);
 void extern_register_write__u64(uint64_t x, int idx, uint64_t value, register_uint64_t* reg, SHORT_STDPARAMS);
 
-void sheep(uint32_t duration, packet_descriptor_t* pd, lookup_table_t** tables);
+void sheep(uint32_t *duration, packet_descriptor_t* pd, lookup_table_t** tables);
 
+#ifdef TIMER_MODULE
+void timer_single(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS);
+void timer_periodic(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS);
+void timer_multiple(uint32_t *duration, uint32_t *id, uint32_t *count, SHORT_STDPARAMS);
+void timer_burst(uint32_t *id, SHORT_STDPARAMS);
+#endif
 
-void timer_single(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
-void timer_periodic(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
-void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPARAMS);
-void timer_burst(uint32_t id, SHORT_STDPARAMS);
 
 inline uint32_t modulo_32(uint32_t div, uint32_t mod, SHORT_STDPARAMS)
 {
@@ -190,5 +192,5 @@ inline uint64_t modulo_64(uint64_t div, uint64_t mod, SHORT_STDPARAMS)
 //                     packet_descriptor_t* pd, lookup_table_t** tables);
 
 #ifdef EVENT_MODULE
-void raise_event(uint8_t event_id, uint32_t arg, SHORT_STDPARAMS);
+void raise_event(uint8_t *event_id, uint32_t *arg, SHORT_STDPARAMS);
 #endif

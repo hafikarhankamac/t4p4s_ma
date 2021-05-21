@@ -14,6 +14,8 @@
 #define NONE 0
 #define TIMER 1
 
+#define MAX_EVENT_BURST   32 
+
 typedef uint8_t event_e;
 
 typedef struct {

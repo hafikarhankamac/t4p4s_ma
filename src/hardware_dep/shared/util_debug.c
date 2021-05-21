@@ -2,7 +2,8 @@
 // Copyright 2016 Eotvos Lorand University, Budapest, Hungary
 
 #include <unistd.h>
-
+#include "rte_mbuf.h"
+#include "util_debug.h"
 
 #ifdef T4P4S_DEBUG
     #include "backend.h"
@@ -11,11 +12,16 @@
     pthread_mutex_t dbg_mutex;
 
     void dbg_fprint_bytes(FILE* out_file, void* bytes, int byte_count) {
-        int reasonable_upper_limit = 160;
+        #ifndef T4P4S_DEBUG_PKT_MAXBYTES
+            int reasonable_upper_limit = 80;
+        #else
+            int reasonable_upper_limit = T4P4S_DEBUG_PKT_MAXBYTES;
+        #endif
+
         if (byte_count <= 0)    return;
 
         if (byte_count > reasonable_upper_limit) {
-            fprintf(out_file, "(%d bytes, showing first %d) ", byte_count, reasonable_upper_limit);
+            fprintf(out_file, "(showing %dB) ", reasonable_upper_limit);
         }
 
         for (int i = 0; i < (byte_count <= reasonable_upper_limit ? byte_count : reasonable_upper_limit); ++i) {
@@ -27,6 +33,11 @@
         }
     }
 #endif
+
+void debug_mbuf(struct rte_mbuf* mbuf, const char* message) {
+    dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf),
+              "%s (" T4LIT(%d) " bytes): ", message, rte_pktmbuf_pkt_len(mbuf));
+}
 
 
 void sleep_millis(int millis) {

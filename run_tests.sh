@@ -1,10 +1,16 @@
 
+[ "$P4C" == "" ] && echo The environment variable \$P4C has to be defined to run $0 && exit 1
+[ "$RTE_SDK" == "" ] && echo The environment variable \$RTE_SDK has to be defined to run $0 && exit 1
+
+
 declare -A exitcode
 declare -A skips
 declare -A skipped
 declare -A testcases
-declare -A copies
-declare -A original
+declare -A dirname
+declare -A src_p4
+declare -A ext_p4
+declare -A p4files
 
 declare -a sorted_testcases
 declare -a sorted_skipped
@@ -12,6 +18,8 @@ declare -a sorted_skipped
 success_count=0
 failure_count=0
 
+START_DIR=${START_DIR-examples}
+START_DIR=`realpath "${START_DIR}"`
 SKIP_FILE=${SKIP_FILE-tests_to_skip.txt}
 
 if [ -f "$SKIP_FILE" ]; then
@@ -22,30 +30,28 @@ if [ -f "$SKIP_FILE" ]; then
 fi
 
 PREFIX=${PREFIX-%}
+std="@std"
+[ "$PREFIX" == "%" ] && std="@test"
+PRECOMPILE=${PRECOMPILE-yes}
 
 
-echo Precompiling P4 files to JSON
-
-cd examples
-
-for file in `ls test/test-*.c`; do
-    p4file="${file##test/test-}"
-    p4file="${p4file%%.c}"
+for file in `find -L "${START_DIR}" -name "test-*.c"`; do
+    base=$(basename $file)
+    noc="${base%%.c}"
+    noprefix="${noc##test-}"
 
     found=0
-    for p4base in "${file##test/test-}" "${file##test/}"; do
-        p4file="${p4base%%.c}"
-        for ext in ".p4" ".p4_14"; do
-            for srcdir in "." "test" "psa" "local"; do
-                SRC_P4="$srcdir/$p4file$ext"
-                [ -f "${SRC_P4}" ] && found=1 && break 3
-            done
+    for p4file in "$noc" "$noprefix"; do
+        for file2 in `find -L . -type f -regex ".*${p4file}.*[.]p4\(_[0-9][0-9]*\)?"`; do
+            SRC_P4="$file2"
+            found=1
+            break 2
         done
     done
 
     [ $found -eq 0 ] && echo "P4 file for $file not found" && continue
 
-    for testcase in `cat $file | grep "&t4p4s_testcase_" | sed -e "s/^.*&t4p4s_testcase_//g" | sed -e "s/ .*//g"`; do
+    for testcase in `cat $file | grep "&t4p4s_testcase_" | sed -e "s/[\"],.*//g" | sed -e "s/.*[\"]//g"`; do
         PREPART="$PREFIX"
         if [ -z ${POSTFIX+x} ]; then
             TESTPART="${p4file}=${testcase}"
@@ -54,7 +60,14 @@ for file in `ls test/test-*.c`; do
             TESTPART="${p4file}$POSTFIX"
         fi
 
-        testcases["$PREPART$TESTPART"]="$PREPART$TESTPART"
+        testid="$PREPART$TESTPART"
+        testcases["$testid"]="$testid"
+        p4files["$testid"]="$p4file"
+        src_p4["$testid"]="$SRC_P4"
+        ext="${SRC_P4##*.}"
+        ext_p4["$testid"]="$ext"
+
+        dirname["$testid"]=`echo "$testid" | sed -e "s/=/${std}-/g" | tr -d '%'`
 
         [ "${skipped[$PREPART$TESTPART]}" != "" ] && continue
         [ "$testcase" == "test" ] && [ "${skipped[\"$PREPART$TESTPART=test\"]}" != "" ] && continue
@@ -66,44 +79,41 @@ for file in `ls test/test-*.c`; do
             [ "$testcase" == "test" ] && [ "$skip=test" == "$TESTPART" ]         && skipped[$PREPART$TESTPART]="$skip" && continue 2
             [ "$testcase" == "test" ] && [ "$PREPART$skip=test" == "$TESTPART" ] && skipped[$PREPART$TESTPART]="$skip" && continue 2
         done
-
-        std="@std"
-        [ "$PREFIX" == "%" ] && std="@test"
-
-        TARGET_DIR="../build/${p4file}${std}-${testcase}/cache"
-        TARGET_JSON="${TARGET_DIR}/${p4file}.p4.json.cached"
-        mkdir -p ${TARGET_DIR}
-
-        [ "${copies["$p4file"]+x}" ] && copies["${p4file}"]+=" ${TARGET_JSON}"
-        [ ! "${copies["$p4file"]+x}" ] && copies["${p4file}"]=""
-
-        if [ ! "${original["$p4file"]+x}" ]; then
-            [ -f "${TARGET_JSON}" ] && [ "${TARGET_JSON}" -nt $file ] && continue
-
-            original["${p4file}"]="${TARGET_JSON}"
-
-            # compile only the "original", the first encountered source file
-            [ "$ext" == ".p4_14" ] && $P4C/build/p4test "${SRC_P4}" -I $P4C/p4include --toJSON ${TARGET_JSON} --Wdisable --p4v 14 &
-            [ "$ext" == ".p4"    ] && $P4C/build/p4test "${SRC_P4}" -I $P4C/p4include --toJSON ${TARGET_JSON} --Wdisable --p4v 16 &
-        fi
     done
 done
+
+total_count=0
+for TESTCASE in ${testcases[@]}; do
+    [ "${skipped[$TESTCASE]+x}" ] && continue
+    ((++total_count))
+done
+
+
+if [ "$PRECOMPILE" == "yes" ]; then
+    echo Precompiling ${total_count} P4 files to JSON
+
+    for TESTCASE in ${testcases[@]}; do
+        [ "${skipped[$TESTCASE]+x}" ] && continue
+
+        TARGET_DIR="../build/${dirname[$TESTCASE]}/cache"
+        TARGET_JSON="${TARGET_DIR}/${p4files[$TESTCASE]}.${ext_p4[$TESTCASE]}.json.cached"
+        mkdir -p ${TARGET_DIR}
+
+        [ -f ${TARGET_JSON} ] && [ ${TARGET_JSON} -nt "${src_p4[$TESTCASE]}" ] && echo -n "|" && continue
+
+        [ "${ext_p4[$TESTCASE]}" == "p4_14" ] && P4VSN=14
+        [ "${ext_p4[$TESTCASE]}" == "p4"    ] && P4VSN=16
+
+        $P4C/build/p4test "${src_p4[$TESTCASE]}" -I $P4C/p4include --toJSON ${TARGET_JSON} --Wdisable --p4v $P4VSN --ndebug && \
+            gzip ${TARGET_JSON} && \
+            mv ${TARGET_JSON}.gz ${TARGET_JSON} && \
+            echo -n "|"  &
+    done
+fi
 
 wait
 
-echo Copying JSON files for other tests in the same example
-
-
-ORIG_IFS=$IFS
-IFS=" "
-for p4file in ${!original[@]}; do
-    for dest in ${copies[$p4file]}; do
-        cp ${original[$p4file]} $dest
-    done
-done
-
-cd - >/dev/null
-
+echo
 
 summary_echo() {
     echo "$*"
@@ -115,7 +125,6 @@ summary_only_echo() {
     echo "$*" >> ${SUMMARY_FILE}
     echo "$*" >> ${LAST_SUMMARY_FILE}
 }
-
 
 LOG_DIR=build/all-run-logs
 SUMMARY_FILE=${LOG_DIR}/$(date +"%Y%m%d_%H%M%S")_log.txt
@@ -141,12 +150,6 @@ for test in ${sorted_skipped[@]}; do
     previous_case=${test%%=*}
 done | sort
 
-
-total_count=0
-for TESTCASE in ${testcases[@]}; do
-    [ "${skipped[$TESTCASE]+x}" ] && continue
-    ((++total_count))
-done
 
 summary_only_echo Will run the following ${total_count} test cases:
 
@@ -200,11 +203,12 @@ else
     fail_codes[1]="P4 to C compilation failed"
     fail_codes[2]="C compilation failed"
     fail_codes[3]="Execution finished with wrong output"
+    fail_codes[4]="Packets were unexpectedly dropped/sent"
     fail_codes[139]="C code execution: Segmentation fault"
     fail_codes[254]="Execution interrupted"
     fail_codes[255]="Switch execution error"
 
-    for fc in 1 2 3 139 254 255; do
+    for fc in 1 2 3 4 139 254 255; do
         failcode_count=0
         for test in ${!exitcode[@]}; do
             [ ${exitcode[$test]} -eq $fc ] && ((++failcode_count))

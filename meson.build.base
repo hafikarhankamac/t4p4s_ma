@@ -1,0 +1,66 @@
+
+fs = import('fs')
+
+hdep = '../../src/hardware_dep'
+xtrn = hdep / 'dpdk/data_plane/externs'
+srcg = 'srcgen'
+
+project_description = meson.project_name()
+
+project_source_files = [
+    srcg / 'dataplane.c',
+    srcg / 'dataplane_key.c',
+    srcg / 'dataplane_table_default_entry.c',
+    srcg / 'dataplane_stats.c',
+    srcg / 'dataplane_smem.c',
+    srcg / 'dataplane_update.c',
+    srcg / 'dataplane_show.c',
+
+    srcg / 'tables.c',
+    srcg / 'parser.c',
+    srcg / 'hdr_fld.c',
+    srcg / 'actions.c',
+    srcg / 'controlplane.c',
+    srcg / 'stats.c',
+    srcg / 'common.c',
+
+    hdep / 'dpdk/main.c',
+    hdep / 'dpdk/main_async.c',
+
+    hdep / 'shared/ctrl_plane/ctrl_plane_backend.c',
+    hdep / 'shared/ctrl_plane/fifo.c',
+    hdep / 'shared/ctrl_plane/handlers.c',
+    hdep / 'shared/ctrl_plane/messages.c',
+    hdep / 'shared/ctrl_plane/sock_helpers.c',
+    hdep / 'shared/ctrl_plane/threadpool.c',
+
+    hdep / 'dpdk/data_plane/dpdk_lib.c',
+    hdep / 'dpdk/data_plane/dpdk_tables.c',
+    hdep / 'dpdk/data_plane/dpdk_primitives_impl.c',
+
+    hdep / 'shared/data_plane/ternary_naive.c',
+
+    hdep / 'shared/util_debug.c',
+    hdep / 'shared/backend.c',
+    hdep / 'shared/dataplane_hdr_fld_pkt.c',
+
+    srcg / 'stateful_memory.c',
+    xtrn / 'dpdkx_smem.c',
+]
+
+build_args = [
+    '-Wno-parentheses-equality',
+]
+
+include_dirs = include_directories(
+    srcg,
+    srcg / 'multi',
+    hdep / 'dpdk/includes',
+    hdep / 'shared/includes',
+    hdep / 'shared/ctrl_plane',
+)
+
+all_dependencies = [
+    dependency('libdpdk'),
+    dependency('threads'),
+]

@@ -9,7 +9,7 @@
 #include "aliases.h"
 #include "parser.h"
 
-typedef struct field_reference_s {
+typedef struct {
     header_instance_t header;
     int meta;
     int bitwidth;
@@ -22,7 +22,7 @@ typedef struct field_reference_s {
     uint8_t* byte_addr;  // Pointer to the byte containing the first bit of the field in the packet
 } field_reference_t;
 
-typedef struct header_reference_s {
+typedef struct {
     header_instance_t header_instance;
     int bytewidth;
     int var_width_field;
@@ -55,23 +55,29 @@ typedef struct header_reference_s {
                  .var_width_field = hdr_infos[h].var_width_field, \
                }
 
-typedef struct header_descriptor_s {
+typedef struct {
     header_instance_t   type;
     void *              pointer;
     uint32_t            length;
     int                 var_width_field_bitwidth;
     bool                was_enabled_at_initial_parse;
 #ifdef T4P4S_DEBUG
-    char*               name;
+    const char*         name;
 #endif
 } header_descriptor_t;
 
-typedef struct packet_descriptor_s {
+typedef struct {
+    int current;
+} pkt_header_stack_t;
+
+typedef struct {
     packet_data_t*      data;
     void*               extract_ptr;
     header_descriptor_t headers[HEADER_COUNT+1];
     parsed_fields_t     fields;
     packet*             wrapper;
+
+    pkt_header_stack_t  stacks[STACK_COUNT+1];
 
     int emit_hdrinst_count;
     int emit_headers_length;
@@ -83,4 +89,23 @@ typedef struct packet_descriptor_s {
     uint8_t header_tmp_storage[NONMETA_HDR_TOTAL_LENGTH];
 
     void * control_locals;
+
+    // async functionality
+    void *context;
+
+    int port_id;
+    unsigned queue_idx;
+    unsigned pkt_idx;
+    int program_restore_phase;
 } packet_descriptor_t;
+
+
+uint8_t* get_fld_pointer(const packet_descriptor_t* pd, field_instance_t fld);
+
+void activate_hdr(header_instance_t hdr, packet_descriptor_t* pd);
+void deactivate_hdr(header_instance_t hdr, packet_descriptor_t* pd);
+
+void stk_next(header_stack_t stk, packet_descriptor_t* pd);
+header_instance_t stk_at_idx(header_stack_t stk, int idx, packet_descriptor_t* pd);
+header_instance_t stk_current(header_stack_t stk, packet_descriptor_t* pd);
+field_instance_t stk_start_fld(header_instance_t hdr);

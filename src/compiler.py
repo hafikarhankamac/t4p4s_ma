@@ -58,6 +58,9 @@ def replace_insert(insert):
 
     # replace $$[light][text1]{expr}{text2} inserts, where all parts except {expr} are optional
     m = re.match(r'(?P<type>\$\$?)(\[(?P<light>[^\]]+)\])?(\[(?P<text1>[^\]]+)\])?{\s*(?P<expr>[^}]*)\s*}({(?P<text2>[^}]+)})?', insert)
+    if not m:
+        yield insert
+        return
 
     light = m.group("light")
     txt1  = m.group('text1') or ''
@@ -67,13 +70,13 @@ def replace_insert(insert):
     # no highlighting
     if m.group("type") == '$':
         yield escape_brace(txt1)
-        yield (fmt,)
+        yield (escape_brace(expr),)
         yield escape_brace(txt2)
     else:
         light_param = f",{light}" if light not in (None, "") else ""
         yield '" T4LIT("'
         yield escape_brace(txt1)
-        yield (fmt,)
+        yield (escape_brace(expr),)
         yield escape_brace(txt2)
         if light:
             yield f",{light}"
@@ -92,7 +95,7 @@ def adjust_indentation(indenter, line_idx, indent, file):
     # #{ starts a new indentation level from the next line
     # also, #} unindents starting this line
     if indenter == '{' and compiler_common.file_indentation_level == 0:
-        addError("Compiler", f"Too much unindent in {file}:{line_index}")
+        addError("Compiler", f"Too much unindent in {file}:{line_idx}")
 
 
 def escape_slash(s):
@@ -110,16 +113,21 @@ def translate_line_main_content(parts, extra_content, no_quote_allowed):
     replaceds = [repl for part in parts for repl in replace_insert(part)]
     raws = [part[0] if type(part) is tuple else part for part in replaceds]
 
-    apostrophe_count = len("'" in raw for raw in raws)
-    quote_count = len('"' in raw for raw in raws)
+    no_apostrophes = all("'" not in raw for raw in raws)
+    no_quotes = all('"' not in raw for raw in raws)
 
-    if quote_count == 0:
-        content = "".join(f'{{{part[0]}}}' if type(part[0]) is tuple else part for part in replaceds)
-        return False, f'{content}'
+    if no_apostrophes or no_quotes:
+        quote = "'" if no_apostrophes else '"'
+        has_inserts = any(type(part) is tuple for part in replaceds)
 
-    if apostrophe_count == 0:
-        content = "".join(f'{{{part[0]}}}' if type(part[0]) is tuple else part for part in replaceds)
-        return False, f"f'{content}'"
+        has_bad_inserts = any(type(part) is tuple and any('(' in p for p in part) for part in replaceds)
+        if has_bad_inserts:
+            return translate_line_main_content2(parts, extra_content, no_quote_allowed)
+
+        esc = escape_brace if has_inserts else (lambda p: p)
+        content = "".join((f'{{{part[0]}}}' if part[0] != '' else '') + "".join(esc(p) for p in part[1:]) if type(part) is tuple else esc(part) for part in replaceds)
+        formatter = 'f' if has_inserts else ''
+        return False, f'{formatter}{quote}{content}{quote}'
 
     return translate_line_main_content2(parts, extra_content, no_quote_allowed)
 
@@ -150,14 +158,16 @@ def translate_line_main_content2(parts, extra_content, no_quote_allowed):
         return True, f'{quote}{all_fmt}{quote}.format({all_escapes_txt})'
 
 
-def translate_line_with_insert(file, line_idx, line, indent_str):
+def translate_line_with_insert(file, genfile, line_idx, line, indent_str):
     """Gets a line that contains an insert
        and transforms it to a Python code section."""
     _empty, indent, maybe_pre, indenter, content, _empty2 = re.split(r'^([ \t]*)#(pre|aft)?([\[\{\}])(.*)$', line)
 
     adjust_indentation(indenter, line_idx, indent, file)
     prepend_append_funname = "prepend" if maybe_pre == "pre" else "append" if maybe_pre == "aft" else ""
-    extra_content = f" // ({prepend_append_funname}ed) {file}:{line_idx}\\n" if maybe_pre else ""
+    prepend_append_txt = f"[{maybe_pre}]" if maybe_pre != "" else ""
+    no_hint = "nohint" in args['hint']
+    extra_content = f" // {prepend_append_txt} {print_file(file, genfile)}:{line_idx}" if not no_hint and maybe_pre else ""
 
     _is_escaped, line = split_and_translate(content, extra_content)
 
@@ -238,11 +248,23 @@ def add_gen_in_def(code_lines, orig_file):
     return new_lines
 
 
+def print_file(file, genfile):
+    nopath = os.path.basename(file)
+    noext = re.sub(r'[.].*$', '', nopath)
+
+    if "nofile" in args['hint']: return ''
+    if "noext"  in args['hint']: return noext
+    if "nopath" in args['hint']: return nopath
+    return file
+
+
 def translate_file_contents(file, genfile, code, prefix_lines="", add_lines=True, relpath=None):
     """Returns the code transformed into runnable Python code.
        Translated are #[generated_code, #=generator_expression and ${var} constructs."""
     global indentation_level
     indentation_level = 0
+
+    no_hint = "nohint" in args['hint']
 
     new_lines = prefix_lines.splitlines()
     new_lines += """
@@ -269,12 +291,17 @@ def add_code(line, lineno = None, file = "{0}"):
     stripped_line = line.strip()
     no_sugar_on_line = stripped_line.startswith('//') or stripped_line.startswith('# ') or stripped_line == ""
 
-    indent = '{1}' * compiler_common.file_indentation_level
-    return indent + line + sugar(no_sugar_on_line, file, lineno, sugar_style) + line_ends[sugar_style]
+    indent = '{2}' * compiler_common.file_indentation_level
+    if compiler_common.file_sugar_style[-1] != 'line_comment':
+        indent = ''
+
+    sugared = sugar(no_sugar_on_line, file, lineno, sugar_style)
+    line_end = line_ends[sugar_style]
+    return f'{{indent}}{{line}}{{sugared}}{{line_end}}'
 
 
 def sugar(no_sugar_on_line, file, lineno, sugar_style):
-    if no_sugar_on_line or file is None or lineno is None:
+    if {1} or no_sugar_on_line or file is None or lineno is None:
         return ""
 
     if sugar_style == 'line_comment':
@@ -284,11 +311,11 @@ def sugar(no_sugar_on_line, file, lineno, sugar_style):
     return ""
 
 
-generated_code += "// Autogenerated file (from {0} via {2}), do not modify directly.\\n"
+generated_code += "// Autogenerated file (from {0} via {3}), do not modify directly.\\n"
 generated_code += "// Generator: T4P4S (https://github.com/P4ELTE/t4p4s/)\\n"
 generated_code += "\\n"
 
-""".format(file, compiler_common.file_indent_str, os.path.relpath(file, relpath) if relpath is not None else file).splitlines()
+""".format(print_file(file, genfile), no_hint, compiler_common.file_indent_str, os.path.relpath(file, relpath) if relpath is not None else file).splitlines()
 
     code_lines = enumerate(code.splitlines())
     code_lines = add_gen_in_def(code_lines, file)
@@ -301,7 +328,7 @@ generated_code += "\\n"
     for idx, code_line in code_lines:
         new_line = code_line
         if has_translatable_comment.match(code_line):
-            new_line = translate_line_with_insert(file, idx, code_line, compiler_common.file_indent_str)
+            new_line = translate_line_with_insert(file, genfile, idx, code_line, compiler_common.file_indent_str)
         elif re.match(r'^[ \t]*#= .*$', code_line):
             line_regex = r'^([ \t]*)#=[ \t]*(.*)$'
             with compiler_common.SugarStyle('no_comment'):
@@ -344,12 +371,17 @@ def generate_code(file, genfile, localvars={}):
         code = orig_file.read()
         code = translate_file_contents(file, genfile, code, relpath="src/")
 
+        if (depth := compiler_common.file_indentation_level) != 0:
+            print(f"Warning: indentation is {depth} level{'' if depth == 1 else 's'} too deep in file {file}", file=sys.stderr)
+            compiler_common.file_indentation_level = 0
+
         if generate_code_files:
             write_file(genfile, code)
 
         localvars['generated_code'] = ""
         module_name = genfile
 
+        localvars['t4p4sdir'] = os.path.relpath(os.path.join(args['generated_dir'], '..', "gen"))
         exec(compile(code, module_name, 'exec'), localvars, localvars)
 
         return re.sub(r'\n{3,}', '\n\n', localvars['generated_code'])
@@ -360,35 +392,57 @@ def generate_desugared_py():
     The desugared files are generated here."""
     import glob
     for fromfile in glob.glob("src/utils/*.sugar.py"):
-        tofile = re.sub("[.]sugar[.]py$", ".py", fromfile)
-        compiler_common.current_compilation = { 'from': fromfile, 'to': tofile }
         with open(fromfile, "r") as orig_file:
             code = orig_file.read()
             prefix_lines = "generated_code = \"\"\n"
+
+            tofile = re.sub("[.]sugar[.]py$", ".py", fromfile)
+            compiler_common.current_compilation = { 'from': fromfile, 'to': tofile, 'use_real_random': args['use_real_random'] }
             code = translate_file_contents(fromfile, tofile, code, prefix_lines=prefix_lines, add_lines=False, relpath="src/")
+            compiler_common.current_compilation = None
 
             write_file(tofile, code)
 
+
+def output_desugared_c(filename, filepath, idx):
+    outfile = os.path.join(args['generated_dir'], re.sub(r'\.([ch])\.py$', r'.\1', filename))
+
+    compiler_common.current_compilation = { 'orig': filename, 'from': genfile, 'to': outfile, 'use_real_random': args['use_real_random'], 'multi': args['multi'], 'multi_idx': idx, 'skip_output': False }
+    code = generate_code(filepath, genfile, {'hlir': hlir})
+    is_multicompiled = 'is_multicompiled' in compiler_common.current_compilation
+    skip_output = compiler_common.current_compilation['skip_output']
     compiler_common.current_compilation = None
+
+    if not skip_output:
+        if is_multicompiled:
+            outfile = os.path.join(args['generated_dir'], 'multi', re.sub(r'\.([ch])\.py$', rf'_{idx}.\1', filename))
+
+        write_file(outfile, code)
+
+    return is_multicompiled
 
 
 def generate_desugared_c(filename, filepath):
     global hlir
 
     genfile = os.path.join(args['desugared_path'], re.sub(r'\.([ch])\.py$', r'.\1.gen.py', filename))
-    outfile = os.path.join(args['generated_dir'], re.sub(r'\.([ch])\.py$', r'.\1', filename))
-
-    compiler_common.current_compilation = { 'orig': filename, 'from': genfile, 'to': outfile }
 
     compiler_log_warnings_errors.filename = filename
     compiler_log_warnings_errors.filepath = filepath
     compiler_log_warnings_errors.genfile = genfile
     compiler_log_warnings_errors.outfile = outfile
 
-    code = generate_code(filepath, genfile, {'hlir': hlir})
-    write_file(outfile, code)
+    is_multicompiled = output_desugared_c(filename, filepath, 0)
 
-    compiler_common.current_compilation = None
+    if is_multicompiled:
+        for idx in range(1, args['multi']):
+            output_desugared_c(filename, filepath, idx)
+
+
+def make_dir(path, description):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+        args['verbose'] and print(f" GEN {path} ({description})")
 
 
 def make_dirs(cache_dir_name):
@@ -397,13 +451,9 @@ def make_dirs(cache_dir_name):
         print("Compiler files path is missing", file=sys.stderr)
         sys.exit(1)
 
-    if not os.path.isdir(args['desugared_path']):
-        os.makedirs(args['desugared_path'])
-        args['verbose'] and print(" GEN {0} (desugared compiler files)".format(args['desugared_path']))
-
-    if not os.path.isdir(args['generated_dir']):
-        os.makedirs(args['generated_dir'])
-        args['verbose'] and print(" GEN {0} (generated files)".format(args['generated_dir']))
+    make_dir(args['desugared_path'], 'desugared compiler files')
+    make_dir(args['generated_dir'], 'generated files')
+    make_dir(os.path.join(args['generated_dir'], 'multi'), os.path.join('generated files', 'multi'))
 
     if cache_dir_name and not os.path.isdir(cache_dir_name):
         os.mkdir(cache_dir_name)
@@ -424,6 +474,9 @@ def file_contains_exact_text(filename, text):
 def write_file(filename, text):
     """Writes the given text to the given file."""
 
+    if filename == '?':
+        return
+
     if file_contains_exact_text(filename, text):
         return
 
@@ -434,11 +487,24 @@ def write_file(filename, text):
         genfile.write(text)
 
 
+def get_core_count():
+    try:
+        import psutil
+        return psutil.core_count()
+    except:
+        try:
+            import multiprocessing
+            return multiprocessing.cpu_count()
+        except:
+            return 1
+
+
 def init_args():
     """Parses the command line arguments and loads them
     into the global variable args."""
     parser = argparse.ArgumentParser(description='T4P4S compiler')
     parser.add_argument('p4_file', help='The source file')
+    parser.add_argument('-x', '--multi', help='Multiplex rate for multicompiled modules', required=True, type=int)
     parser.add_argument('-v', '--p4v', help='Use P4-14 (default is P4-16)', required=False, choices=[16, 14], type=int, default=16)
     parser.add_argument('-p', '--p4c_path', help='P4C path', required=False)
     parser.add_argument('-c', '--compiler_files_dir', help='Source directory of the compiler\'s files', required=False, default=os.path.join("src", "hardware_indep"))
@@ -446,7 +512,10 @@ def init_args():
     parser.add_argument('-desugared_path', help='Output directory for the compiler\'s files', required=False, default=argparse.SUPPRESS)
     parser.add_argument('-desugar_info', help='Markings in the generated source code', required=False, choices=["comment", "pragma", "none"], default="comment")
     parser.add_argument('-verbose', help='Verbosity', required=False, default=False, action='store_const', const=True)
+    parser.add_argument('-hint', help='Filename hint style in generated code comments', required=False, default=[], action='append')
+    parser.add_argument('-recompile', help='Force recompilation: ignore cache files', required=False, default=False, action='store_const', const=True)
     parser.add_argument('-beautify', help='Beautification', required=False, default=False, action='store_const', const=True)
+    parser.add_argument('-use_real_random', help='Use random values in unspecified cases', required=False, default=False, action='store_const', const=True)
     parser.add_argument('--p4dbg', help='Debugging', required=False, default=False, action='store_const', const=True)
     parser.add_argument('--p4opt', help='Debug option passed to P4-to-JSON compiler', required=False, default=[], action='append')
 
@@ -457,15 +526,18 @@ def init_args():
 
     cache_dir_name = os.path.relpath(os.path.join(args['generated_dir'], '..', "cache"))
 
+    if args['hint'] == []:
+        args['hint'] = ['nohint']
+
     return args, cache_dir_name
 
 
 def generate_files():
-    base = args['compiler_files_dir']
+    bases = (args['compiler_files_dir'], os.path.join(args['compiler_files_dir'], 'multi'))
     exts = [".c.py", ".h.py"]
 
     generate_desugared_py()
-    for filename in (f for f in os.listdir(base) if os.path.isfile(os.path.join(base, f)) for ext in exts if f.endswith(ext)):
+    for base, filename in ((base, f) for base in bases for f in os.listdir(base) if os.path.isfile(os.path.join(base, f)) for ext in exts if f.endswith(ext)):
         generate_desugared_c(filename, os.path.join(base, filename))
 
 

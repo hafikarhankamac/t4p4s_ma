@@ -5,6 +5,11 @@
 #include "main.h"
 
 #include <rte_ethdev.h>
+#include <rte_mempool.h>
+
+
+volatile int packet_counter = 0;
+volatile int packet_with_error_counter = 0;
 
 #ifdef TIMER_MODULE
 #include <rte_timer.h>
@@ -80,11 +85,11 @@ void send_packet(int egress_port, int ingress_port, LCPARAMS)
         #ifdef T4P4S_DEBUG
             char ports_msg[256];
             get_broadcast_port_msg(ports_msg, ingress_port);
-            dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf), "   " T4LIT(<<,outgoing) " " T4LIT(Broadcasting,outgoing) " packet from port " T4LIT(%d,port) " to all other ports (%s) (" T4LIT(%d) " bytes): ", ingress_port, ports_msg, rte_pktmbuf_pkt_len(mbuf));
+            dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf), "   " T4LIT(<<,outgoing) " " T4LIT(Broadcasting,outgoing) " packet from port " T4LIT(%d,port) " to all other ports (%s) (" T4LIT(%dB) "): ", ingress_port, ports_msg, rte_pktmbuf_pkt_len(mbuf));
         #endif
         broadcast_packet(egress_port, ingress_port, LCPARAMS_IN);
     } else {
-        dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf), "   " T4LIT(<<,outgoing) " " T4LIT(Emitting,outgoing) " packet on port " T4LIT(%d,port) " (" T4LIT(%d) " bytes): ", egress_port, rte_pktmbuf_pkt_len(mbuf));
+        dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf), "   " T4LIT(<<,outgoing) " " T4LIT(Emitting,outgoing) " packet on port " T4LIT(%d,port) " (" T4LIT(%dB) "): ", egress_port, rte_pktmbuf_pkt_len(mbuf));
         send_single_packet(pd->wrapper, egress_port, ingress_port, false, LCPARAMS_IN);
     }
 }
@@ -92,7 +97,6 @@ void send_packet(int egress_port, int ingress_port, LCPARAMS)
 void do_single_tx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
 {
     if (unlikely(GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD) == EGRESS_DROP_VALUE)) {
-        debug(" " T4LIT(XXXX,status) " " T4LIT(Dropping,status) " packet\n");
         free_packet(LCPARAMS_IN);
     } else {
         debug(" " T4LIT(<<<<,outgoing) " " T4LIT(Egressing,outgoing) " packet\n");
@@ -104,21 +108,67 @@ void do_single_tx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
     }
 }
 
+void do_handle_packet(int portid, unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
+{
+    struct lcore_state state = lcdata->conf->state;
+    lookup_table_t** tables = state.tables;
+    parser_state_t* pstate = &(state.parser_state);
+    init_parser_state(&(state.parser_state));
+
+    handle_packet(portid, get_packet_idx(LCPARAMS_IN), STDPARAMS_IN);
+    do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
+
+    #if ASYNC_MODE == ASYNC_MODE_CONTEXT
+        if (pd->context != NULL) {
+            debug(" " T4LIT(<<<<,async) " Context for packet " T4LIT(%p,bytes) " terminating, swapping back to " T4LIT(main context,async) "\n", pd->context);
+            rte_ring_enqueue(context_free_command_ring, pd->context);
+        }
+    #endif
+}
+
+void do_handle_event(int portid, unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
+{
+    struct lcore_state state = lcdata->conf->state;
+    lookup_table_t** tables = state.tables;
+    parser_state_t* pstate = &(state.parser_state);
+    init_parser_state(&(state.parser_state));
+
+    handle_event(portid, get_packet_idx(LCPARAMS_IN), STDPARAMS_IN);
+    do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
+}
+
+// defined in main_async.c
+void async_handle_packet(int port_id, unsigned queue_idx, unsigned pkt_idx, packet_handler_t handler_function, LCPARAMS);
+void main_loop_async(LCPARAMS);
+void main_loop_fake_crypto(LCPARAMS);
+
+void init_pd_state(packet_descriptor_t* pd) {
+    pd->context = NULL;
+    pd->program_restore_phase = 0;
+}
+
+// TODO move this to stats.h.py
+extern void print_async_stats(LCPARAMS);
+
 void do_single_rx(unsigned queue_idx, unsigned pkt_idx, LCPARAMS)
 {
-    bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
+    print_async_stats(LCPARAMS_IN);
 
+    init_pd_state(pd);
+
+    bool got_packet = receive_packet(pkt_idx, LCPARAMS_IN);
     if (got_packet) {
         if (likely(is_packet_handled(LCPARAMS_IN))) {
-            struct lcore_state state = lcdata->conf->state;
-            lookup_table_t** tables = state.tables;
-            parser_state_t* pstate = &(state.parser_state);
-
             int portid = get_portid(queue_idx, LCPARAMS_IN);
+            #if ASYNC_MODE == ASYNC_MODE_CONTEXT || ASYNC_MODE == ASYNC_MODE_PD
+                if (PACKET_REQUIRES_ASYNC(lcdata,pd)){
+                    COUNTER_STEP(lcdata->conf->sent_to_crypto_packet);
+                    async_handle_packet(portid, queue_idx, pkt_idx, do_handle_packet, LCPARAMS_IN);
+                    return;
+                }
+            #endif
 
-            init_parser_state(&(state.parser_state));
-            handle_packet(portid, STDPARAMS_IN);
-            do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
+            do_handle_packet(portid, queue_idx, pkt_idx, LCPARAMS_IN);
         }
     }
 
@@ -132,13 +182,8 @@ void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t event, LCPARA
 
     if (got_packet) {
         if (likely(is_packet_handled(LCPARAMS_IN))) {
-            struct lcore_state state = lcdata->conf->state;
-            lookup_table_t** tables = state.tables;
-            parser_state_t* pstate = &(state.parser_state);
-
-            init_parser_state(&(state.parser_state));
-            handle_event(event.as_event, STDPARAMS_IN);
-            do_single_tx(queue_idx, pkt_idx, LCPARAMS_IN);
+            int portid = get_portid(queue_idx, LCPARAMS_IN);
+            do_handle_event(portid, queue_idx, pkt_idx, LCPARAMS_IN);
         }
     }
 
@@ -146,22 +191,86 @@ void do_single_event(unsigned queue_idx, unsigned pkt_idx, event_t event, LCPARA
 }
 #endif
 
-void do_rx(LCPARAMS)
+bool do_rx(LCPARAMS)
 {
+    bool got_packet = false;
     unsigned queue_count = get_queue_count(lcdata);
     for (unsigned queue_idx = 0; queue_idx < queue_count; queue_idx++) {
         main_loop_rx_group(queue_idx, LCPARAMS_IN);
 
         unsigned pkt_count = get_pkt_count_in_group(lcdata);
+        got_packet |= pkt_count > 0;
         for (unsigned pkt_idx = 0; pkt_idx < pkt_count; pkt_idx++) {
             do_single_rx(queue_idx, pkt_idx, LCPARAMS_IN);
         }
     }
+
+    return got_packet;
 }
 
+void main_loop_pre_do_post_rx(LCPARAMS){
+    main_loop_pre_rx(LCPARAMS_IN);
+    bool got_packet = do_rx(LCPARAMS_IN);
+    main_loop_post_rx(got_packet, LCPARAMS_IN);
+}
+
+void main_loop_evt_pre_do_post_rx(LCPARAMS) {
+    main_loop_pre_rx(LCPARAMS_IN);
+    bool got_packet = recv_events(LCPARAMS_IN);
+    main_loop_post_rx(got_packet, LCPARAMS_IN);
+}
+
+void main_loop_evt_rx_pre_do_post_rx(LCPARAMS) {
+    main_loop_pre_rx(LCPARAMS_IN);
+    bool got_packet = recv_events(LCPARAMS_IN);
+    bool got_packet = do_rx(LCPARAMS_IN);
+    main_loop_post_rx(got_packet, LCPARAMS_IN);
+}
+
+int crypto_node_id() {
+    return rte_lcore_count() - 1;
+}
+
+bool is_crypto_node() {
+    return rte_lcore_id() == crypto_node_id();
+}
+
+bool initial_check(LCPARAMS) {
+    if (!lcdata->is_valid) {
+        debug("lcore data is invalid, exiting\n");
+        #ifdef START_CRYPTO_NODE
+            if (!is_crypto_node()) return false;
+        #else
+            return false;
+        #endif
+    }
+
+    #ifdef START_CRYPTO_NODE
+        if (is_crypto_node()){
+            RTE_LOG(INFO, P4_FWD, "lcore %u is the crypto node\n", lcore_id);
+        }
+    #endif
+
+    return true;
+}
+
+void init_stats(LCPARAMS)
+{
+    COUNTER_INIT(lcdata->conf->processed_packet_num);
+    COUNTER_INIT(lcdata->conf->async_packet);
+    COUNTER_INIT(lcdata->conf->sent_to_crypto_packet);
+    COUNTER_INIT(lcdata->conf->doing_crypto_packet);
+    COUNTER_INIT(lcdata->conf->fwd_packet);
+}
+
+void dpdk_main_loop()
 #ifdef EVENT_MODULE
 void recv_events(LCPARAMS)
 {
+    extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
+    uint32_t lcore_id = rte_lcore_id();
+
+    struct lcore_data lcdata_content = init_lcore_data();
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
     uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
 
@@ -187,27 +296,34 @@ bool dpdk_main_loop_rx()
     struct lcore_data* lcdata = &lcdata_content;
     packet_descriptor_t* pd = &pd_content;
 
-    if (!lcdata->is_valid) {
-        debug("lcore data is invalid, exiting\n");
-        return false;
-    }
+    if (!initial_check(LCPARAMS_IN))   return;
 
     init_dataplane(pd, lcdata->conf->state.tables);
 
-    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
-    //uint64_t rx_cnt = 0;
-    while (core_is_working(LCPARAMS_IN)) {
-    	main_loop_pre_rx(LCPARAMS_IN);
-        do_rx(LCPARAMS_IN);
-        main_loop_post_rx(LCPARAMS_IN);
-    }
+    #if defined ASYNC_MODE && ASYNC_MODE == ASYNC_MODE_CONTEXT
+        getcontext(&lcore_conf[rte_lcore_id()].main_loop_context);
+    #endif
 
-    return lcdata->is_valid;
+    init_stats(LCPARAMS_IN);
+
+    while (likely(core_is_working(LCPARAMS_IN))) {
+        #ifdef START_CRYPTO_NODE
+            if (is_crypto_node()) {
+                main_loop_fake_crypto(LCPARAMS_IN);
+                continue;
+            }
+        #endif
+
+        main_loop_pre_do_post_rx(LCPARAMS_IN);
+        #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+            main_loop_async(LCPARAMS_IN);
+        #endif
+    }
 }
 
 bool dpdk_main_loop_evt()
 {
-    struct lcore_data lcdata_content = init_lcore_data(false, true);
+    struct lcore_data lcdata_content = init_lcore_data(true, false);
     packet_descriptor_t pd_content;
 
     struct lcore_data* lcdata = &lcdata_content;
@@ -215,9 +331,16 @@ bool dpdk_main_loop_evt()
 
     init_dataplane(pd, lcdata->conf->state.tables);
 
-    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
-    //uint64_t rx_cnt = 0;
-    while (core_is_working(LCPARAMS_IN)) {
+    init_stats(LCPARAMS_IN);
+
+    while (likely(core_is_working(LCPARAMS_IN))) {
+        #ifdef START_CRYPTO_NODE
+            if (is_crypto_node()) {
+                main_loop_fake_crypto(LCPARAMS_IN);
+                continue;
+            }
+        #endif
+
         #ifdef TIMER_MODULE
             cur_tsc = rte_rdtsc();
 	        diff_tsc = cur_tsc - prev_tsc;
@@ -226,31 +349,35 @@ bool dpdk_main_loop_evt()
             prev_tsc = cur_tsc;
         }
 	    #endif
-	    
-    	main_loop_pre_rx(LCPARAMS_IN);
-        recv_events(LCPARAMS_IN);
-        main_loop_post_rx(LCPARAMS_IN);
-    }
 
-    return lcdata->is_valid;
+        main_loop_evt_pre_do_post_rx(LCPARAMS_IN);
+    }
 }
-bool dpdk_main_loop_rx_evt()
+
+bool dpdk_main_loop_evt_rx()
 {
-    struct lcore_data lcdata_content = init_lcore_data(true, true);
+    struct lcore_data lcdata_content = init_lcore_data(true, false);
     packet_descriptor_t pd_content;
 
     struct lcore_data* lcdata = &lcdata_content;
     packet_descriptor_t* pd = &pd_content;
 
-    if (!lcdata->is_valid) {
-        debug("lcore data is invalid, exiting\n");
-        return false;
-    }
-
     init_dataplane(pd, lcdata->conf->state.tables);
 
-    uint64_t prev_tsc = 0, cur_tsc, diff_tsc;
-    while (core_is_working(LCPARAMS_IN)) {
+    #if defined ASYNC_MODE && ASYNC_MODE == ASYNC_MODE_CONTEXT
+        getcontext(&lcore_conf[rte_lcore_id()].main_loop_context);
+    #endif
+
+    init_stats(LCPARAMS_IN);
+
+    while (likely(core_is_working(LCPARAMS_IN))) {
+        #ifdef START_CRYPTO_NODE
+            if (is_crypto_node()) {
+                main_loop_fake_crypto(LCPARAMS_IN);
+                continue;
+            }
+        #endif
+
         #ifdef TIMER_MODULE
             cur_tsc = rte_rdtsc();
 	        diff_tsc = cur_tsc - prev_tsc;
@@ -259,36 +386,36 @@ bool dpdk_main_loop_rx_evt()
             prev_tsc = cur_tsc;
         }
 	    #endif
-	    
-    	main_loop_pre_rx(LCPARAMS_IN);
-	recv_events(LCPARAMS_IN);
-        do_rx(LCPARAMS_IN);
-        main_loop_post_rx(LCPARAMS_IN);
-    }
 
-    return lcdata->is_valid;
+        main_loop_evt_rx_pre_do_post_rx(LCPARAMS_IN);
+        #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+            main_loop_async(LCPARAMS_IN);
+        #endif
+    }
 }
 
 
 static int
 launch_one_lcore_rx_evt()
 {
-    bool success = dpdk_main_loop_rx_evt();
-    return success ? 0 : -1;
+    dpdk_main_loop_rx_evt();
+    return 0;
 }
 
 static int
 launch_one_lcore_rx()
 {
-    bool success = dpdk_main_loop_rx();
-    return success ? 0 : -1;
+    pdk_main_loop_rx();
+    return 0;
 }
 
 static int
 launch_one_lcore_evt()
 {
-    bool success = dpdk_main_loop_evt();
-    return success ? 0 : -1;
+    dpdk_main_loop_evt();
+    return 0;
+    dpdk_main_loop();
+    return 0;
 }
 
 static int remote_launch_lcore(uint32_t lcore_id, bool recv_pkts, bool recv_events)
@@ -309,7 +436,7 @@ static int remote_launch_lcore(uint32_t lcore_id, bool recv_pkts, bool recv_even
 int launch_dpdk()
 {
     #ifdef TIMER_MODULE
-	rte_timer_subsystem_init();
+	    rte_timer_subsystem_init();
     	timer_init(rte_get_timer_hz());
     #endif
 
@@ -321,116 +448,94 @@ int launch_dpdk()
 
     volatile bool lcores[32];
     memset(lcores, false, sizeof(bool) * 32);
-//    sleep(15);
 
     for (unsigned nb_lcore = 0; nb_lcore < nb_lcore_params; nb_lcore++) {
-	unsigned lcore_id = lcore_params[nb_lcore].lcore_id;
-	bool recv_pkts = true;
-	bool handle_evts = handle_event_mask & (1 << lcore_id);
-	RTE_LOG(INFO, P4_FWD, "test\n");
-	if (!lcores[lcore_id]) {
-		lcores[lcore_id] = true;	
-		
-		if (lcore_id == rte_get_master_lcore()) {
-			master_defined = true;
-			master_recv_pkts = recv_pkts;
-			master_handle_evts = handle_evts;
-		} else {
-			remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
-		}
-	RTE_LOG(INFO, P4_FWD, "%d %d\n", nb_lcore, nb_lcore_params);
-	}
-    }    
+	    unsigned lcore_id = lcore_params[nb_lcore].lcore_id;
+	    bool recv_pkts = true;
+	    bool handle_evts = handle_event_mask & (1 << lcore_id);
+	    RTE_LOG(INFO, P4_FWD, "test\n");
+	    if (!lcores[lcore_id]) {
+	    	lcores[lcore_id] = true;
+
+	    	if (lcore_id == rte_get_master_lcore()) {
+	    		master_defined = true;
+	    		master_recv_pkts = recv_pkts;
+	    		master_handle_evts = handle_evts;
+	    	} else {
+		    	remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+	    	}
+	        RTE_LOG(INFO, P4_FWD, "%d %d\n", nb_lcore, nb_lcore_params);
+	    }
+    }
 
     for (int lcore_id = 0; lcore_id < 32; lcore_id++) { // TODO lcore < 32
-	if (!lcores[lcore_id]) {
-		lcores[lcore_id] = true;
-		bool handle_evts = handle_event_mask & (1 << lcore_id);
-		bool recv_pkts = false;
-		if (lcore_id == rte_get_master_lcore()) {
-			master_defined = true;
-			master_recv_pkts = recv_pkts;
-			master_handle_evts = handle_evts;
-		} else {
-			if (handle_evts) {
-				remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
-			}
-		}
-	}
+	    if (!lcores[lcore_id]) {
+		    lcores[lcore_id] = true;
+		    bool handle_evts = handle_event_mask & (1 << lcore_id);
+		    bool recv_pkts = false;
+		    if (lcore_id == rte_get_master_lcore()) {
+			    master_defined = true;
+			    master_recv_pkts = recv_pkts;
+			    master_handle_evts = handle_evts;
+		    } else {
+			    if (handle_evts) {
+				    remote_launch_lcore(lcore_id, recv_pkts, handle_evts);
+			    }
+		    }
+	    }
     }
 
-    if (master_defined) {	
+    if (master_defined) {
 	    if (master_recv_pkts && master_handle_evts) {
-		launch_one_lcore_rx_evt();
+		    launch_one_lcore_rx_evt();
 	    } else if (master_recv_pkts) {
-		launch_one_lcore_rx();
+		    launch_one_lcore_rx();
 	    } else if (master_handle_evts) {
-		launch_one_lcore_evt();
+		    launch_one_lcore_evt();
 	    } else {
-		return -1;
+		    return -1;
 	    }
     } else {
-	return -1;
+	    return -1;
     }
 
-    RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+    #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
+        RTE_LCORE_FOREACH_SLAVE(lcore_id) {
         if (rte_eal_wait_lcore(lcore_id) < 0)
             return -1;
     }
+    #else
+        RTE_LCORE_FOREACH_WORKER(lcore_id) {
+        if (rte_eal_wait_lcore(lcore_id) < 0)
+            return -1;
+    #endif
 
     return 0;
 }
 
-// https://doc.dpdk.org/guides/prog_guide/poll_mode_drv.html
-void print_rte_xstats(uint32_t port_id)
+void init_async()
 {
-    struct rte_eth_xstat_name *xstats_names;
-    uint64_t *values;
-    int len, i;
-
-    printf("========== xstats for port = %u ==========\n", port_id);
-    /* Get number of stats */
-    len = rte_eth_xstats_get_names_by_id(port_id, NULL, 0, NULL);
-    printf("len=%d\n", len);
-    if (len < 0) {
-        printf("Cannot get xstats count\n");
-    }
-
-    xstats_names = malloc(sizeof(struct rte_eth_xstat_name) * len);
-    if (xstats_names == NULL) {
-        printf("Cannot allocate memory for xstat names\n");
-    }
-
-    /* Retrieve xstats names, passing NULL for IDs to return all statistics */
-    int xstatsnamelen = rte_eth_xstats_get_names_by_id(port_id, xstats_names, len, NULL);// NULL, len);
-    printf("rte_eth_xstats_get_names_by_id(port_id, xstats_names, NULL, len) =%d\n", xstatsnamelen);
-    if (len != xstatsnamelen) {
-        printf("Cannot get xstat names\n");
-    }
-
-    values = malloc(sizeof(values) * len);
-    if (values == NULL) {
-        printf("Cannot allocate memory for xstats\n");
-    }
-
-    /* Getting xstats values */
-    if (len != rte_eth_xstats_get_by_id(port_id, NULL, values, len)) {
-        printf("Cannot get xstat values\n");
-    }
-
-    /* Print all xstats names and values */
-    for (i = 0; i < len; i++) {
-        printf("%s: %"PRIu64"\n", xstats_names[i].name, values[i]);
-    }
-    printf("==========================================\n");
-    fflush(stdout);
+    #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+        RTE_LOG(INFO, P4_FWD, ":: Starter config :: \n");
+        RTE_LOG(INFO, P4_FWD, " -- ASYNC_MODE: %u\n", ASYNC_MODE);
+        #ifdef  DEBUG__CRYPTO_EVERY_N
+            RTE_LOG(INFO, P4_FWD, " -- DEBUG__CRYPTO_EVERY_N: %u\n", DEBUG__CRYPTO_EVERY_N);
+        #endif
+        RTE_LOG(INFO, P4_FWD, " -- CRYPTO_NODE_MODE: %u\n", CRYPTO_NODE_MODE);
+        RTE_LOG(INFO, P4_FWD, " -- FAKE_CRYPTO_SLEEP_MULTIPLIER: %u\n", FAKE_CRYPTO_SLEEP_MULTIPLIER);
+        RTE_LOG(INFO, P4_FWD, " -- CRYPTO_BURST_SIZE: %u\n", CRYPTO_BURST_SIZE);
+        RTE_LOG(INFO, P4_FWD, " -- CRYPTO_CONTEXT_POOL_SIZE: %u\n", CRYPTO_CONTEXT_POOL_SIZE);
+        RTE_LOG(INFO, P4_FWD, " -- CRYPTO_RING_SIZE: %u\n", CRYPTO_RING_SIZE);
+    #endif
 }
 
 int main(int argc, char** argv)
 {
     debug("Init switch\n");
+
     initialize_args(argc, argv);
     initialize_nic();
+    init_async();
 
     int launch_count2 = launch_count();
     for (int idx = 0; idx < launch_count2; ++idx) {
@@ -448,6 +553,7 @@ int main(int argc, char** argv)
         #endif
 
         init_table_default_actions();
+
         t4p4s_pre_launch(idx);
 
         int retval = launch_dpdk();
@@ -460,8 +566,6 @@ int main(int argc, char** argv)
 
         flush_tables();
     }
-    /*print_rte_xstats(1);
-    print_rte_xstats(2);*/
 
     return t4p4s_normal_exit();
 }

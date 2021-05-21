@@ -74,12 +74,12 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
     strcpy(te->table_name, table_name);
 
     struct p4_field_match_lpm* lpm = add_p4_field_match_lpm(te, 2048);
-    strcpy(lpm->header.name, header_name);
+    strcpy(lpm->header.name, translate(header_name));
     memcpy(lpm->bitmap, ip, 4);
     lpm->prefix_length = prefix_length;
 
     struct p4_action* a = add_p4_action(h, 2048);
-    strcpy(a->description.name, action_name);
+    strcpy(a->description.name, translate(action_name));
 
     struct p4_action_parameter* ap1 = add_p4_action_parameter(h, a, 2048);
     memcpy(ap1->bitmap, &i1, 4);
@@ -140,16 +140,16 @@ void fill_t_fwd_table(uint16_t inport, uint16_t port, uint8_t mac[6], int wmac)
 
         h = create_p4_header(buffer, 0, 2048);
         te = create_p4_add_table_entry(buffer,0,2048);
-        strcpy(te->table_name, "t_fwd_0");
+        strcpy(te->table_name, ".t_fwd");
 
         exact = add_p4_field_match_exact(te, 2048);
-        strcpy(exact->header.name, "standard_metadata.ingress_port");
+        strcpy(exact->header.name, "all_metadatas.ingress_port");
         memcpy(exact->bitmap, &inport , 2);
         exact->length = 2*8+0;
 
         if (wmac) {
                 a = add_p4_action(h, 2048);
-                strcpy(a->description.name, "forward_rewrite");
+                strcpy(a->description.name, ".forward_rewrite");
         
                 ap = add_p4_action_parameter(h, a, 2048);        
                 strcpy(ap->name, "port");
@@ -169,7 +169,7 @@ void fill_t_fwd_table(uint16_t inport, uint16_t port, uint8_t mac[6], int wmac)
                 netconv_p4_action_parameter(ap2);
         } else {
                 a = add_p4_action(h, 2048);
-                strcpy(a->description.name, "forward");
+                strcpy(a->description.name, ".forward");
         
                 ap = add_p4_action_parameter(h, a, 2048);        
                 strcpy(ap->name, "port");
@@ -253,10 +253,10 @@ void set_table_default_action(const char* table_nickname, const char* table_name
     struct p4_header* h = create_p4_header(buffer, 0, sizeof(buffer));
 
     struct p4_set_default_action* sda = create_p4_set_default_action(buffer, 0, sizeof(buffer));
-    strcpy(sda->table_name, table_name);
+    strcpy(sda->table_name, translate(table_name));
 
     struct p4_action* a = & (sda->action);
-    strcpy(a->description.name, default_action_name);
+    strcpy(a->description.name, translate(default_action_name));
 
     netconv_p4_header(h);
     netconv_p4_set_default_action(sda);

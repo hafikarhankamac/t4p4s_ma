@@ -4,8 +4,11 @@
 #include <rte_ethdev.h>
 
 #include "dpdk_nicon.h"
+#include "dpdkx_crypto.h"
+#include "dataplane_hdr_fld_pkt.h"
 
 #include "util_packet.h"
+#include "util_debug.h"
 
 extern int get_socketid(unsigned lcore_id);
 
@@ -142,26 +145,26 @@ void send_single_packet(packet* pkt, int egress_port, int ingress_port, bool sen
 
 void init_queues(struct lcore_data* lcdata, const bool recv_pkts, const bool recv_evts) {
     if (recv_pkts) {
-	for (unsigned i = 0; i < lcdata->conf->hw.n_rx_queue; i++) {
-		unsigned portid = lcdata->conf->hw.rx_queue_list[i].port_id;
-		uint8_t queueid = lcdata->conf->hw.rx_queue_list[i].queue_id;
-		RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
-	}
+	    for (unsigned i = 0; i < lcdata->conf->hw.n_rx_queue; i++) {
+		    unsigned portid = lcdata->conf->hw.rx_queue_list[i].port_id;
+		    uint8_t queueid = lcdata->conf->hw.rx_queue_list[i].queue_id;
+		    RTE_LOG(INFO, P4_FWD, " -- lcoreid=%u portid=%u rxqueueid=%hhu\n", rte_lcore_id(), portid, queueid);
+	    }
     }
-
     #ifdef EVENT_MODULE
-    //init event queues
-    if (recv_evts) {
-	    char name[15];
-	    snprintf(&name, 15, "event_queue_%02u", rte_lcore_id()); 
-	    lcdata->conf->state.event_queue = rte_ring_create(name, EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
-	    snprintf(&name, 15, "event_burst_%02u", rte_lcore_id());
-	    lcdata->conf->state.event_burst = rte_malloc_socket(name, MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
-    }
+        //init event queues
+        if (recv_evts) {
+    	    char name[15];
+    	    snprintf(&name, 15, "event_queue_%02u", rte_lcore_id());
+    	    lcdata->conf->state.event_queue = rte_ring_create(name, EVENT_QUEUE_SIZE, get_socketid(rte_lcore_id()), RING_F_SC_DEQ);
+    	    snprintf(&name, 15, "event_burst_%02u", rte_lcore_id());
+    	    lcdata->conf->state.event_burst = rte_malloc_socket(name, MAX_EVENT_BURST * sizeof(event_t), 0, get_socketid(rte_lcore_id()));
+        }
     #endif
 }
 
-struct lcore_data init_lcore_data(bool recv_pkts, bool recv_evts) {
+extern void init_async_data(struct lcore_data *data);
+struct lcore_data init_lcore_data() {
     struct lcore_data lcdata = {
         .drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US,
         .prev_tsc  = 0,
@@ -171,13 +174,15 @@ struct lcore_data init_lcore_data(bool recv_pkts, bool recv_evts) {
 
         .is_valid  = lcdata.conf->hw.n_rx_queue != 0,
     };
-
+    lcdata.conf->mempool  = pktmbuf_pool[0]; // pktmbuf_pool[rte_lcore_id()] + get_socketid(rte_lcore_id());
+    #if ASYNC_MODE != ASYNC_MODE_OFF
+        init_async_data(&lcdata);
+    #endif
     if (lcdata.is_valid || !recv_pkts) {
-	RTE_LOG(INFO, P4_FWD, "entering main loop on lcore %u\n", rte_lcore_id());
-	
-	init_queues(&lcdata, recv_pkts, recv_evts);
+	    RTE_LOG(INFO, P4_FWD, "entering main loop on lcore %u\n", rte_lcore_id());
+	    init_queues(&lcdata, recv_pkts, recv_evts);
     } else {
-	RTE_LOG(INFO, P4_FWD, "lcore %u has nothing to do\n", rte_lcore_id());
+        RTE_LOG(INFO, P4_FWD, "lcore %u has nothing to do\n", rte_lcore_id());
     }
 
     return lcdata;
@@ -206,6 +211,8 @@ void free_packet(LCPARAMS) {
     rte_pktmbuf_free(pd->wrapper);
 }
 
+// defined in main_async.c
+void async_init_storage();
 
 void init_storage() {
     /* Needed for L2 multicasting - e.g. acting as a hub
@@ -221,13 +228,16 @@ void init_storage() {
 
     if (clone_pool == NULL)
         rte_exit(EXIT_FAILURE, "Cannot init clone mbuf pool\n");
+    #if ASYNC_MODE != ASYNC_MODE_OFF
+        async_init_storage();
+    #endif
 }
 
 void main_loop_pre_rx(LCPARAMS) {
     tx_burst_queue_drain(LCPARAMS_IN);
 }
 
-void main_loop_post_rx(LCPARAMS) {
+void main_loop_post_rx(bool got_packet, LCPARAMS) {
 }
 
 void main_loop_post_single_rx(bool got_packet, LCPARAMS) {
@@ -273,6 +283,9 @@ unsigned get_queue_count(LCPARAMS) {
 
 void initialize_nic() {
     dpdk_init_nic();
+    #if T4P4S_INIT_CRYPTO
+        init_crypto_devices();
+    #endif
 }
 
 int launch_count() {
@@ -313,4 +326,8 @@ uint32_t get_port_mask() {
 extern uint8_t get_nb_ports();
 uint8_t get_port_count() {
     return get_nb_ports();
+}
+
+int get_packet_idx(LCPARAMS) {
+    return -1;
 }

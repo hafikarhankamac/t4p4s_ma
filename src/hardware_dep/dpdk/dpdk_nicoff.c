@@ -5,9 +5,12 @@
 
 #include "dpdk_lib.h"
 #include "dpdk_nicoff.h"
-
 #include "util_debug.h"
+#include "dpdkx_crypto.h"
 #include "util_packet.h"
+#include "test.h"
+
+#include "main.h"
 
 extern int get_socketid(unsigned lcore_id);
 
@@ -15,6 +18,11 @@ extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 extern void dpdk_init_nic();
 
 extern struct rte_mempool* pktmbuf_pool[NB_SOCKETS];
+
+// ------------------------------------------------------
+
+extern volatile int packet_counter;
+extern volatile int packet_with_error_counter;
 
 // ------------------------------------------------------
 // Exports
@@ -31,9 +39,12 @@ testcase_t* current_test_case;
     extern testcase_t t4p4s_test_suite[MAX_TESTCASES];
 
     void t4p4s_pre_launch(int idx) {
-        if (idx != 0) {
-            sleep_millis(PAUSE_BETWEEN_TESTCASES_MILLIS);
-        }
+        #ifndef T4P4S_NO_CONTROL_PLANE
+            // wait for "stray" control messages to go away
+            if (idx != 0) {
+                sleep_millis(PAUSE_BETWEEN_TESTCASES_MILLIS);
+            }
+        #endif
 
         current_test_case = t4p4s_test_suite + idx;
 
@@ -74,11 +85,6 @@ testcase_t* current_test_case;
 // ------------------------------------------------------
 // Helpers
 
-fake_cmd_t get_cmd(LCPARAMS) {
-    return (*(current_test_case->steps))[rte_lcore_id()][lcdata->idx];
-}
-
-
 uint8_t bytes[8*sizeof(struct ether_header)];
 
 // str is a string that contains hex numbers without spaces.
@@ -116,15 +122,19 @@ int total_fake_byte_count(const char* texts[MAX_SECTION_COUNT]) {
 struct rte_mbuf* fake_packet(const char* texts[MAX_SECTION_COUNT], LCPARAMS) {
     int byte_count = total_fake_byte_count(texts);
 
-    debug("Creating fake " T4LIT(packet #%d,packet) " (" T4LIT(%d) " bytes)\n", lcdata->pkt_idx + 1, byte_count);
-
+    // debug("Creating fake " T4LIT(packet #%d,packet) " (" T4LIT(%d) " bytes)\n", lcdata->pkt_idx + 1, byte_count);
     struct rte_mbuf* p  = rte_pktmbuf_alloc(pktmbuf_pool[get_socketid(rte_lcore_id())]);
-    uint8_t*         p2 = (uint8_t*)rte_pktmbuf_prepend(p, byte_count);
+    uint8_t*         p2 = (uint8_t*)rte_pktmbuf_append(p, byte_count);
+
+    if (p2 == NULL) {
+        rte_exit(3, "Could not allocate space for fake packet\n");
+    }
+
     while (strlen(*texts) > 0) {
         uint8_t* dst = p2;
         p2 = str2bytes(*texts, p2);
 
-        dbg_bytes(dst, strlen(*texts) / 2, " :::: " T4LIT(%2zd) " bytes: ", strlen(*texts) / 2);
+        // dbg_bytes(dst, strlen(*texts) / 2, " :::: " T4LIT(%2zd) " bytes: ", strlen(*texts) / 2);
 
         ++texts;
     }
@@ -303,15 +313,53 @@ void check_packet_contents(fake_cmd_t cmd, LCPARAMS) {
 }
 
 bool encountered_error = false;
+bool encountered_drops = false;
+
+fake_cmd_t get_cmd(int idx) {
+    if(idx < 0){
+        fake_cmd_t ret = {FAKE_PKT, 0, 0, FDATA(""), 0, 0, FDATA("")};
+        return ret;
+    }else{
+        return (*(current_test_case->steps))[rte_lcore_id()][idx];
+    }
+}
+
+bool is_real_fake_packet(fake_cmd_t cmd) {
+    return cmd.action == FAKE_PKT && strlen(cmd.out[0]) != 0;
+}
+
+fake_cmd_t get_next_real_fake_verify_packet(LCPARAMS) {
+    while(true){
+        ++lcdata->verify_idx;
+        fake_cmd_t cmd = get_cmd(lcdata->verify_idx);
+        if(is_real_fake_packet(cmd) || cmd.action == FAKE_END){
+            return cmd;
+        }
+    }
+}
 
 void check_sent_packet(int egress_port, int ingress_port, LCPARAMS) {
-    fake_cmd_t cmd = get_cmd(LCPARAMS_IN);
-
+    fake_cmd_t cmd = get_next_real_fake_verify_packet(LCPARAMS_IN);
     check_egress_port(cmd, egress_port, LCPARAMS_IN);
     bool is_ok = check_byte_count(cmd, LCPARAMS_IN);
     if (is_ok) {
         check_packet_contents(cmd, LCPARAMS_IN);
     }
+
+    #ifdef T4P4S_STATS
+
+    if (cmd.require[0]>0 || cmd.forbid[0]>0) {
+        bool requirements_ok = check_controlflow_requirements(cmd);
+
+        if (requirements_ok) {
+            debug( "   " T4LIT(<<,success) " " T4LIT(Packet #%d,packet) "@" T4LIT(core%d,core) " is " T4LIT(passing the control-flow requirements, success) "\n", lcdata->pkt_idx + 1, rte_lcore_id());
+        } else {
+            debug( "   " T4LIT(!!,error)" " T4LIT(Packet #%d,packet) "@" T4LIT(core%d,core) " is " T4LIT(failing the control-flow requirements, error) "\n", lcdata->pkt_idx + 1, rte_lcore_id());
+            encountered_error = true;
+        }
+    }
+
+    #endif
 
     if (lcdata->is_valid) {
         debug( "   " T4LIT(<<,success) " " T4LIT(Packet #%d,packet) "@" T4LIT(core%d,core) " is " T4LIT(sent successfully,success) "\n", lcdata->pkt_idx + 1, rte_lcore_id());
@@ -324,12 +372,55 @@ void check_sent_packet(int egress_port, int ingress_port, LCPARAMS) {
 // ------------------------------------------------------
 // TODO
 
+#ifdef START_CRYPTO_NODE
+bool core_stopped_running[RTE_MAX_LCORE];
+#endif
+
 bool core_is_working(LCPARAMS) {
-    return get_cmd(LCPARAMS_IN).action != FAKE_END;
+    #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+        bool ret =
+            get_cmd(lcdata->idx).action != FAKE_END ||
+            lcdata->conf->pending_crypto > 0 ||
+            rte_ring_count(lcdata->conf->async_queue) > 0;
+
+        #ifdef START_CRYPTO_NODE
+            if(ret == false){
+                core_stopped_running[rte_lcore_id()] = true;
+            }
+
+            if (is_crypto_node()) {
+                bool is_any_runing = false;
+                for(int a = 0; a < crypto_node_id();a++){
+                    is_any_runing |= !core_stopped_running[a];
+                }
+                ret = is_any_runing;
+            }
+        #endif
+        return ret;
+    #else
+        return get_cmd(lcdata->idx).action != FAKE_END;
+    #endif
+}
+
+extern volatile bool ctrl_is_initialized;
+
+void await_ctl_init() {
+    #ifndef T4P4S_NO_CONTROL_PLANE
+        int MAX_CTL_INIT_MILLIS = 50;
+        for (int i = 0; i < MAX_CTL_INIT_MILLIS; ++i) {
+            if (ctrl_is_initialized)    break;
+            sleep_millis(1);
+        }
+    #endif
 }
 
 bool receive_packet(unsigned pkt_idx, LCPARAMS) {
-    fake_cmd_t cmd = get_cmd(LCPARAMS_IN);
+    if (pkt_idx == 0) {
+        await_ctl_init();
+    }
+
+    lcdata->idx++;
+    fake_cmd_t cmd = get_cmd(lcdata->idx);
     if (cmd.action == FAKE_PKT) {
         bool got_packet = strlen(cmd.in[0]) > 0;
 
@@ -338,9 +429,12 @@ bool receive_packet(unsigned pkt_idx, LCPARAMS) {
             pd->data    = rte_pktmbuf_mtod(pd->wrapper, uint8_t*);
         }
 
-        if (cmd.sleep_millis > 0) {
-            sleep_millis(cmd.sleep_millis);
-        }
+        #ifndef T4P4S_NO_CONTROL_PLANE
+            // wait for answer from fake control plane
+            if (cmd.sleep_millis > 0) {
+                sleep_millis(cmd.sleep_millis);
+            }
+        #endif
 
         return got_packet;
     }
@@ -357,30 +451,57 @@ bool receive_packet(unsigned pkt_idx, LCPARAMS) {
     return false;
 }
 
+int packet_expected_length(const char* sections[MAX_SECTION_COUNT]) {
+    int retval = 0;
+    for (int idx = 0; strlen(sections[idx]) != 0; ++idx) {
+        retval += strlen(sections[idx]) / 2;
+    }
+    return retval;
+}
+
 void free_packet(LCPARAMS) {
     rte_free(pd->wrapper);
+
+    if (get_cmd(lcdata->idx).out_port != -1) {
+        ++packet_with_error_counter;
+        encountered_drops = true;
+        debug(" " T4LIT(!!!!,error) " Packet was supposed to be sent to " T4LIT(port %d,port) " with " T4LIT(%dB) " of data, but it was " T4LIT(dropped,error) "\n",
+              get_cmd(lcdata->idx).out_port,
+              packet_expected_length(get_cmd(lcdata->idx).out)
+        );
+    }
 }
 
 bool is_packet_handled(LCPARAMS) {
-    return get_cmd(LCPARAMS_IN).action == FAKE_PKT;
+    return get_cmd(lcdata->idx).action == FAKE_PKT;
 }
 
 void main_loop_pre_rx(LCPARAMS) {
+    #if defined T4P4S_STATS && T4P4S_STATS == 1
+        t4p4s_init_per_packet_stats();
+    #endif
 
+    lcdata->is_valid = true;
 }
 
-void main_loop_post_rx(LCPARAMS) {
+void main_loop_post_rx(bool got_packet, LCPARAMS) {
+    #if defined T4P4S_STATS && T4P4S_STATS == 1
+        t4p4s_print_per_packet_stats();
+    #endif
 
+    if (got_packet) {
+        ++packet_counter;
+    }
 }
 
 void main_loop_post_single_rx(bool got_packet, LCPARAMS) {
-    if (get_cmd(LCPARAMS_IN).action == FAKE_PKT && got_packet)  ++lcdata->pkt_idx;
+    if (!lcdata->is_valid)    ++packet_with_error_counter;
 
-    ++lcdata->idx;
+    if (get_cmd(lcdata->idx).action == FAKE_PKT && got_packet)  ++lcdata->pkt_idx;
 }
 
 uint32_t get_portid(unsigned queue_idx, LCPARAMS) {
-    return get_cmd(LCPARAMS_IN).in_port;
+    return get_cmd(lcdata->idx).in_port;
 }
 
 void main_loop_rx_group(unsigned queue_idx, LCPARAMS) {
@@ -388,7 +509,10 @@ void main_loop_rx_group(unsigned queue_idx, LCPARAMS) {
 }
 
 unsigned get_pkt_count_in_group(LCPARAMS) {
-    return 1;
+    if(get_cmd(lcdata->idx).action == FAKE_PKT)
+        return 1;
+    else
+        return 0;
 }
 
 unsigned get_queue_count(LCPARAMS) {
@@ -397,36 +521,70 @@ unsigned get_queue_count(LCPARAMS) {
 
 void send_single_packet(packet* pkt, int egress_port, int ingress_port, bool send_clone, LCPARAMS) {
     struct rte_mbuf* mbuf = (struct rte_mbuf *)pkt;
+
+    if (get_cmd(lcdata->idx).out_port == -1) {
+        ++packet_with_error_counter;
+        encountered_drops = true;
+        debug(" " T4LIT(!!!!,error) " Packet was supposed to be " T4LIT(dropped,warning) ", but it was " T4LIT(sent,error) " to " T4LIT(port %d,port) " with " T4LIT(%dB) " of data\n",
+              egress_port,
+              packet_length(pd)
+        );
+        return;
+    }
+
     check_sent_packet(egress_port, ingress_port, LCPARAMS_IN);
 }
 
 bool storage_already_inited = false;
 
-void init_storage() {
-    if (storage_already_inited)    return;
+// defined in main_async.c
+void async_init_storage();
 
-    char str[15];
-    sprintf(str, "testpool");
-    pktmbuf_pool[0] = rte_mempool_create(str, (unsigned)1023, MBUF_SIZE, MEMPOOL_CACHE_SIZE, sizeof(struct rte_pktmbuf_pool_private), rte_pktmbuf_pool_init, NULL, rte_pktmbuf_init, NULL, 0, 0);
+void init_storage() {
+    if (storage_already_inited) return;
+    pktmbuf_pool[0] = rte_mempool_create("main_pool", (unsigned)1023, MBUF_SIZE, MEMPOOL_CACHE_SIZE, sizeof(struct rte_pktmbuf_pool_private), rte_pktmbuf_pool_init, NULL, rte_pktmbuf_init, NULL, 0, 0);
+    #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+        async_init_storage();
+    #endif
 
     storage_already_inited = true;
+
+    #ifdef START_CRYPTO_NODE
+        for(int a=0;a<rte_lcore_count();a++){
+            core_stopped_running[a] = false;
+        }
+    #endif
 }
 
+extern void init_async_data(struct lcore_data *lcdata);
+
 struct lcore_data init_lcore_data(const bool, const bool) {
-    return (struct lcore_data) {
-        .conf     = &lcore_conf[rte_lcore_id()],
-        .is_valid = true,
-        .idx      = 0,
-        .pkt_idx  = 0,
-        .mempool  = pktmbuf_pool[0],
+    t4p4s_init_global_stats();
+    struct lcore_data lcdata = (struct lcore_data) {
+        .conf       = &lcore_conf[rte_lcore_id()],
+        .is_valid   = true,
+        .verify_idx = -1,
+        .idx        = -1,
+        .pkt_idx    = 0,
+        .mempool    = pktmbuf_pool[0],
     };
+
+    #if defined ASYNC_MODE && ASYNC_MODE != ASYNC_MODE_OFF
+        init_async_data(&lcdata);
+    #endif
+    return lcdata;
 }
 
 void initialize_nic() {
     dpdk_init_nic();
+    #if T4P4S_INIT_CRYPTO
+        init_crypto_devices();
+    #endif
 }
 
 void t4p4s_abnormal_exit(int retval, int idx) {
+    t4p4s_print_global_stats();
+
     if (launch_count() == 1) {
         debug(T4LIT(Abnormal exit,error) ", code " T4LIT(%d) ".\n", retval);
     } else {
@@ -443,9 +601,16 @@ void t4p4s_after_launch(int idx) {
 }
 
 int t4p4s_normal_exit() {
+    t4p4s_print_global_stats();
+
     if (encountered_error) {
         debug(T4LIT(Normal exit,success) " but " T4LIT(errors in processing packets,error) "\n");
         return 3;
+    }
+
+    if (encountered_drops) {
+        debug(T4LIT(Normal exit,success) " but " T4LIT(some packets were unexpectedly dropped/sent,error) "\n");
+        return 4;
     }
 
     debug(T4LIT(Normal exit.,success) "\n");
@@ -465,4 +630,8 @@ uint32_t get_port_mask() {
 // TODO make this parameterizable
 uint8_t get_port_count() {
     return __builtin_popcount(get_port_mask());
+}
+
+int get_packet_idx(LCPARAMS) {
+    return lcdata->pkt_idx + 1;
 }

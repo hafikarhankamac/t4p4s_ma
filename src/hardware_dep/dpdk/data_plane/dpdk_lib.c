@@ -7,13 +7,15 @@
 #include <rte_ethdev.h>
 #include <rte_ip.h>
 #include <unistd.h>
+
+#include "actions.h"
 #include "timer_extern.h"
 
 extern int numa_on;
 
 extern void print_all_ports_link_status(uint8_t port_num, uint32_t port_mask);
 extern void print_port_mac(unsigned portid, uint8_t* mac_bytes);
-extern void table_set_default_action(lookup_table_t* t, uint8_t* value);
+extern void table_set_default_action(lookup_table_t* t, actions_t* value);
 
 //=============================================================================
 // Shared
@@ -27,7 +29,7 @@ uint32_t handle_event_mask;
 uint16_t            nb_lcore_params;
 struct lcore_params lcore_params[MAX_LCORE_PARAMS];
 
-int master_socket_id;
+int main_socket;
 
 bool enabled_timer_module = false;
 
@@ -53,12 +55,6 @@ int get_socketid(unsigned lcore_id)
     }
 
     return socketid;
-}
-
-int get_master_socketid()
-{
-    int lcore_id = rte_get_master_lcore();
-    return get_socketid(lcore_id);
 }
 
 // Returns the number of rx queues that this port has.
@@ -98,3 +94,18 @@ uint32_t packet_length(packet_descriptor_t* pd) {
 packet* clone_packet(packet* pd, struct rte_mempool* mempool) {
     return rte_pktmbuf_clone(pd, mempool);
 }
+
+//=============================================================================
+// Utils
+
+uint8_t topbits_1(uint8_t data, int bits) { return data >> (8 - bits); }
+uint16_t topbits_2(uint16_t data, int bits) { return data >> (16 - bits); }
+uint32_t topbits_4(uint32_t data, int bits) { return data >> (32 - bits); }
+
+uint8_t net2t4p4s_1(uint8_t data) { return data; }
+uint16_t net2t4p4s_2(uint16_t data) { return rte_be_to_cpu_16(data); }
+uint32_t net2t4p4s_4(uint32_t data) { return rte_be_to_cpu_32(data); }
+
+uint8_t t4p4s2net_1(uint8_t data) { return data; }
+uint16_t t4p4s2net_2(uint16_t data) { return rte_cpu_to_be_16(data); }
+uint32_t t4p4s2net_4(uint32_t data) { return rte_cpu_to_be_32(data); }

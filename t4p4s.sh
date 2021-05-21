@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# --------------------------------------------------------------------
+STARTPWD=$(pwd)
+
+[ "${T4P4S_TRACE}" != "" ] && export PS4='trace>:`date +%s.%N`:$0:line $LINENO:' && mkdir -p "./build" && exec 321>"./build/trace.log" && BASH_XTRACEFD=321 && set -x
+
+declare -A KNOWN_COLOURS
+declare -A OPTS
+declare -A IGNORE_OPTS
 
 PYTHON_PARSE_HELPER_PROCESS=""
 
@@ -23,12 +29,9 @@ fi
 # --------------------------------------------------------------------
 # Helper functions
 
-save_envs() {
-    mkdir -p $T4P4S_TARGET_DIR/build/recent
-    get_current_envs | grep -vE "(${ORIG_ENVS})" > $T4P4S_TARGET_DIR/build/recent/${OPTS[example]}@${OPTS[variant]}.opts.txt
-}
-
 exit_program() {
+    [ "${T4P4S_TRACE}" != "" ] && set +x
+
     echo -e "$nn"
     [ "${OPTS[ctr]}" != "" ] && verbosemsg "(Terminating controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn)" && sudo pkill -f "dpdk_${OPTS[ctr]}_controller"
     [ "${PYTHON_PARSE_HELPER_PROCESS}" != "" ] && verbosemsg "(Terminating the $(cc 0)parse helper process$nn, port $(cc 1)$PYTHON_PARSE_HELPER_PORT$nn, pid $(cc 1)$PYTHON_PARSE_HELPER_PROCESS$nn)" && (echo "exit_parse_helper" | netcat localhost "${PYTHON_PARSE_HELPER_PORT}")
@@ -121,7 +124,7 @@ print_opts() {
         all_opts[$k]=1
     done
 
-    for optid in ${!all_opts[@]}; do
+    valuesList=$(for optid in ${!all_opts[@]}; do
         [[ $optid = [A-Z]*_* ]] && continue
 
         PREFIX="$(cc 0)"
@@ -129,7 +132,13 @@ print_opts() {
         [ "${IGNORE_OPTS[$optid]}" == "on" ] && PREFIX="$(cc 3 2)^"
         [ "${OPTS[$optid]}" != "" -a "${OPTS[$optid]}" != "on" ] && echo "$PREFIX$optid$nn=$(cc 1)${OPTS[$optid]}$nn" && continue
         echo "$PREFIX$optid$nn"
-    done | sort | tr '\n' ', '
+    done | sort)
+
+    if [ "$(optvalue verbose)" == "lines" ]; then
+      echo "\n$valuesList"
+    else
+      echo $valuesList | tr '\n' ', '
+    fi
 }
 
 setopt() {
@@ -230,7 +239,7 @@ change_hugepages() {
 
     OLD_HUGEPAGES=`cat /sys/kernel/mm/hugepages/hugepages-${HUGEPGSZ}/nr_hugepages`
 
-    [ "$(optvalue hugepages)" == "off" ] && [ "$(optvalue hugemb)" != "off" ] && OPTS[hugepages]=$(($(optvalue hugemb)*1024/($HUGE_FORMULA)))
+    [ "$(optvalue hugepages)" == "off" ] && [ "$(optvalue hugemb)" != "off" ] && OPTS[hugepages]=$(($(optvalue hugemb)*1024/($HUGE_FORMULA) + (($(optvalue hugemb)*1024%($HUGE_FORMULA) > 0))))
 
     HUGE_UNIT=kB
     HUGE_KB=$(($HUGE_FORMULA*OPTS[hugepages]))
@@ -248,7 +257,7 @@ change_hugepages() {
         verbosemsg "Keeping the previously reserved $(cc 0)$OLD_HUGEPAGES$nn hugepages ($(cc 0)$HUGE_AMOUNT$nn $HUGE_UNIT)"
         return
     else
-        verbosemsg "Keeping $(cc 0)$OLD_HUGEPAGES$nn hugepages which is more than the needed $(cc 0)${OPTS[hugepages]}$nn ($(cc 0)$HUGE_AMOUNT$nn $HUGE_UNIT)"
+        verbosemsg "Keeping $(cc 0)$OLD_HUGEPAGES$nn hugepages which is more than the requested $(cc 0)${OPTS[hugepages]}$nn ($(cc 0)$HUGE_AMOUNT$nn $HUGE_UNIT)"
         return
     fi
 
@@ -268,23 +277,23 @@ change_hugepages() {
 # Only (over)write $1 if the generated content differs from the existing one
 overwrite_on_difference() {
     cmp -s "/tmp/$1.tmp" "$2/$1"
-    [ "$?" -ne 0 ] && mv "/tmp/$1.tmp" "$2/$1"
-    rm -f "/tmp/$1.tmp"
+    [ "$?" -ne 0 ] && cp "/tmp/$1.tmp" "$2/$1"
+    sudo rm -f "/tmp/$1.tmp"
 }
 
 candidate_count() {
-    simple_count=$(find "$P4_SRC_DIR" -type f -name "$1.p4*" | wc -l)
+    simple_count=$(find -L "$P4_SRC_DIR" -type f -name "$1.p4*" | wc -l)
     if [ $simple_count -eq 1 ]; then
         echo 1
     else
-        echo $(find "$P4_SRC_DIR" -type f -name "*$1*.p4*" | wc -l)
+        echo $(find -L "$P4_SRC_DIR" -type f -regex ".*$1.*[.]p4\(_[0-9][0-9]*\)?" | wc -l)
     fi
 }
 
 candidates() {
     if [ $(candidate_count $1) -gt 0 ]; then
         echo
-        find "$P4_SRC_DIR" -type f -name "*$1*.p4*" | sed 's#^.*/\([^\.]*\).*$#    \1#g'
+        find -L "$P4_SRC_DIR" -type f -regex ".*$1.*[.]p4\(_[0-9][0-9]*\)?" | sed 's#^.*/\([^\.]*\).*$#    \1#g'
     else
         echo "(no candidates found)"
     fi
@@ -292,6 +301,10 @@ candidates() {
 
 # --------------------------------------------------------------------
 # Set defaults
+
+T4P4S_BUILD_DIR=${T4P4S_BUILD_DIR-"./build"}
+
+mkdir -p ${T4P4S_BUILD_DIR}
 
 ERROR_CODE=1
 
@@ -304,17 +317,53 @@ CTRL_PLANE_DIR=${CTRL_PLANE_DIR-./src/hardware_dep/shared/ctrl_plane}
 
 ARCH=${ARCH-dpdk}
 ARCH_OPTS_FILE=${ARCH_OPTS_FILE-opts_${ARCH}.cfg}
-CFGFILES=${CFGFILES-${COLOURS_CONFIG_FILE},${LIGHTS_CONFIG_FILE},!cmdline!,!varcfg!${EXAMPLES_CONFIG_FILE},${ARCH_OPTS_FILE}}
 
-POSSIBLE_PYTHONS=(python3.9 python3.8 python3.7 python3.6 python3)
-for found_python3 in "${POSSIBLE_PYTHONS[@]}"
-do
-    if [ `command -v "${found_python3}"` ]; then
-        PYTHON=${PYTHON-${found_python3}}
-        break
-    fi
-done
-DEBUGGER=${DEBUGGER-gdb}
+colours[$i]="\033[${COLOUR}m"
+
+CFGFILES=${CFGFILES-!cmdline!,!varcfg!${EXAMPLES_CONFIG_FILE},${ARCH_OPTS_FILE}}
+
+declare -A OPTS=([cfgfiles]="$CFGFILES", [meson_opts]="")
+
+mkdir -p build/tools
+
+if [ ! -f "build/tools/${COLOURS_CONFIG_FILE}.sh" ]; then
+    cat ${COLOURS_CONFIG_FILE} | grep -ve "^[ \t]*;" | grep -ve "^[ \t]*$" | sed "s/COLOUR_\([^ \t]*\)[ \t]*\([^ \t]*\)/KNOWN_COLOURS[\\\"\1\\\"]=\\\"\2\\\"/" > "build/tools/${COLOURS_CONFIG_FILE}.sh"
+    cat ${COLOURS_CONFIG_FILE} | grep -ve "^[ \t]*;" | grep -ve "^[ \t]*$" | sed "s/COLOUR_\([^ \t]*\)[ \t]*\([^ \t]*\)/colours[\1]=\\\"\\\\033\[\2m\\\"/" >> "build/tools/${COLOURS_CONFIG_FILE}.sh"
+    cat ${COLOURS_CONFIG_FILE} | grep -ve "^[ \t]*;" | grep -ve "^[ \t]*$" | sed "s/\([^ \t]*\)[ \t]*\([^ \t]*\)/OPTS[\1]=\\\"\2\\\"/" >> "build/tools/${COLOURS_CONFIG_FILE}.sh"
+fi
+
+if [ ! -f "build/tools/${LIGHTS_CONFIG_FILE}.sh" ]; then
+    cat ${LIGHTS_CONFIG_FILE} | grep -ve "^[ \t]*;" | grep -ve "^[ \t]*$" | sed "s/\([^ \t]*\)[ \t]*\([^ \t]*\)/OPTS[\1]=\2/" > "build/tools/${LIGHTS_CONFIG_FILE}.sh"
+    echo "set_term_light `cat ${LIGHTS_CONFIG_FILE} | cat lights.cfg | grep -e "^light" | sed 's/^light[ \t]*\([^ \t]*\)/\1/'`" >> "build/tools/${LIGHTS_CONFIG_FILE}.sh"
+fi
+
+. build/tools/${COLOURS_CONFIG_FILE}.sh
+. build/tools/${LIGHTS_CONFIG_FILE}.sh
+
+find_tool() {
+    SEP=$1
+    shift
+    DEFAULT_TOOL=$1
+    T4P4S_TOOL_DIR="${T4P4S_BUILD_DIR}/tools"
+    mkdir -p "${T4P4S_TOOL_DIR}"
+    TOOL_FILE="${T4P4S_TOOL_DIR}/tool.${DEFAULT_TOOL}.txt"
+    [ -f "${TOOL_FILE}" ] && cat "${TOOL_FILE}" && return
+    for tool in $*; do
+        for candidate in `apt-cache search --names-only "^${tool}[\.\-]?[0-9]*$" | tr "." "-" | cut -f 1 -d " " | sort -t "-" -k 2,2nr | tr "\n" " " | tr "-" "$SEP"`; do
+            which $candidate >/dev/null
+            [ $? -eq 0 ] && echo $candidate | tee "${TOOL_FILE}" && return
+        done
+        which $tool >/dev/null
+        [ $? -eq 0 ] && echo $tool | tee "${TOOL_FILE}" && return
+    done
+    exit_on_error "1" "Cannot not find $(cc 2)$tool$nn tool"
+}
+
+PYTHON3=${PYTHON3-$(find_tool "." python3)}
+
+# note: it is used with sudo
+MESON_CMD="$PYTHON3 -m mesonbuild.mesonmain"
+MESON_BUILDTYPE=${MESON_BUILDTYPE-debug}
 
 declare -A EXT_TO_VSN=(["p4"]=16 ["p4_14"]=14)
 
@@ -381,7 +430,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 END
     )
 
-$PYTHON -c "$PYTHON_PARSE_HELPER" "${PYTHON_PARSE_HELPER_PORT}" >&2>/dev/null &
+$PYTHON3 -c "$PYTHON_PARSE_HELPER" "${PYTHON_PARSE_HELPER_PORT}" >&2>/dev/null &
 PYTHON_PARSE_HELPER_PROCESS="$!"
 
 unset PYTHON_PARSE_HELPER
@@ -392,20 +441,11 @@ sleep 0.1
 # --------------------------------------------------------------------
 # Set defaults
 
-
-verbosemsg "Using $(cc 0)$p$nn as Python 3 executable"
-verbosemsg "Using $(cc 0)$DEBUGGER$nn as debugger"
-
-ALL_COLOUR_NAMES=(action bytes control core default error expected extern field header headertype incoming off outgoing packet parserstate port smem socket status success table testcase warning)
+ALL_COLOUR_NAMES=(action async bytes control core default error expected extern field header headertype incoming off outgoing packet parserstate port queue smem socket status success table testcase warning)
 
 # --------------------------------------------------------------------
 # Set defaults
 
-declare -A KNOWN_COLOURS
-declare -A OPTS
-declare -A IGNORE_OPTS
-
-colours=()
 nn="\033[0m"
 
 # Check if configuration is valid
@@ -416,8 +456,6 @@ nn="\033[0m"
 # Parse opts from files and command line
 
 OPT_NOPRINTS=("OPT_NOPRINTS" "cfgfiles")
-
-declare -A OPTS=([cfgfiles]="$CFGFILES")
 
 
 while [ "${OPTS[cfgfiles]}" != "" ]; do
@@ -513,7 +551,8 @@ while [ "${OPTS[cfgfiles]}" != "" ]; do
                 [ $FIND_COUNT -eq 0 ] && exit_program "Could not find P4 file for $(cc 0)${var}$nn, candidates: $(cc 1)$(candidates ${var})$nn"
 
                 setopt example "$var"
-                setopt source "`find "$P4_SRC_DIR" -type f -name "${var}.p4*"`"
+                P4_SRC_FILE="`find -L "$P4_SRC_DIR" -type f -regex ".*/${var}[.]p4\(_[0-9][0-9]*\)?"`"
+                setopt source "$P4_SRC_FILE"
             fi
 
             [ "${groups[prefix]}" == ":"  ] && setopt example "$var" && continue
@@ -541,7 +580,7 @@ while [ "${OPTS[cfgfiles]}" != "" ]; do
     done
 done
 
-verbosemsg "Using $(cc 0)$PYTHON_PARSE_HELPER_PORT$nn as parse helper port"
+verbosemsg "Parse port is $(cc 0)$PYTHON_PARSE_HELPER_PORT$nn"
 
 [ "$(optvalue verbose)" == on ] && IGNORE_OPTS[silent]=on
 [ "$(optvalue silent)" == on  ] && IGNORE_OPTS[verbose]=on
@@ -560,46 +599,66 @@ if [ "${OPTS[vsn]}" == "" ]; then
     fi
     OPTS[vsn]="${EXT_TO_VSN["${P4_EXT##*.}"]}"
     [ "${OPTS[vsn]}" == "" ] && exit_program "Cannot determine P4 version for $(cc 0)${OPTS[example]}$nn"
-    verbosemsg "Determined P4 version to be $(cc 0)${OPTS[vsn]}$nn by the extension of $(cc 0)$(print_cmd_opts "${OPTS[source]}")$nn"
+    verbosemsg "P4 version is $(cc 0)${OPTS[vsn]}$nn (by the extension of $(cc 0)$(print_cmd_opts "${OPTS[source]}")$nn)"
 fi
 
 [ "$(optvalue testcase)" == off ] && OPTS[choice]=${T4P4S_CHOICE-${OPTS[example]}@${OPTS[variant]}}
 [ "$(optvalue testcase)" != off ] && OPTS[choice]=${T4P4S_CHOICE-${OPTS[example]}@${OPTS[variant]}-$(optvalue testcase)}
-T4P4S_BUILD_DIR=${T4P4S_BUILD_DIR-"./build"}
 T4P4S_COMPILE_DIR=${T4P4S_COMPILE_DIR-"${T4P4S_BUILD_DIR}/${OPTS[choice]}"}
 T4P4S_TARGET_DIR="${T4P4S_BUILD_DIR}/last"
+# a synonym of "last", this comes earliest alphabetically
+T4P4S_AFTERMOST_DIR="${T4P4S_BUILD_DIR}/aftermost"
 
 OPTS[executable]="$T4P4S_TARGET_DIR/build/${OPTS[example]}"
 
 T4P4S_SRCGEN_DIR=${T4P4S_SRCGEN_DIR-"$T4P4S_TARGET_DIR/srcgen"}
 T4P4S_GEN_INCLUDE_DIR="${T4P4S_SRCGEN_DIR}"
+T4P4S_GEN_LIGHT="gen_light.h"
 T4P4S_GEN_INCLUDE="gen_include.h"
-GEN_MAKEFILE_DIR="${T4P4S_TARGET_DIR}"
-GEN_MAKEFILE="Makefile"
+T4P4S_GEN_DEFS="gen_defs.h"
+T4P4S_GEN_MODEL="gen_model.h"
 
-T4P4S_LOG_DIR=${T4P4S_LOG_DIR-$(dirname $(dirname ${OPTS[executable]}))/log}
+EXAMPLES_DIR=${EXAMPLES_DIR-./examples}
 
 # By default use all three phases
-if [ "${OPTS[p4]}" != on ] && [ "${OPTS[c]}" != on ] && [ "${OPTS[run]}" != on ]; then
+if [ "$(optvalue p4)" == off ] && [ "$(optvalue c)" == off ] && [ "$(optvalue run)" == off ]; then
     OPTS[p4]=on
     OPTS[c]=on
     OPTS[run]=on
 fi
 
+T4P4S_CC=${T4P4S_CC-$(find_tool "-" clang gcc)}
+if [[ ! "$T4P4S_CC" =~ "clang" ]]; then
+    # note: when using gcc, only lld seems to be supported, not lld-VSN
+    T4P4S_LD=${T4P4S_LD-$(find_tool lld bfd gold)}
+else
+    T4P4S_LD=${T4P4S_LD-$(find_tool "-" lld bfd gold)}
+fi
+DEBUGGER=${DEBUGGER-$(find_tool "-" lldb gdb)}
+
+verbosemsg "Using $(cc 0)CC$nn=$(cc 1)$T4P4S_CC$nn, $(cc 0)LD$nn=$(cc 1)$T4P4S_LD$nn, $(cc 0)PYTHON3$nn=$(cc 1)${PYTHON3}$nn, $(cc 0)DBG$nn=$(cc 1)${DEBUGGER}$nn"
+
 [ "$(optvalue silent)" != off ] && addopt makeopts ">/dev/null" " "
 
 # Generate directories and files
 mkdir -p "$T4P4S_COMPILE_DIR"
-rm -f "$T4P4S_TARGET_DIR"
+rm -rf "$T4P4S_TARGET_DIR"
+rm -rf "$T4P4S_AFTERMOST_DIR"
 ln -s "`realpath "$T4P4S_COMPILE_DIR"`" "$T4P4S_TARGET_DIR"
+ln -s "`realpath "$T4P4S_COMPILE_DIR"`" "$T4P4S_AFTERMOST_DIR"
 mkdir -p $T4P4S_SRCGEN_DIR
+
+T4P4S_LOG_DIR=${T4P4S_LOG_DIR-$(realpath ${T4P4S_TARGET_DIR})/log}
+mkdir -p "${T4P4S_LOG_DIR}"
+
+PARALLELISM=${PARALLELISM-$((`nproc`))}
+PARALLELISM=$(($PARALLELISM < 1 ? 1 : $PARALLELISM))
 
 # --------------------------------------------------------------------
 # Checks before execution of phases begins
 
 if [ "$(optvalue testcase)" != off -o "$(optvalue suite)" != off ]; then
-    EXAMPLES_DIR=${EXAMPLES_DIR-./examples}
-    if [ $(find "$EXAMPLES_DIR" -type f -name "test-${OPTS[example]##test-}.c" | wc -l) -ne 1 ]; then
+    if [ $(find -L "$EXAMPLES_DIR" -type f -name "test-${OPTS[example]##test-}.c" | wc -l) -ne 1 ]; then
         exit_program "No test input file found for example $(cc 0)${OPTS[example]}$nn under $(cc 0)$EXAMPLES_DIR$nn (expected filename: $(cc 0)test-${OPTS[example]##test-}.c$nn)"
     fi
 fi
@@ -643,84 +702,178 @@ if [ "$(optvalue p4)" != off ]; then
     addopt p4opts "${OPTS[source]}" " "
     addopt p4opts "--p4v ${OPTS[vsn]}" " "
     addopt p4opts "-g ${T4P4S_SRCGEN_DIR}" " "
-    # addopt p4opts "-desugar_info none" " "
     [ "$(optvalue verbose)" != off ] && addopt p4opts "-verbose" " "
 
     verbosemsg "P4 compiler options: $(print_cmd_opts "${OPTS[p4opts]}")"
 
     IFS=" "
-    $PYTHON -B src/compiler.py ${OPTS[p4opts]}
+    $PYTHON3 -B src/compiler.py --multi $PARALLELISM ${OPTS[p4opts]}
     exit_on_error "$?" "P4 to C compilation $(cc 2)failed$nn"
 fi
 
 
 # Phase 2: C compilation
 if [ "$(optvalue c)" != off ]; then
-    cat <<EOT > "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
-#ifndef __GEN_INCLUDE_H_
-#define __GEN_INCLUDE_H_
-EOT
+    [ "$(optvalue model)" == off ] && exit_on_error "1" "Cannot find $(cc 2)model$nn (e.g. $(cc 1)v1model$nn or $(cc 1)psa$nn) for example $(cc 0)$(optvalue example)$nn"
+
+    sudo echo "#pragma once" > "/tmp/${T4P4S_GEN_MODEL}.tmp"
+    sudo echo "#include \"${ARCH}_model_$(optvalue model).h\"" >> "/tmp/${T4P4S_GEN_MODEL}.tmp"
+    overwrite_on_difference "${T4P4S_GEN_MODEL}" "${T4P4S_GEN_INCLUDE_DIR}"
+
+
+    sudo echo "#pragma once" > "/tmp/${T4P4S_GEN_LIGHT}.tmp"
 
     unset colour
     for colour in ${ALL_COLOUR_NAMES[@]}; do
         COLOUR_MACRO=""
         [ "$(array_contains "${OPTS[bw]}" "on" "switch")" == n ] && COLOUR_MACRO="\"${OPTS["${OPTS[T4LIGHT_$colour]}"]-${OPTS[T4LIGHT_$colour]}}\"  // ${OPTS[T4LIGHT_$colour]}"
         [ "$(array_contains "${OPTS[bw]}" "on" "switch")" == n ] && [ "$COLOUR_MACRO" == "\"\"" ] && [ "$colour" != "default" ] && COLOUR_MACRO="T4LIGHT_default"
-        echo "#define T4LIGHT_${colour} $COLOUR_MACRO" >> "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
+        sudo echo "#define T4LIGHT_${colour} $COLOUR_MACRO" >> "/tmp/${T4P4S_GEN_LIGHT}.tmp"
     done
+
+    overwrite_on_difference "${T4P4S_GEN_LIGHT}" "${T4P4S_GEN_INCLUDE_DIR}"
+
+
+    sudo echo "#pragma once" > "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
 
     IFS=" "
     for hdr in ${OPTS[include-hdrs]}; do
-        echo "#include \"$hdr\"" >> "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
+        sudo echo "#include \"$hdr\"" >> "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
     done
 
-    echo "#endif" >> "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
+    echo """
+#ifndef T4P4S_MODEL
+    #error No T4P4S_MODEL set; perhaps configuration in examples.cfg is missing/incomplete?
+    #ifdef T4P4S_TESTCASE
+        #error Possible cause for missing T4P4S_MODEL: is there an appropriate @test line in examples.cfg?
+    #endif
+#endif
+""" >> "/tmp/${T4P4S_GEN_INCLUDE}.tmp"
+
     overwrite_on_difference "${T4P4S_GEN_INCLUDE}" "${T4P4S_GEN_INCLUDE_DIR}"
 
 
-    cat <<EOT >"/tmp/${GEN_MAKEFILE}.tmp"
-CDIR := \$(dir \$(lastword \$(MAKEFILE_LIST)))
-APP = ${OPTS[example]}
-include \$(CDIR)/../../makefiles/${ARCH}_backend_pre.mk
-include \$(CDIR)/../../makefiles/common.mk
-include \$(CDIR)/../../makefiles/hw_independent.mk
-VPATH += $(dirname ${OPTS[source]})
-EXTRA_CFLAGS += ${OPTS[extra-cflags]}
-LDFLAGS += ${OPTS[ldflags]}
+    sudo echo "#pragma once" > "/tmp/${T4P4S_GEN_DEFS}.tmp"
+
+    IFS=$'\n'
+    for def in ${OPTS[include-defs]}; do
+        sudo echo "$def" >> "/tmp/${T4P4S_GEN_DEFS}.tmp"
+    done
+
+    overwrite_on_difference "${T4P4S_GEN_DEFS}" "${T4P4S_GEN_INCLUDE_DIR}"
+
+
+    cat <<EOT >"/tmp/meson.build.tmp"
+project(
+    '${OPTS[example]}',
+    'c',
+    version : '1.0.0',
+    default_options : [
+        'warning_level=0',
+        'optimization=3',
+        'buildtype=release'
+    ],
+)
+
 EOT
 
-    if [ "$(optvalue testcase)" != off -o "$(optvalue suite)" != off ]; then
-        # EXAMPLES_DIR is defined in the check above
-        TESTFILE=$(find "$EXAMPLES_DIR" -type f -name "test-${OPTS[example]##test-}.c")
+    echo >> "/tmp/meson.build.tmp"
 
-        [ "$(optvalue testcase)" != off -a "$(optvalue suite)" == off ] && addopt cflags "-DT4P4S_TESTCASE=\"t4p4s_testcase_${OPTS[testcase]}\"" " "
-        echo "VPATH += \$(CDIR)/../../`dirname $TESTFILE`" >>"/tmp/${GEN_MAKEFILE}.tmp"
-        echo "SRCS-y += `basename $TESTFILE`" >>"/tmp/${GEN_MAKEFILE}.tmp"
+    sudo cat "meson.build.base" >>"/tmp/meson.build.tmp"
+
+    if [ "$(optvalue p4rt)" != off ]; then
+        [ "${GRPC}" == "" ] && exit_program "Option $(cc 0)p4rt$nn is set but variable $(cc 0)\$GRPC$nn is not"
+        [ "${P4PI}" == "" ] && exit_program "Option $(cc 0)p4rt$nn is set but variable $(cc 0)\$P4PI$nn is not"
+        [ "${GRPCPP}" == "" ] && exit_program "Option $(cc 0)p4rt$nn is set but variable $(cc 0)\$GRPCPP$nn is not"
+
+        sudo cat <<EOT >>"/tmp/meson.build.tmp"
+grpc = '$GRPC'
+p4pi = '$P4PI'
+grpcpp = '$GRPCPP'
+EOT
+
+        sudo cat "meson.build.p4rt" >>"/tmp/meson.build.tmp"
+    fi
+
+    if [ "$(optvalue testcase)" != off -o "$(optvalue suite)" != off ]; then
+        TESTFILE=$(find -L "$EXAMPLES_DIR" -type f -name "test-${OPTS[example]##test-}.c")
+
+        [ "$(optvalue testcase)" != off -a "$(optvalue suite)" == off ] && addopt cflags "-DT4P4S_TESTCASE=t4p4s_testcase_${OPTS[testcase]}" " "
+
+        sudo echo >>"/tmp/meson.build.tmp"
+        sudo echo "project_source_files += ['../../$TESTFILE']" >>"/tmp/meson.build.tmp"
+        sudo echo >>"/tmp/meson.build.tmp"
     fi
 
     IFS=" "
     for src in ${OPTS[include-srcs]}; do
-        echo "SRCS-y += $src" >> "/tmp/${GEN_MAKEFILE}.tmp"
+        sudo echo "project_source_files += [$src]" >> "/tmp/meson.build.tmp"
     done
 
-    echo "CFLAGS += ${OPTS[cflags]}" >> "/tmp/${GEN_MAKEFILE}.tmp"
-    echo "include \$(CDIR)/../../makefiles/${ARCH}_backend_post.mk" >> "/tmp/${GEN_MAKEFILE}.tmp"
+    for flag in ${OPTS[cflags]}; do
+        sudo echo "build_args += ['$flag']" >> "/tmp/meson.build.tmp"
+    done
 
-    overwrite_on_difference "${GEN_MAKEFILE}" "${GEN_MAKEFILE_DIR}"
+
+    sudo cat <<EOT >>"/tmp/meson.build.tmp"
+
+foreach i: [`seq 0 $(($PARALLELISM-1)) | tr '\n' ','`]
+    foreach multi: ['actions', 'controlplane', 'dataplane', 'parser']
+        multifile = multi + '.stage_' + i.to_string() + '.c'
+        if fs.exists(srcg / 'multi' / multifile)
+            project_source_files += [srcg / 'multi' / multifile]
+        endif
+    endforeach
+endforeach
+
+executable(
+    meson.project_name(),
+    project_source_files,
+    c_args                : build_args,
+    gnu_symbol_visibility : 'hidden',
+    include_directories   : include_dirs,
+    dependencies          : all_dependencies,
+    link_args             : ['/usr/local/lib/x86_64-linux-gnu/librte_bus_vdev.so']
+)
+EOT
+
+    overwrite_on_difference "meson.build" "${T4P4S_TARGET_DIR}"
 
 
     msg "[$(cc 0)COMPILE SWITCH$nn]"
     verbosemsg "C compiler options: $(cc 0)$(print_cmd_opts "${OPTS[cflags]}")${nn}"
 
-    cd ${T4P4S_TARGET_DIR}
-    if [ "$(optvalue silent)" != off ]; then
-        make -j >/dev/null
-    else
-        make -j
-    fi
-    exit_on_error "$?" "C compilation $(cc 2)failed$nn"
+    MESON_OPTS=${OPTS[meson_opts]}
 
+    mkdir -p ${T4P4S_TARGET_DIR}/build
+    cd ${T4P4S_TARGET_DIR}/build
+    sudo rm -rf build.ninja
+    sudo rm -rf compile_commands.json
+    sudo rm -rf .ninja*
+    sudo rm -rf meson-info
+    sudo rm -rf meson-private
     cd - >/dev/null
+
+    cd ${T4P4S_TARGET_DIR}
+    sudo CC="ccache $T4P4S_CC" CC_LD="$T4P4S_LD" CFLAGS="$FLTO" $MESON_CMD $MESON_OPTS -Dbuildtype=$MESON_BUILDTYPE build >$T4P4S_LOG_DIR/20_meson.txt 2>&1
+    exit_on_error "$?" "Meson invocation $(cc 2)failed$nn, see $(cc 1)$(realpath --relative-to="$STARTPWD" $T4P4S_LOG_DIR/20_meson.txt)$nn"
+    cd - >/dev/null
+
+    cd ${T4P4S_TARGET_DIR}/build
+    sudo ninja 2>$T4P4S_LOG_DIR/22_ninja.txt
+    exit_on_error "$?" "C compilation using ninja $(cc 2)failed$nn, see log $(cc 1)$(realpath --relative-to="$STARTPWD" $T4P4S_LOG_DIR/22_ninja.txt)$nn"
+    cd - >/dev/null
+
+    UPX=${UPX-upx}
+    if [ "$(optvalue upx)" != off ]; then
+        if [[ `which $UPX` ]]; then
+            UPX_OPTS=${UPX_OPTS-}
+            [ ${OPTS[upx]} != "on" ] && UPX_OPTS=${OPTS[upx]}
+            sudo $UPX ${UPX_OPTS} ${OPTS[executable]}
+        else
+            msg "Cannot find $(cc 1)$UPX$nn, will not compress executable"
+        fi
+    fi
 fi
 
 
@@ -747,11 +900,11 @@ if [ "$(optvalue run)" != off ]; then
         # Step 3A-1: Compile the controller
         cd $CTRL_PLANE_DIR
         if [ "$(optvalue verbose)" == on ]; then
-            make -j $CONTROLLER
+            CC="ccache $T4P4S_CC" LD="ld.$T4P4S_LD" make -j $CONTROLLER
         elif [ "$(optvalue silent)" != off ]; then
-            make -s -j $CONTROLLER
+            CC="ccache $T4P4S_CC" LD="ld.$T4P4S_LD" make -s -j $CONTROLLER
         else
-            make -s -j $CONTROLLER >/dev/null
+            CC="ccache $T4P4S_CC" LD="ld.$T4P4S_LD" make -s -j $CONTROLLER >/dev/null
         fi
         exit_on_error "$?" "Controller compilation $(cc 2)failed$nn"
         cd - >/dev/null
@@ -792,7 +945,6 @@ if [ "$(optvalue run)" != off ]; then
 
     verbosemsg "Options    : $(print_cmd_opts "${EXEC_OPTS}")"
 
-    mkdir -p ${T4P4S_LOG_DIR}
     echo "Executed at $(date +"%Y%m%d %H:%M:%S")" >${T4P4S_LOG_DIR}/last.txt
     echo >>${T4P4S_LOG_DIR}/last.txt
     if [ "${OPTS[eal]}" == "off" ]; then
@@ -822,13 +974,13 @@ if [ "$(optvalue run)" != off ]; then
 
     DBGWAIT=1
     if [ $ERROR_CODE -ne 0 ] && [ "$(optvalue autodbg)" != off ]; then
-        [ "${OPTS[ctr]}" != "" ] && verbosemsg "Restarting controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn" && sudo pkill -f "dpdk_${OPTS[ctr]}_controller"
-        (stdbuf -o 0 $CTRL_PLANE_DIR/$CONTROLLER ${OPTS[ctrcfg]} &)
+        [ "$(optvalue ctr)" != off ] && verbosemsg "Restarting controller $(cc 0)dpdk_${OPTS[ctr]}_controller$nn" && sudo pkill -f "dpdk_${OPTS[ctr]}_controller"
+        [ "$(optvalue ctr)" != off ] && (stdbuf -o 0 $CTRL_PLANE_DIR/$CONTROLLER ${OPTS[ctrcfg]} &)
 
         msg "Running $(cc 1)debugger $DEBUGGER$nn in $(cc 0)$DBGWAIT$nn seconds"
         sleep $DBGWAIT
-        print "${OPTS[executable]}"
-        sudo -E ${DEBUGGER} -q -ex run --args "${OPTS[executable]}" ${EXEC_OPTS}
+        [[ "${DEBUGGER}" = gdb* ]]  && sudo -E ${DEBUGGER} -q -ex run --args "${OPTS[executable]}" ${EXEC_OPTS}
+        [[ "${DEBUGGER}" = lldb* ]] && sudo -E ${DEBUGGER} "${OPTS[executable]}" -o "run ${EXEC_OPTS}" -o bt
     fi
 fi
 

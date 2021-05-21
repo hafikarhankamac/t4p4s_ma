@@ -221,7 +221,6 @@ bool recv_events(LCPARAMS)
     extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
     uint32_t lcore_id = rte_lcore_id();
 
-    struct lcore_data lcdata_content = init_lcore_data(false, true);
     uint8_t queue_id = lcdata->conf->hw.rx_queue_list[0].queue_id;
     uint32_t event_count = rte_ring_sc_dequeue_burst(lcdata->conf->state.event_queue, lcdata->conf->state.event_burst, MAX_EVENT_BURST, NULL);
     got_packet |= event_count > 0;
@@ -330,7 +329,7 @@ bool dpdk_main_loop_rx()
 
 bool dpdk_main_loop_evt()
 {
-    struct lcore_data lcdata_content = init_lcore_data(true, false);
+    struct lcore_data lcdata_content = init_lcore_data(false, true);
     packet_descriptor_t pd_content;
 
     struct lcore_data* lcdata = &lcdata_content;
@@ -563,7 +562,6 @@ int main(int argc, char** argv)
         init_table_default_actions();
 
         t4p4s_pre_launch(idx);
-
         int retval = launch_dpdk();
         if (retval < 0) {
             t4p4s_abnormal_exit(retval, idx);

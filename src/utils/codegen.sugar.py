@@ -103,16 +103,18 @@ def gen_format_type(t, resolve_names = True, use_array = False, addon = ""):
             postfix = '_t' if postfix == '' else postfix
 
             #[ ${t.name}${postfix}
+    elif t.node_type == 'Type_Header':
+        #[ t.name
     else:
         addError('formatting type', f'Type {t.node_type} for node ({t}) is not supported yet')
         #[ TODO_TYPE_FOR_${t.name} /* placeholder type for ${t.node_type} */
 
 def gen_format_type_mask(t):
     if t.node_type == 'Type_Bits' and not t.isSigned:
-        if t.size <= 32:
+        if t.size <= 64:
             var = generate_var_name(f"bitmask_{t.size}b")
             mask = hex((2 ** t.size) - 1)
-            masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32
+            masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32 if t.size <= 32 else 64
             #pre[ uint${masksize}_t $var = $mask;
             #[ $var
         else:
@@ -219,7 +221,10 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
         #[ uint8_t $src_pointer[$dst_bytewidth] = ${int_to_big_endian_byte_array_with_length(src.value, dst_bytewidth, src.base)};
     elif src.node_type == 'Mux':
         src_pointer = generate_var_name('tmp_fldref_mux')
-        #[ uint8_t $src_pointer[$dst_bytewidth] = ((${format_expr(src.e0.left)}) == (${format_expr(src.e0.right)})) ? (${format_expr(src.e1)}) : (${format_expr(src.e2)});
+        if src.e0.node_type == 'PathExpression':
+            #[ uint8_t $src_pointer[$dst_bytewidth] = (${src.e0.path.absolute}) ? (${format_expr(src.e1)}) : (${format_expr(src.e2)});
+        else:
+            #[ uint8_t $src_pointer[$dst_bytewidth] = ((${format_expr(src.e0.left)}) == (${format_expr(src.e0.right)})) ? (${format_expr(src.e1)}) : (${format_expr(src.e2)});
     elif src.node_type in simple_binary_ops and src.right.node_type == 'Constant':
         binop = src.node_type
         src_pointer = generate_var_name(f'tmp_binop_{binop}')

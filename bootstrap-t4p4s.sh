@@ -527,7 +527,7 @@ if [ "$INSTALL_STAGE4_P4C" == "yes" ]; then
     mkdir p4c/build
     cd p4c/build
     sed -i 's/-fuse-ld=gold/-fuse-ld=${T4P4S_LD}/g' ../CMakeLists.txt
-    cmake .. -DCMAKE_C_FLAGS="${P4C_CFLAGS} -fPIC" -DCMAKE_CXX_FLAGS="${P4C_CFLAGS} -Wno-cpp -fPIC" -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -GNinja  -DENABLE_P4TEST=ON -DENABLE_EBPF=OFF -DENABLE_UBPF=OFF -DENABLE_P4C_GRAPHS=OFF -DENABLE_GTESTS=OFF >$(logfile "p4c" ".ninja") 2>&1
+    cmake .. -DCMAKE_C_FLAGS="${P4C_CFLAGS} -fPIC" -DCMAKE_CXX_FLAGS="${P4C_CFLAGS} -Wno-cpp -fPIC" -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DENABLE_P4TEST=ON -DENABLE_EBPF=OFF -DENABLE_UBPF=OFF -DENABLE_P4C_GRAPHS=OFF -DENABLE_GTESTS=OFF 
     ERRCODE=$? && [ $ISSKIP -ne 1 ] && [ $ERRCODE -ne 0 ] && ISSKIP=1 && echo -e "${cc}p4c$nn/${cc}cmake$nn step ${ee}failed$nn with error code ${ee}$ERRCODE$nn"
 
     # free up as much memory as possible
@@ -539,9 +539,9 @@ if [ "$INSTALL_STAGE4_P4C" == "yes" ]; then
     MAX_MAKE_JOBS_P4C=$(($MAX_MAKE_JOBS_P4C <= 0 ? 1 : $MAX_MAKE_JOBS_P4C))
     echo -e "Will use $cc$MAX_MAKE_JOBS_P4C$nn for ${cc}p4c$nn compilation"
 
-    [ $ISSKIP -ne 1 ] && sudo ninja -j ${MAX_MAKE_JOBS_P4C} >&2 2>>$(logfile "p4c" ".ninja")
+    [ $ISSKIP -ne 1 ] && sudo make -j ${MAX_MAKE_JOBS_P4C} >&2 2>>$(logfile "p4c" ".ninja")
     ERRCODE=$? && [ $ISSKIP -ne 1 ] && [ $ERRCODE -ne 0 ] && ISSKIP=1 && echo -e "${cc}p4c$nn/${cc}ninja$nn step ${ee}failed$nn with error code ${ee}$ERRCODE$nn"
-    [ $ISSKIP -ne 1 ] && sudo ninja install -j ${MAX_MAKE_JOBS_P4C} 2>&1 >>$(logfile "p4c" ".ninja.install")
+    [ $ISSKIP -ne 1 ] && sudo make install -j ${MAX_MAKE_JOBS_P4C} 2>&1 >>$(logfile "p4c" ".ninja.install")
     ERRCODE=$? && [ $ISSKIP -ne 1 ] && [ $ERRCODE -ne 0 ] && ISSKIP=1 && echo -e "${cc}p4c$nn/${cc}ninja install$nn step ${ee}failed$nn with error code ${ee}$ERRCODE$nn"
     cd "$WORKDIR"
 fi

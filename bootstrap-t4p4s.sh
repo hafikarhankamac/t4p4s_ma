@@ -377,7 +377,7 @@ if [ "$INSTALL_STAGE3_PROTOBUF" == "yes" ]; then
 fi
 
 if [ "$INSTALL_STAGE4_P4C" == "yes" ]; then
-    [ ! -d "p4c" ] && git clone "$REPO_PATH_p4c" --no-hardlinks --recursive >$(logfile "get-p4c") 2>&1 && cd p4c && git checkout $P4C_COMMIT >>$(logfile "get-p4c") 2>&1 && git submodule update --init --recursive && control-plane/p4runtime && git checkout $P4RUNTIME_COMMIT & 
+    [ ! -d "p4c" ] && git clone "$REPO_PATH_p4c" --no-hardlinks --recursive >$(logfile "get-p4c") 2>&1 && cd p4c && git checkout $P4C_COMMIT >>$(logfile "get-p4c") 2>&1 && git submodule update --init --recursive && cd control-plane/p4runtime && git checkout $P4RUNTIME_COMMIT & 
     WAITPROC_P4C="$!"
     [ "$PARALLEL_INSTALL" != "yes" ] && wait "$WAITPROC_P4C" >/dev/null 2>&1
 fi

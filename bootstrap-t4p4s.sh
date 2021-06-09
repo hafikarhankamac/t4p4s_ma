@@ -525,7 +525,9 @@ if [ "$INSTALL_STAGE4_P4C" == "yes" ]; then
     export P4C=`pwd`/p4c
 
     mkdir p4c/build
-    cd p4c/build
+    cd p4c/control-plane/p4runtime
+    git checkout $P4RUNTIME_COMMIT
+    cd ../../build
     cmake ..  
     ERRCODE=$? && [ $ISSKIP -ne 1 ] && [ $ERRCODE -ne 0 ] && ISSKIP=1 && echo -e "${cc}p4c$nn/${cc}cmake$nn step ${ee}failed$nn with error code ${ee}$ERRCODE$nn"
 

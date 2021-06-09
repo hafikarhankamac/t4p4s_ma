@@ -264,7 +264,7 @@ echo Setting software versions...
 # Note: recent versions of official P4C introduced changes currently incompatible with T4P4S
 [ -z "$TAPAS_COMMIT" ] && TAPAS_COMMIT=c29f2cae5fb84cf5696096084594181a61f4c20e
 [ -z "$P4C_COMMIT" ] && P4C_COMMIT=2f55fb522058af47eed17182a6a1697e09dc6b85
-[ -z "$P4RUNTIME_COMMIT" ] && P4RUNTIME_COMMIT=ef54d874d7bd385b1721a07722c371d02dee245f
+[ -z "$P4RUNTIME_COMMIT" ] && P4RUNTIME_COMMIT=7a322f35f0c80bf20bc7fcc96f9d1ab77e5fd07a
 
 echo t4p4s: $TAPAS_COMMIT
 echo p4c: $P4C_COMMIT

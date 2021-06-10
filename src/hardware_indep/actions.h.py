@@ -17,6 +17,7 @@ from compiler_common import unique_everseen
 
 # TODO this should not be here in the indep section
 #[ #include "dpdk_smem.h"
+#[ #include "requests.h"
 
 #[ #define FIELD(name, length) uint8_t name[(length + 7) / 8];
 

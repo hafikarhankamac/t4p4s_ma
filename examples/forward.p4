@@ -36,7 +36,7 @@ struct headers {
     udp_t udp;
 }
 
-
+struct metadata {}
 
 
 // parser

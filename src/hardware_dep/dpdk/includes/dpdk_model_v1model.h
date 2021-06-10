@@ -178,13 +178,13 @@ void timer_burst(uint32_t *id, SHORT_STDPARAMS);
 #endif
 
 
-inline uint32_t modulo_32(uint32_t div, uint32_t mod, SHORT_STDPARAMS)
+inline void modulo_32(uint32_t *ret, uint32_t div, uint32_t mod, SHORT_STDPARAMS)
 {
-    return div % mod;
+    *ret = div % mod;
 }
-inline uint64_t modulo_64(uint64_t div, uint64_t mod, SHORT_STDPARAMS)
+inline void modulo_64(uint64_t *ret, uint64_t div, uint64_t mod, SHORT_STDPARAMS)
 {
-    return div % mod;
+    *ret = div % mod;
 }
 
 

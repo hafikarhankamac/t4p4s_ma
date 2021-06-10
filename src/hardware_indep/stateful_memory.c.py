@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2018 Eotvos Lorand University, Budapest, Hungary
 
-from utils.codegen import format_expr, format_statement, format_declaration
+from utils.codegen import format_expr, format_statement, format_declaration, gen_format_call_extern
 
 #[ #include "stateful_memory.h"
 
@@ -38,6 +38,9 @@ for smem in hlir.registers:
         #[ global_smem.${smem.smem_type}_${smem.name}_amount = ${smem.amount};
 
     #[
+
+for extern in hlir.extern_decl:
+    #[ global_smem.${extern.type.type_ref.name}_${extern.name}[0] = ${gen_format_call_extern(extern.arguments, extern.type.type_ref.name, None)};
 
 #[ #endif
 #} }

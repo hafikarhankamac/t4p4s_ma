@@ -53,7 +53,7 @@ for smem in hlir.registers:
 
 #other externs
 for extern in hlir.extern_decl:
-    #[     ${extern.type.type_ref.name} ${extern.type.type_ref.name}_${extern.name}[1];
+    #[     ${format_type(extern.urtype)} ${extern.type.type_ref.name}_${extern.name}[1];
 
 # temp = {action: action.flatmap('parameters.parameters') for action in hlir.tables.flatmap('control.controlLocals').filter('node_type', 'P4Action')}
 

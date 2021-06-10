@@ -40,6 +40,7 @@ def gen_make_smem_code(smem, table = None):
 #[ #include "aliases.h"
 #[ #include "dpdk_smem.h"
 #[ #include "gen_include.h"
+#[ #include "requests.h"
 
 #{ typedef struct {
 for table, smem in hlir.all_meters + hlir.all_counters:

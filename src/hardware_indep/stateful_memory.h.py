@@ -51,7 +51,9 @@ for smem in unique_everseen((smem for table, smem in hlir.all_meters + hlir.all_
 for smem in hlir.registers:
     #= gen_make_smem_code(smem)
 
-
+#other externs
+for extern in hlir.extern_decl:
+    #[     ${extern.type.type_ref.name} ${extern.type.type_ref.name}_${extern.name}[1];
 
 # temp = {action: action.flatmap('parameters.parameters') for action in hlir.tables.flatmap('control.controlLocals').filter('node_type', 'P4Action')}
 
@@ -71,7 +73,7 @@ for locname, loctype in all_locals:
 
 # Note: currently all control locals are put together into the global state
 for ctl in hlir.controls:
-    for local_var_decl in (ctl.controlLocals['Declaration_Variable'] + ctl.controlLocals['Declaration_Instance']).filterfalse('urtype.node_type', 'Type_Header').filterfalse(lambda n: 'smem_type' in n):
+    for local_var_decl in (ctl.controlLocals['Declaration_Variable'] + ctl.controlLocals['Declaration_Instance']).filterfalse('urtype.node_type', 'Type_Header').filterfalse(lambda n: 'smem_type' in n).filterfalse(lambda n: n in hlir.extern_decl):
         #[     ${format_type(local_var_decl.urtype, varname = local_var_decl.name, resolve_names = False)};
 
 

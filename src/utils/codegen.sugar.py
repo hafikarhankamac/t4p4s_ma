@@ -104,7 +104,7 @@ def gen_format_type(t, resolve_names = True, use_array = False, addon = ""):
 
             #[ ${t.name}${postfix}
     elif t.node_type == 'Type_Header':
-        #[ t.name
+        #[ ${t.name}
     else:
         addError('formatting type', f'Type {t.node_type} for node ({t}) is not supported yet')
         #[ TODO_TYPE_FOR_${t.name} /* placeholder type for ${t.node_type} */
@@ -1027,7 +1027,7 @@ def gen_format_method_parameter(par, listexpr_to_buf):
         expr = par.expression.expr
         hdrname = expr.member
         fldname = expr.fld_ref.name
-        #[ handle(header_desc_ins(pd, HDR($hdrname)), FLD($hdrname, $fldname))
+        #[ ${format_expr(par)}
     else:
         fmt = format_expr(par)
         if fmt == '':

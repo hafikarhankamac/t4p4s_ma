@@ -34,7 +34,7 @@ typedef struct {
     }
 
     //TODO delivered=true
-    void extern_request_store_commit(uint32_t declarg, request_store_t *rs, digest_t digest) {
+    void extern_request_store_commit(uint32_t declarg, digest_t digest, request_store_t *rs, SHORT_STDPARAMS) {
     }
 
     void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS) {

@@ -30,7 +30,7 @@ typedef struct {
     //void extern_request_store_add_request(uint32_t declarg, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
 
-    void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t timestamp, uint16_t cliendId, uint8_t req, uint32_t args, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
+    void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t timestamp, uint16_t cliendId, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS) {
     }
 
     void extern_request_store_updateCheckpoint(uint32_t declarg, cp_id * cp, uint32_t cp_digest, uint16_t checkpoint_id,  request_store_t *rs, SHORT_STDPARAMS) {

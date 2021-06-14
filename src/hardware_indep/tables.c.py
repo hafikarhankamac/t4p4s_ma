@@ -14,7 +14,6 @@ from compiler_common import generate_var_name, prepend_statement
 #[ #include "util_debug.h"
 #[
 
-
 table_short_names_sorted = '", "'.join(sorted(f'T4LIT({table.short_name},table)' for table in hlir.tables if not table.is_hidden))
 #[ const char* table_short_names_sorted = "" ${table_short_names_sorted};
 #[

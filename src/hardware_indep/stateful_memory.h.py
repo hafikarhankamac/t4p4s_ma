@@ -38,9 +38,11 @@ def gen_make_smem_code(smem, table = None):
 
 #[ #include "common.h"
 #[ #include "aliases.h"
-#[ #include "dpdk_smem.h"
 #[ #include "gen_include.h"
+#[ #include "dpdk_smem.h"
 #[ #include "requests.h"
+
+# [ typedef struct { uint8_t *anon; } request_store_t;
 
 #{ typedef struct {
 for table, smem in hlir.all_meters + hlir.all_counters:
@@ -54,7 +56,7 @@ for smem in hlir.registers:
 
 #other externs
 for extern in hlir.extern_decl:
-    #[     ${format_type(extern.urtype)} ${extern.type.type_ref.name}_${extern.name}[1];
+    #[     ${format_type(extern.urtype)} *${extern.type.type_ref.name}_${extern.name};
 
 # temp = {action: action.flatmap('parameters.parameters') for action in hlir.tables.flatmap('control.controlLocals').filter('node_type', 'P4Action')}
 

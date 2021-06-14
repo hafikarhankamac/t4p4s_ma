@@ -1,5 +1,3 @@
-#pragma once
-
 #include "requests.h"
 
 request_store_t* request_store(uint32_t size, SHORT_STDPARAMS)
@@ -19,7 +17,7 @@ void extern_request_store_createCheckpoint(uint32_t declarg, cp_digest_t *cp, ui
 {
 }
 
-void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t request, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS)
 {
 }
 

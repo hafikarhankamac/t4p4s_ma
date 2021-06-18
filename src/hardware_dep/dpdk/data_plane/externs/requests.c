@@ -52,7 +52,6 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
 {
     request_t *req = rte_malloc("request_t", sizeof(request_t), 0);
     req->payload = { .req = req, .args = args};
-    req->timestamp = timestamp;
     req->clientId = clientId;
     *dig = hash_req(req);
     rte_add_key_with_hash_data(rs->table, dig, dig, req);
@@ -83,7 +82,7 @@ void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,
     request_t *req;
     *ret = rte_hash_lookup_with_hash_data(rs->table, digest, digest, req);
 }
-void extern_request_store_containsSn(uint32_t declarg, bool *ret, digest_t digest, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
 {
 }
 

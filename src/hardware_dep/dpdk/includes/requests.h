@@ -14,7 +14,7 @@ typedef uint16_t cp_id;
 
 struct request_store {
 
-    rte_hash *table;
+    struct rte_hash *table;
     uint8_t *anon;
 };
 
@@ -38,5 +38,5 @@ void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req
 //    }
 
 void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_containsSn(uint32_t declarg, bool *ret, digest_t digest, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
 

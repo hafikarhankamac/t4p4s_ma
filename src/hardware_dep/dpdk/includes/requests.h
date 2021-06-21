@@ -15,10 +15,22 @@ typedef uint16_t cp_id;
 struct request_store {
 
     struct rte_hash *table;
-    uint8_t *anon;
+    struct rte_hash *snlv;
+
+    uint32_t max_not_executed;
+    uint32_t min_not_executed;
 };
 
+struct request_to_store {
+    request_t request;
+    uint32_t sn;
+    uint32_t lv;
+}
+
 typedef struct request_store request_store_t;
+typedef struct request_to_store request_to_store_t;
+
+
 request_store_t* request_store(uint32_t size, SHORT_STDPARAMS);
 
 void extern_request_store_isDelivered(uint32_t declarg, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);

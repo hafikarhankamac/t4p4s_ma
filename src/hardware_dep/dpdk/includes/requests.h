@@ -2,6 +2,7 @@
 
 #include <rte_malloc.h>
 #include <rte_hash.h>
+#include <rte_hash_crc.h>
 
 #include "backend.h"
 #include "dpdk_tables.h"
@@ -11,6 +12,7 @@ typedef uint32_t digest_t;
 typedef uint32_t cp_digest_t;
 typedef uint16_t cp_id;
 
+#define PROCESS_REQUEST 1
 
 struct request_store {
 
@@ -25,7 +27,7 @@ struct request_to_store {
     request_t request;
     uint32_t sn;
     uint32_t lv;
-}
+};
 
 typedef struct request_store request_store_t;
 typedef struct request_to_store request_to_store_t;

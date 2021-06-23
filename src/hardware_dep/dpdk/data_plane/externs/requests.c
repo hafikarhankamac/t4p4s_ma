@@ -132,3 +132,8 @@ void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, u
     *ret = rte_hash_lookup_with_hash_data(rs->table, snlv, snlv, &req);
 }
 
+void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)
+{
+    printf("%i", arg);
+}
+

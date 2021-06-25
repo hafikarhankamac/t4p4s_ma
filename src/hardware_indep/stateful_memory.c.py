@@ -39,8 +39,12 @@ for smem in hlir.registers:
 
     #[
 
+#[ // TODO ugly fix
+#[ packet_descriptor_t* pd;
+#[ lookup_table_t** tables;
+
 for extern in hlir.extern_decl:
-    #[ global_smem.${extern.type.type_ref.name}_${extern.name}[0] = ${gen_format_call_extern(extern.arguments, extern.type.type_ref.name, None)};
+    #[ global_smem.${extern.type.type_ref.name}_${extern.name} = ${gen_format_call_extern(extern.arguments, extern.type.type_ref.name, None)};
 
 #[ #endif
 #} }

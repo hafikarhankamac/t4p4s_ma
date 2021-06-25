@@ -21,7 +21,7 @@ controller c;
 extern void notify_controller_initialized();
 void fill_table(TYPE count[], TYPE key, const char* table_name, const char* header_name, const char* action_name)
 {
-    char buffer[2048];
+    char buffer[4096];
     struct p4_header* h;
     struct p4_add_table_entry* te;
     struct p4_action* a;
@@ -29,7 +29,7 @@ void fill_table(TYPE count[], TYPE key, const char* table_name, const char* head
     // struct p4_field_match_header* fmh;
     struct p4_field_match_exact* exact;
 
-    h = create_p4_header(buffer, 0, 2048);
+    h = create_p4_header(buffer, 0, 4096);
     te = create_p4_add_table_entry(buffer,0,2048);
     strcpy(te->table_name, (table_name));
 
@@ -64,14 +64,14 @@ void fill_table(TYPE count[], TYPE key, const char* table_name, const char* head
     send_p4_msg(c, buffer, 2048);
 }
 
-uint8_t SIZES_PARAMS = { 4, 4, 2, 2, 1, 1, 4 };
+uint8_t SIZES_PARAMS[] = { 4, 4, 2, 2, 1, 1, 4 };
 uint8_t SUM_SIZES = 4 + 4 + 2 + 2 + 1 + 1 + 4;
-char* PARAMS_NAMES = { "view", "sn", "count_prepare", "count_commit", "bitmap_prepare", "bitmap_commit", "dig"};
+char* PARAMS_NAMES[] = { "view", "sn", "count_prepare", "count_commit", "bitmap_prepare", "bitmap_commit", "dig"};
 uint8_t NUM_PARAMS = 7;
 
 void fill_commit_deliver_table(const char* table_name, const char* action_name, const int lv, const int sn)
 {
-    char buffer[2048];
+    char buffer[4096];
     struct p4_header* h;
     struct p4_add_table_entry* te;
     struct p4_action* a;
@@ -80,27 +80,27 @@ void fill_commit_deliver_table(const char* table_name, const char* action_name, 
     struct p4_field_match_exact* exact;
     struct p4_field_match_exact* exact2;
 
-    h = create_p4_header(buffer, 0, 2048);
-    te = create_p4_add_table_entry(buffer,0,2048);
+    h = create_p4_header(buffer, 0, 4096);
+    te = create_p4_add_table_entry(buffer,0,4096);
     strcpy(te->table_name, (table_name));
 
-    exact = add_p4_field_match_exact(te, 2048);
+    exact = add_p4_field_match_exact(te, 4096);
     strcpy(exact->header.name, "meta.relative_sn");
     memcpy(exact->bitmap, &lv, 4);
     exact->length = 8*4;
 
-    exact2 = add_p4_field_match_exact(te, 2048);
+    exact2 = add_p4_field_match_exact(te, 4096);
     strcpy(exact2->header.name, "meta.relative_lv");
     memcpy(exact2->bitmap, &sn, 4);
     exact2->length = 8*4;
 
     uint64_t ZERO = 0;
 
-    a = add_p4_action(h, 2048);
+    a = add_p4_action(h, 4096);
     strcpy(a->description.name, (action_name));
 
     for (uint32_t i = 0; i < NUM_PARAMS; i++) {
-        ap[i] = add_p4_action_parameter(h, a, 2048);
+        ap[i] = add_p4_action_parameter(h, a, 4096);
         strcpy(ap[i]->name, PARAMS_NAMES[i]);
         memcpy(ap[i]->bitmap, &ZERO, SIZES_PARAMS[i]);
         ap[i]->length = SIZES_PARAMS[i] * 8;
@@ -116,7 +116,7 @@ void fill_commit_deliver_table(const char* table_name, const char* action_name, 
 	    netconv_p4_action_parameter(ap[i]);
     }
 
-    send_p4_msg(c, buffer, 2048);
+    send_p4_msg(c, buffer, 4096);
 }
 
 
@@ -170,12 +170,7 @@ void dhf(void* b) {
         return;
     }
 
-    struct p4_digest* d = unpack_p4_digest(b,0);
-    if (strcmp(d->field_list_name, "change_table_entry")==0) {
-        change_table_entry(b);
-    } else {
-        printf("Unknown digest received: X%sX\n", d->field_list_name);
-    }
+        printf("Unknown digest received: \n");
 }
 
 void set_default_action(char *table_name, char *action_name)
@@ -252,6 +247,7 @@ int read_entries_from_file(char *filename) {
 
 void init() {
     int i;
+    sleep(20);
     printf("Set default actions.\n");
     set_default_action("ingress.forward_tab_0", "._drop");
     set_default_action("ingress.commit_deliver_tab_0", ".commit_deliver");
@@ -264,7 +260,7 @@ void init() {
     for (int lv = 0; lv < K; lv++) {
         for (int sn = 0; sn < N; sn++) {
         printf("Filling commit_deliver_tab with sn %i lv %i -> commit_deliver 0 0 0 0 0 0 0", sn, lv);
-            fill_commit_deliver_table("ingress.commit_deliver_tab_0", ".commit_deliver", lv, sn);
+            // fill_commit_deliver_table("ingress.commit_deliver_tab_0", ".commit_deliver", lv, sn);
         }
     }
 

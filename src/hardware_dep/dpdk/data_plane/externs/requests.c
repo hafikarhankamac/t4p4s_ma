@@ -86,7 +86,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
     hash_request(&req->request, dig);
     rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
     uint64_t snlv = get_sn_lv_key(sn, lv);
-    rte_hash_add_key_data(rs->snlv, snlv, req);
+    rte_hash_add_key_data(rs->snlv, &snlv, req);
 
     rs->max_not_executed = rs->max_not_executed > sn ? rs->max_not_executed : sn;
 }

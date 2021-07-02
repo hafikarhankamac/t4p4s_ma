@@ -171,10 +171,10 @@ void extern_register_write__u64(uint64_t x, int idx, uint64_t value, register_ui
 void sheep(uint32_t *duration, packet_descriptor_t* pd, lookup_table_t** tables);
 
 #ifdef TIMER_MODULE
-void timer_single(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS);
-void timer_periodic(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS);
-void timer_multiple(uint32_t *duration, uint32_t *id, uint32_t *count, SHORT_STDPARAMS);
-void timer_burst(uint32_t *id, SHORT_STDPARAMS);
+void timer_single(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+void timer_periodic(uint32_t duration, uint32_t id, SHORT_STDPARAMS);
+void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPARAMS);
+void timer_burst(uint32_t id, SHORT_STDPARAMS);
 #endif
 
 //void encrypt_bytes(enum enum_EncryptionAlgorithm algorithm, enum enum_EncryptionMode mode, uint32_t iv, uint32_t key, uint16_t start_byte, uint16_t length,

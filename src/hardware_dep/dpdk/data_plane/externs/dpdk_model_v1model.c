@@ -61,23 +61,23 @@ void raise_event(uint8_t *event_id, uint32_t *args, SHORT_STDPARAMS) {
 #endif
 
 #ifdef TIMER_MODULE
-void timer_single(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS) {
+void timer_single(uint32_t duration, uint32_t id, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(timer_single,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
-    single_timer(*duration, *id);
+    single_timer(&duration, &id);
 }
 
-void timer_periodic(uint32_t *duration, uint32_t *id, SHORT_STDPARAMS) {
+void timer_periodic(uint32_t duration, uint32_t id, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(timer_periodic,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
-    periodic_timer(*duration, *id);
+    periodic_timer(&duration, &id);
 }
 
-void timer_multiple(uint32_t *duration, uint32_t *id, uint32_t *count, SHORT_STDPARAMS) {
+void timer_multiple(uint32_t duration, uint32_t id, uint32_t count, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(timer_multiple,extern) " waiting " T4LIT(%d) " ms with ID " T4LIT(%d) " \n", duration, id);
-    multiple_timer(*duration, *id, *count);
+    multiple_timer(&duration, &id, &count);
 }
 
-void timer_burst(uint32_t *id, SHORT_STDPARAMS) {
+void timer_burst(uint32_t id, SHORT_STDPARAMS) {
     debug(" :::: Called extern " T4LIT(timer_burst,extern) "with ID " T4LIT(%d) " \n", id);
-    burst_timer(*id);
+    burst_timer(&id);
 }
 #endif

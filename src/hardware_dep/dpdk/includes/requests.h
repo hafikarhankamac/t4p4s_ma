@@ -16,8 +16,8 @@ typedef uint16_t cp_id;
 
 struct request_store {
 
-    struct rte_hash *table;
-    struct rte_hash *snlv;
+    struct rte_hash* table;
+    struct rte_hash* snlv;
 
     uint32_t max_not_executed;
     uint32_t min_not_executed;

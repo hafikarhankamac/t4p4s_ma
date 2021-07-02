@@ -1,12 +1,18 @@
 #include "requests.h"
 
+struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc, const uint32_t size, const bool has_replicas);
+
 request_store_t* request_store(uint32_t size, SHORT_STDPARAMS)
 {
+   sleep(10);
    request_store_t *rs = (request_store_t*) rte_malloc("request_store_t", size * sizeof(uint8_t), 0);
 
    //TODO socket id, max_size
-   rs->table = hash_create(0, "rs-table", sizeof(uint32_t), rte_hash_crc, 1000000, false);
-   rs->snlv = hash_create(0, "snlv-table", sizeof(uint64_t), rte_hash_crc, 1000000, false);
+
+   struct rte_hash* h = hash_create(1, "rs-table", sizeof(uint32_t), rte_hash_crc, 1000000, false);
+   rs->table = h;
+   struct rte_hash* i = hash_create(1, "snlv-table", sizeof(uint64_t), rte_hash_crc, 1000000, false);
+   rs->snlv = i;
    rs->max_not_executed = 0;
    rs->min_not_executed = 0;
 
@@ -70,14 +76,15 @@ void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint
 
 void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint16_t clientId, uint8_t req_cmd, uint32_t args, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_to_store_t *req = rte_malloc("request_to_store_t", sizeof(request_to_store_t), 0);
+    request_to_store_t *req = rte_malloc("request_to_store_t", sizeof(request_to_store_t) + sizeof(request_t), 0);
     req->sn = sn; 
     req->lv = lv;
-    req->request.clientId = clientId,
+    req->request.clientId = clientId;
+    req->request.payload = req + sizeof(request_to_store_t);
     req->request.payload->req = req_cmd;
     req->request.payload->args = args;
-    hash_request(&req->request, *dig);
-    rte_hash_add_key_with_hash_data(rs->table, dig, dig, req);
+    hash_request(&req->request, dig);
+    rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
     uint64_t snlv = get_sn_lv_key(sn, lv);
     rte_hash_add_key_data(rs->snlv, snlv, req);
 

@@ -67,9 +67,13 @@ def split_join_text(text, n, prefix, joiner):
     """Splits the text into chunks that are n characters long, then joins them up again."""
     return joiner.join(f"{prefix}{text[i:i+n]}" for i in range(0, len(text), n))
 
+def reverse_text(text, n):
+    return "".join(text[i:i+n] for i in range(len(text), -1, -n))
+
 def make_const(e):
     byte_width = (e.type.size+7)//8
     const_str = f'{{:0{2 * byte_width}x}}'.format(e.value)
+    const_str = reverse_text(const_str, 2) 
 
     hex_content = split_join_text(const_str, 2, "0x", ", ")
     name = split_join_text(const_str, 4, "", "_")

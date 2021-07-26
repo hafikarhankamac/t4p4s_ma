@@ -706,6 +706,7 @@ fi
 
 # Phase 3B: Execution (switch)
 if [ "$(optvalue run)" != off ]; then
+    pos_set_variable tapas_started 1
     msg "[$(cc 0)RUN SWITCH$nn] $(cc 1)${OPTS[executable]}$nn"
 
     sudo mkdir -p /mnt/huge

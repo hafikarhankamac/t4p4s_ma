@@ -176,6 +176,8 @@ export RTE_SDK=`pwd`/`ls -d dpdk*$DPDK_FILEVSN*/`
 
 cd "$RTE_SDK"
 MAKE_PAUSE=n make install DESTDIR="${RTE_TARGET}" T="${RTE_TARGET}" LDFLAGS="-fuse-ld=${T4P4S_LD}" -j ${MAX_MAKE_JOBS}
+mv /root/rte.sdkinstall.mk /root/t4p4s/dpdk-19.02/mk
+MAKE_PAUSE=n make install DESTDIR="${RTE_TARGET}" T="${RTE_TARGET}" LDFLAGS="-fuse-ld=${T4P4S_LD}" -j ${MAX_MAKE_JOBS}
 cd ..
 
 

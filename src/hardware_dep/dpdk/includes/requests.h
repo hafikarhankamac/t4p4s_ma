@@ -41,7 +41,7 @@ void extern_request_store_createCheckpoint(uint32_t declarg, cp_digest_t *cp, ui
 void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);
     //void extern_request_store_add_request(uint32_t declarg, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
-void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint16_t cliendId, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint16_t clientId, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS);
 void extern_request_store_updateCheckpoint(uint32_t declarg, cp_id * cp, uint32_t cp_digest, uint16_t checkpoint_id,  request_store_t *rs, SHORT_STDPARAMS);
 
     //TODO delivered=true

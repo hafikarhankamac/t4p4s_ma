@@ -86,7 +86,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
     hash_request(&req->request, dig);
     rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
     uint64_t snlv = get_sn_lv_key(sn, lv);
-    rte_hash_add_key_data(rs->snlv, &snlv, req);
+    rte_hash_add_key_data(rs->snlv, &snlv, dig);
 
     rs->max_not_executed = rs->max_not_executed > sn ? rs->max_not_executed : sn;
 }
@@ -109,7 +109,8 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
     request_to_store_t *r;
     for (uint32_t i = rs->min_not_executed; i <= max; i++) {
         uint64_t snlv = get_sn_lv_key(i, lv);
-        rte_hash_lookup_with_hash_data(rs->snlv, snlv, snlv, &r);
+        rte_hash_lookup_with_hash_data(rs->snlv, snlv, snlv, &dig);
+        rte_hash_lookup_with_hash_data(rs->table, dig, dig, &r);
         if (req->request.processed) {
             rs->min_not_executed = r->sn;
         } else {
@@ -119,7 +120,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
     }
 }
 
-void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, int8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS)
 {
     request_payload_t request = {.req = req, .args = args};
     hash(&request, *dig);
@@ -136,9 +137,14 @@ void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,
 
 void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_t *req;
+    digest_t *dig;
     uint64_t snlv = get_sn_lv_key(sn, lv);
-    *ret = rte_hash_lookup_with_hash_data(rs->table, snlv, snlv, &req);
+    *ret = rte_hash_lookup_with_hash_data(rs->table, snlv, snlv, &dig);
+}
+
+void extern_request_store_getDigestBySn(uint32_t declarg, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
+    uint64_t snlv = get_sn_lv_key(sn, lv);
+    rte_hash_lookup_with_hash_data(rs->table, snlv, snlv, &dig);
 }
 
 void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)

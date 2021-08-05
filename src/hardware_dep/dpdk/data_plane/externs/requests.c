@@ -1,5 +1,7 @@
 #include "requests.h"
 
+#include <rte_hash_crc.h>
+
 struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rte_hash_function hashfunc, const uint32_t size, const bool has_replicas);
 
 request_store_t* request_store(uint32_t size, SHORT_STDPARAMS)
@@ -26,12 +28,7 @@ uint64_t get_sn_lv_key(uint32_t sn, uint32_t lv) {
 
 
 uint32_t hash_naive(uint8_t *key, uint8_t length) {
-   uint32_t h = 0;
-   for(int i = 0; i < length; i++) {
-       h += key[i];
-   }
-
-   return h;
+    return rte_hash_crc(key, length, 0xffffffff);
 }
 
 void hash_request(request_payload_t *req, uint8_t **hsh) {
@@ -97,7 +94,7 @@ void extern_request_store_updateCheckpoint(uint32_t declarg, cp_id * cp, uint32_
 void extern_request_store_commit(uint32_t declarg, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
     request_to_store_t *req;
-    rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req);
+    rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &req);
     req->request.delivered = true;
 
     uint32_t lv = req->lv;
@@ -130,19 +127,19 @@ void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req
 void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS)
 {
    request_t *req;
-   *ret = rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req) > 0;
+   *ret = rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req) >= 0;
 }
 
 void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
 {
     digest_t *dig;
     uint64_t snlv = get_sn_lv_key(sn, lv);
-    *ret = rte_hash_lookup_data(rs->snlv, &snlv, &dig) > 0;
+    *ret = rte_hash_lookup_data(rs->snlv, &snlv, &dig) >= 0;
 }
 
 void extern_request_store_getDigestBySn(uint32_t declarg, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
     uint64_t snlv = get_sn_lv_key(sn, lv);
-    rte_hash_lookup_data(rs->snlv, &snlv, &dig);
+    rte_hash_lookup_data(rs->snlv, &snlv, dig);
 }
 
 void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)

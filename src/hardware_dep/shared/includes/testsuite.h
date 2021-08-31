@@ -56,4 +56,4 @@ typedef struct {
 
 // ------------------------------------------------------
 
-#define T4P4S_BROADCAST_PORT 100
+#define T4P4S_BROADCAST_PORT 101

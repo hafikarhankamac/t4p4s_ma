@@ -63,7 +63,7 @@ void broadcast_packet(int egress_port, int ingress_port, LCPARAMS)
 
     uint8_t nb_port = 0;
     for (uint8_t portidx = 0; nb_port < nb_ports - 1 && portidx < RTE_MAX_ETHPORTS; ++portidx) {
-        if (portidx == ingress_port) {
+        if (portidx == ingress_port && egress_port != T4P4S_BROADCAST_ALL_PORT) {
            continue;
         }
 
@@ -87,7 +87,7 @@ void send_packet(int egress_port, int ingress_port, LCPARAMS)
     uint32_t lcore_id = rte_lcore_id();
     struct rte_mbuf* mbuf = (struct rte_mbuf *)pd->wrapper;
 
-    if (unlikely(egress_port == T4P4S_BROADCAST_PORT)) {
+    if (unlikely((~1U & egress_port) == T4P4S_BROADCAST_PORT)) {
         #ifdef T4P4S_DEBUG
             char ports_msg[256];
             get_broadcast_port_msg(ports_msg, ingress_port);

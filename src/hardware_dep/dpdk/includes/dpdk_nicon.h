@@ -11,7 +11,8 @@
 
 #include "testsuite.h"
 
-#define T4P4S_BROADCAST_PORT    101
+#define T4P4S_BROADCAST_PORT    102
+#define T4P4S_BROADCAST_ALL_PORT    103
 
 #define MAX_PKT_BURST     32  /* note: this equals to MBUF_TABLE_SIZE in dpdk_lib.h */
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */

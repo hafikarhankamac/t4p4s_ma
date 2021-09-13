@@ -35,14 +35,14 @@ extern uint32_t handle_event_mask;
 extern uint32_t nb_lcore_params;
 extern struct lcore_params lcore_params[];
 
-void get_broadcast_port_msg(char result[256], int ingress_port) {
+void get_broadcast_port_msg(char result[256], int ingress_port, bool all) {
     uint8_t nb_ports = get_port_count();
     uint32_t port_mask = get_port_mask();
 
     char* result_ptr = result;
     bool is_first_printed_port = true;
     for (uint8_t portidx = 0; portidx < RTE_MAX_ETHPORTS; ++portidx) {
-        if (portidx == ingress_port) {
+        if (portidx == ingress_port && !all) {
            continue;
         }
 
@@ -90,7 +90,7 @@ void send_packet(int egress_port, int ingress_port, LCPARAMS)
     if (unlikely((~1U & egress_port) == T4P4S_BROADCAST_PORT)) {
         #ifdef T4P4S_DEBUG
             char ports_msg[256];
-            get_broadcast_port_msg(ports_msg, ingress_port);
+            get_broadcast_port_msg(ports_msg, ingress_port, egress_port == T4P4S_BROADCAST_ALL_PORT);
             dbg_bytes(rte_pktmbuf_mtod(mbuf, uint8_t*), rte_pktmbuf_pkt_len(mbuf), "   " T4LIT(<<,outgoing) " " T4LIT(Broadcasting,outgoing) " packet from port " T4LIT(%d,port) " to all other ports (%s) (" T4LIT(%dB) "): ", ingress_port, ports_msg, rte_pktmbuf_pkt_len(mbuf));
         #endif
         broadcast_packet(egress_port, ingress_port, LCPARAMS_IN);

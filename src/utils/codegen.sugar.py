@@ -11,6 +11,34 @@ from itertools import takewhile
 
 ################################################################################
 
+MAX_BIT_SIZE = 32
+BINARY_COMPLEX_OPS_ARR_BITS = {
+    'Add': ['bignum_add({0}, {1}, {2}, {3})', 'bignum_add_signed({0}, {1}, {2}, {3})'],
+    'Sub': ['bignum_sub({0}, {1}, {2}, {3})', 'bignum_sub_signed({0}, {1}, {2}, {3})'],
+    'Mul': ['bignum_mul({0}, {1}, {2}, {3})', 'bignum_mul_signed({0}, {1}, {2}, {3})'],
+    'Div': ['bignum_div({0}, {1}, {2}, {3})', 'bignum_div_signed({0}, {1}, {2}, {3})'],
+    'Mod': ['bignum_mod({0}, {1}, {2}, {3})', 'bignum_mod_signed({0}, {1}, {2}, {3})'],
+    'Div': ['bignum_div({0}, {1}, {2}, {3})', 'bignum_div_signed({0}, {1}, {2}, {3})'],
+    'BAnd': ['bignum_and({0}, {1}, {2}, {3})', 'bignum_and_signed({0}, {1}, {2}, {3})'],
+    'BOr': ['bignum_or({0}, {1}, {2}, {3})', 'bignum_or_signed({0}, {1}, {2}, {3})'],
+    'BXor': ['bignum_xor({0}, {1}, {2}, {3})', 'bignum_xor_signed({0}, {1}, {2}, {3})'],
+    'Shl': ['bignum_lshift({0}, {1}, {2}, {3})', 'bignum_lshift_signed({0}, {1}, {2}, {3})'],
+    'Shr': ['bignum_rshift({0}, {1}, {2}, {3})', 'bignum_rshift_signed({0}, {1}, {2}, {3})']
+}
+
+BINARY_OPS_BYTES = {
+
+}
+
+BINARY_SIMPLE_OPS_ARR = { 
+    'Equ': ['(0 == memcmp({}, {}, {}))', 'bignum_cmp_signed({}, {}, {})'],
+    'Neq': ['(0 != memcmp({}, {}, {}))', '(0 != bignum_cmp_signed({}, {}, {}))'],
+    'Grt': ['(0 > memcmp({}, {}, {}))', 'bignum_gr_signed({}, {}, {})'],
+    'Geq': ['(0 >= memcmp({}, {}, {}))', 'bignum_ge_signed({}, {}, {})'],
+    'Lss': ['(0 < memcmp({}, {}, {}))', 'bignum_ls_signed({}, {}, {})'],
+    'Leq': ['(0 <= memcmp({}, {}, {}))', 'bignum_le_signed({}, {}, {})']
+}
+
 # note: some functions with well-known names in C have to be renamed
 funname_map = {
     "random": "random_fun",
@@ -21,6 +49,11 @@ funname_map = {
 def sizeup(size, use_array):
     return 8 if use_array else 8 if size <= 8 else 16 if size <= 16 else 32 if size <= 32 else 8
 
+def bits_to_bytes(bits):
+    return (bits + 7) // 8
+
+def gen_array(name, length):
+    return 'uint8_t {}[{}];'.format(name, length)
 
 def type_to_str(t):
     if t.node_type == 'Type_Bits':
@@ -228,8 +261,11 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
         #[ uint8_t $const[$dst_bytewidth] = ${int_to_big_endian_byte_array_with_length(src.right.value, dst_bytewidth, src.right.base)};
         #[ for (int i = 0; i < ${dst_bytewidth}; ++i)    $src_pointer[i] ${simple_binary_ops[binop]}= $const[i];
     else:
-        src_pointer = 'NOT_SUPPORTED'
-        addError('formatting statement', f'Assignment to unsupported field in: {format_expr(dst)} = {src}')
+        src_pointer = 'value_{}'.format(src.id)
+        evaluated_expr = format_expr(src)
+
+        if src_pointer != evaluated_expr:
+            #[ $src_pointer = $evaluated_expr;
 
     dst_fixed_size = dst.expr.hdr_ref.urtype.size - dst.fld_ref.size
 
@@ -829,37 +865,61 @@ def gen_masking(dst_type, expr_str):
     #[ ($mask & $varname)
 
 def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variable=False, funname_override=None):
-    et = e.expr.type
-    edt = e.destType
-    fe = format_expr(e.expr)
-    ft = format_type(edt)
-    if (et.node_type, et.size, edt.node_type) == ('Type_Bits', 1, 'Type_Boolean') and not et.isSigned:
-        #Cast from bit<1> to bool
-        return f"({fe})"
-    elif (et.node_type, edt.node_type, edt.size) == ('Type_Boolean', 'Type_Bits', 1) and not edt.isSigned:
-        #Cast from bool to bit<1>
-        return f'({fe} ? 1 : 0)'
-    elif et.node_type == 'Type_Bits' and edt.node_type == 'Type_Bits':
-        if et.isSigned == edt.isSigned:
-            if not et.isSigned:                       #Cast from bit<w> to bit<v>
-                if et.size > edt.size:
-                    #[ ${masking(edt, fe)}
+    if e.type.size <= MAX_BIT_SIZE and e.expr.type.size <= MAX_BIT_SIZE:
+        et = e.expr.type
+        edt = e.destType
+        fe = format_expr(e.expr)
+        ft = format_type(edt)
+        if (et.node_type, et.size, edt.node_type) == ('Type_Bits', 1, 'Type_Boolean') and not et.isSigned:
+            #Cast from bit<1> to bool
+            return f"({fe})"
+        elif (et.node_type, edt.node_type, edt.size) == ('Type_Boolean', 'Type_Bits', 1) and not edt.isSigned:
+            #Cast from bool to bit<1>
+            return f'({fe} ? 1 : 0)'
+        elif et.node_type == 'Type_Bits' and edt.node_type == 'Type_Bits':
+            if et.isSigned == edt.isSigned:
+                if not et.isSigned:                       #Cast from bit<w> to bit<v>
+                    if et.size > edt.size:
+                        #[ ${masking(edt, fe)}
+                    else:
+                        #= fe
+                else:                                              #Cast from int<w> to int<v>
+                    #[ (($ft)$fe)
+            elif et.isSigned and not edt.isSigned: #Cast from int<w> to bit<w>
+                #[ ${masking(edt, fe)}
+            elif not et.isSigned and edt.isSigned: #Cast from bit<w> to int<w>
+                if edt.size in {8,16,32}:
+                    #[ (($ft)$fe)
                 else:
-                    #= fe
-            else:                                              #Cast from int<w> to int<v>
-                #[ (($ft)$fe)
-        elif et.isSigned and not edt.isSigned: #Cast from int<w> to bit<w>
-            #[ ${masking(edt, fe)}
-        elif not et.isSigned and edt.isSigned: #Cast from bit<w> to int<w>
-            if edt.size in {8,16,32}:
-                #[ (($ft)$fe)
-            else:
-                addError('formatting an expression', f'Cast from bit<{et.size}> to int<{edt.size}> is not supported! (Only int<8>, int<16> and int<32> are supported.)')
-                #[ ERROR_invalid_cast_from_bit${et.size}_to_int${edt.size}
+                    addError('formatting an expression', f'Cast from bit<{et.size}> to int<{edt.size}> is not supported! (Only int<8>, int<16> and int<32> are supported.)')
+                    #[ ERROR_invalid_cast_from_bit${et.size}_to_int${edt.size}
+        else:
+            #Cast from int to bit<w> and int<w> are performed by P4C
+            addError('formatting an expression', f'Cast from {pp_type_16(et)} to {pp_type_16(edt)} is not supported!')
+            #[ ERROR_invalid_cast
     else:
-        #Cast from int to bit<w> and int<w> are performed by P4C
-        addError('formatting an expression', f'Cast from {pp_type_16(et)} to {pp_type_16(edt)} is not supported!')
-        #[ ERROR_invalid_cast
+        if e.expr.type.node_type not in ['Type_Boolean', 'Type_Bits'] or e.destType.node_type != 'Type_Bits':
+            addError('formatting an expression', 'Cast from %s to %s is not supported!' % (pp_type_16(e.expr.type), pp_type_16(e.destType)))
+            return ''
+
+        dst_width = bits_to_bytes(e.destType.size)
+        evaluated_expr = format_expr(e.expr)
+
+        if e.type.size <= MAX_BIT_SIZE:
+            cast_template = 'bignum_to_int_signed({}, {})' if e.type.isSigned else 'bignum_to_int({}, {})'
+            return cast_template.format(evaluated_expr, dst_width)
+
+        name = generate_var_name('value', str(e.id))
+        #pre[ ${gen_array(name, dst_width)}
+
+        if e.expr.type.size <= MAX_BIT_SIZE:
+            cast_template = 'bignum_from_int_signed({}, {}, {});' if e.expr.type.isSigned else 'bignum_from_int({}, {}, {});'
+            #pre[ ${cast_template.format(name, evaluated_expr, dst_width)}
+        else:
+            cast_template = 'bignum_cast_signed({}, {}, {}, {});' if e.expr.type.isSigned and e.destType.isSigned else 'bignum_cast({}, {}, {}, {});'
+            #pre[ ${cast_template.format(evaluated_expr, e.expr.type.size, name, e.destType.size)}
+
+        return name
 
 def gen_fmt_ComplexOp(e, op, format_as_value=True, expand_parameters=False):
     et = e.type
@@ -1277,36 +1337,84 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
     if nt in unary_ops:
         fe = format_expr(e.expr)
         if nt == 'Neg':
-            if e.type.node_type == 'Type_Bits' and not e.type.isSigned:
-                fe2 = f'{2**e.type.size}-({fe})'
-                #[ ${masking(e.type, fe2)}
+            if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+                name = generate_var_name('value', e.id)
+                evaluated_expr = format_expr(e.expr)
+                byte_width = bits_to_bytes(e.type.size)
+
+                prepend_statement(gen_array(name, byte_width))
+                prepend_statement('bignum_negate({}, {}, {});'.format(evaluated_expr, name, e.type.size))
+                return name
             else:
-                #[ (-$fe)
+                if e.type.node_type == 'Type_Bits' and not e.type.isSigned:
+                    fe2 = f'{2**e.type.size}-({fe})'
+                    #[ ${masking(e.type, fe2)}
+                else:
+                    #[ (-$fe)
         elif nt == 'Cmpl':
-            fe2 = f'~({fe})'
-            #[ ${masking(e.type, fe2)}
+            if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+                name = generate_var_name('value', e.id)
+                evaluated_expr = format_expr(e.expr)
+                byte_width = bits_to_bytes(e.type.size)
+
+                prepend_statement(gen_array(name, byte_width))
+                prepend_statement('bignum_not({}, {}, {});'.format(evaluated_expr, name, byte_width))
+                return name
+            else:
+                fe2 = f'~({fe})'
+                #[ ${masking(e.type, fe2)}
         elif nt == 'LNot':
-            #[ (!$fe)
+            star = '*' if hasattr(e.expr.type, 'size') and e.expr.type.size > MAX_BIT_SIZE else ''
+            #[ (!${star}${fe})
     else:
         left = format_expr(e.left)
         right = format_expr(e.right)
         size = e.left.type.size
-        if nt in simple_binary_ops:
-            if nt == 'Equ' and size > 32:
-                #[ 0 == memcmp($left, $right, (${size} + 7) / 8)
+        if size <= MAX_BIT_SIZE:
+            if nt in simple_binary_ops:
+                if nt == 'Equ' and size > 32:
+                    #[ 0 == memcmp($left, $right, (${size} + 7) / 8)
+                else:
+                    op = simple_binary_ops[nt]
+                    #[ (($left) ${op} ($right))
+            elif nt == 'Sub' and e.type.node_type == 'Type_Bits' and not e.type.isSigned:
+                #Subtraction on unsigned values is performed by adding the negation of the second operand
+                expr_to_mask = f'{left} + ({2 ** e.type.size}-{right})'
+                #[ ${masking(e.type, expr_to_mask)}
+            elif nt == 'Shr' and e.type.node_type == 'Type_Bits' and e.type.isSigned:
+                #Right shift on signed values is performed with a shift width check
+                #[ ((${right}>${size}) ? 0 : (${left} >> ${right}))
             else:
-                op = simple_binary_ops[nt]
-                #[ (($left) ${op} ($right))
-        elif nt == 'Sub' and e.type.node_type == 'Type_Bits' and not e.type.isSigned:
-            #Subtraction on unsigned values is performed by adding the negation of the second operand
-            expr_to_mask = f'{left} + ({2 ** e.type.size}-{right})'
-            #[ ${masking(e.type, expr_to_mask)}
-        elif nt == 'Shr' and e.type.node_type == 'Type_Bits' and e.type.isSigned:
-            #Right shift on signed values is performed with a shift width check
-            #[ ((${right}>${size}) ? 0 : (${left} >> ${right}))
+                #These formatting rules MUST follow the previous special cases
+                #= gen_fmt_ComplexOp(e, complex_binary_ops[nt], format_as_value, expand_parameters)
         else:
-            #These formatting rules MUST follow the previous special cases
-            #= gen_fmt_ComplexOp(e, complex_binary_ops[nt], format_as_value, expand_parameters)
+            if nt in BINARY_SIMPLE_OPS_ARR:
+                if e.left.type.isSigned:
+                    return BINARY_SIMPLE_OPS_ARR[nt][1].format(left, right, e.left.type.size)
+                else:
+                    return BINARY_SIMPLE_OPS_ARR[nt][1].format(left, right, e.left.type.size)
+            elif nt in ['Shr', 'Shl']:
+                name = generate_var_name('value', str(e.id))
+                byte_width = bits_to_bytes(e.type.size)
+                is_signed = 1 if e.type.isSigned else 0
+
+                # In case the shifting argument has an array type
+                if e.right.type.size > MAX_BIT_SIZE:
+                    r = 'bignum_to_int({}, {})'.format(right, bits_to_bytes(e.right.type.size))
+
+                #pre[ ${gen_array(name, byte_width)}
+                #pre[ ${BINARY_COMPLEX_OPS_ARR_BITS[e.node_type][is_signed].format(left, right, name, e.type.size)};
+
+                return name
+            elif nt in BINARY_COMPLEX_OPS_ARR_BITS:
+                name = generate_var_name('value', str(e.id))
+                byte_width = bits_to_bytes(e.type.size)
+                is_signed = 1 if e.type.isSigned else 0
+
+                #pre[ ${gen_array(name, byte_width)}
+                #pre[ ${BINARY_COMPLEX_OPS_ARR_BITS[e.node_type][is_signed].format(left, right, name, e.type.size)};
+
+                return name
 
 
 def funs_with_cond(name_cond):
@@ -1389,7 +1497,8 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
         if not format_as_value:
             #[ FLD(${e.expr.hdr_ref.name}, ${fldname})
         elif e.type.size > 32 or needs_variable:
-            var_name = generate_var_name(f"hdr_{e.expr.hdr_ref.name}_{fldname}")
+            #var_name = generate_var_name(f"hdr_{e.expr.hdr_ref.name}_{fldname}")
+            var_name = generate_var_name('value', str(e.id))
             byte_size = (e.type.size + 7) // 8
 
             hdrname = e.expr.member
@@ -1397,7 +1506,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             #pre[ uint8_t ${var_name}[${byte_size}];
             #pre[ EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), ${var_name});
 
-            #= var_name
+            return var_name
         else:
             hdrname = get_hdr_name(e.expr)
             size = e.expr.fld_ref.urtype.size
@@ -1435,8 +1544,30 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
     elif nt == 'Mux':
         #[ (${format_expr(e.e0)} ? ${format_expr(e.e1)} : ${format_expr(e.e2)})
     elif nt == 'Slice':
+        if hasattr(e.e0.type, 'size') and e.e0.type.size > 32:
+            name = generate_var_name('value', str(e.id))
+            evaluated_expr = format_expr(e.e0)
+            m = int(format_expr(e.e1))
+            l = int(format_expr(e.e2))
+            new_width = bits_to_bytes(m - l)
+
+            if e.type.size > 32:
+                #pre[ ${gen_array(name, new_width)}
+                #pre[ bignum_slice($evaluated_expr, ${e.e0.type.size}, $name, $l, $m);
+                return name
+            else:
+                return 'bignum_slice_int({}, {}, {}, {})'.format(evaluated_expr, e.e0.type.size, l, m)
+
         #= gen_format_slice(e)
     elif nt == 'Concat':
+        if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+            name = generate_var_name('value', str(e.id))
+            dst_width = bits_to_bytes(e.type.size)
+
+            #pre[ ${gen_array(name, dst_width)}
+            #pre[ bignum_concat(${format_expr(e.left)}, ${e.left.type.size}, ${format_expr(e.right)}, ${e.right.type.size}, $name);
+
+            return name
         #[ ((${format_expr(e.left)} << ${e.right.type.size}) | ${format_expr(e.right)})
     elif nt == 'PathExpression':
         name = e.path.name

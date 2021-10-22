@@ -25,6 +25,7 @@ else:
     #[ #include "actions.h"
     #[ #include "util_debug.h"
     #[ #include "util_packet.h"
+    #[ #include "bn.h"
 
     #[ #include "util_packet.h"
 

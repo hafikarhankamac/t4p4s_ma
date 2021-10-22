@@ -189,7 +189,7 @@ uint32_t bignum_to_int(uint8_t* n, uint8_t length) {
   uint32_t r = 0;
   for (int i = a - 1; i >= 0; i--) {
     uint32_t factor = (a - i - 1) * 8;
-    r += (n[i] * ((uint32_t)pow(2, factor)));
+    r += (n[i] * (1 << factor));
   }
 
   return r;
@@ -870,20 +870,20 @@ void bignum_concat_int_arr(uint32_t a, uint8_t length_a_in_bits, uint8_t* b, uin
 }
 
 void bignum_slice(uint8_t* a, uint8_t length, uint8_t* c, uint8_t from, uint8_t to) {
-  uint8_t from_byte = from / 8; // 0
-  uint8_t to_byte = to / 8 + 1; // 2
-  uint8_t new_length = to_byte - from_byte; // 2
+  uint8_t from_byte = from / 8;
+  uint8_t to_byte = to / 8 + 1;
+  uint8_t new_length = to_byte - from_byte;
 
   for (int i = 0; i < new_length; i++)
     c[i] = a[from_byte + i];
 
-  uint8_t r_shift_value = to_byte * 8 - to - 1; // 1
+  uint8_t r_shift_value = to_byte * 8 - to - 1;
 
   bignum_rshift(c, c, r_shift_value, new_length);
 
   uint8_t rest = (to_byte * 8 - to - 1) + (from - from_byte * 8);
 
-  uint8_t mask = BIT_MASK(8 - rest); //pow(2, 8 - rest) - 1;
+  uint8_t mask = BIT_MASK(8 - rest);
   c[0] &= mask;
 }
 
@@ -902,7 +902,7 @@ uint32_t bignum_slice_int(uint8_t* a, uint8_t length, uint8_t from, uint8_t to) 
 }
 
 void bignum_truncate(uint8_t* a, uint8_t remaining_bits) {
-  uint8_t mask = pow(2, remaining_bits) - 1;
+  uint8_t mask = BIT_MASK(remaining_bits);
   a[0] &= mask;
 }
 

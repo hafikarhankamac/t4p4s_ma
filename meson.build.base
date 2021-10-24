@@ -39,7 +39,11 @@ project_source_files = [
     hdep / 'dpdk/data_plane/dpdk_primitives_impl.c',
 
     hdep / 'shared/data_plane/ternary_naive.c',
+<<<<<<< HEAD
     hdep / 'shared/data_plane/bn.c
+=======
+    hdep / 'shared/data_plane/bn.c',
+>>>>>>> 5b10a42cb60e2373b14e491dab345052178adaa4
 
     hdep / 'shared/util_debug.c',
     hdep / 'shared/backend.c',

@@ -1,23 +1,3 @@
-/*
-
-Big number library - arithmetic on multiple-precision unsigned integers.
-
-This library is an implementation of arithmetic on arbitrarily large integers.
-
-The difference between this and other implementations, is that the data structure
-has optimal memory utilization (i.e. a 1024 bit integer takes up 128 bytes RAM),
-and all memory is allocated statically: no dynamic allocation for better or worse.
-
-Primary goals are correctness, clarity of code and clean, portable implementation.
-Secondary goal is a memory footprint small enough to make it suitable for use in
-embedded applications.
-
-
-The current state is correct functionality and adequate performance.
-There may well be room for performance-optimizations and improvements.
-
-*/
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -26,7 +6,7 @@ There may well be room for performance-optimizations and improvements.
 #include "bn.h"
 #include <math.h>
 
-#define MIN(a,b) a < b ? a : b
+#define MIN(a,b) (a < b ? a : b)
 
 void _lshift_word(uint8_t* a, int nwords, uint8_t length);
 void _rshift_word(uint8_t* a, int nwords, uint8_t length);
@@ -97,32 +77,32 @@ void bignum_mul_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bit
   uint8_t isANeg = GET_SIGN(a, first_bits);
   uint8_t isBNeg = GET_SIGN(b, first_bits);;
 
-    uint8_t *tmp1, *tmp2;
+  uint8_t *tmp1, *tmp2;
 
-    if (isANeg) {
-      tmp1 = malloc(bytes * sizeof(uint8_t));
-      bignum_make_positive(a, tmp1, length_in_bits);
-    }
-    else
-      tmp1 = a;
+  if (isANeg) {
+    tmp1 = malloc(bytes * sizeof(uint8_t));
+    bignum_make_positive(a, tmp1, length_in_bits);
+  }
+  else
+    tmp1 = a;
 
-    if (isBNeg) {
-      tmp2 = malloc(bytes * sizeof(uint8_t));
-      bignum_make_positive(b, tmp2, length_in_bits);
-    }
-    else
-      tmp2 = b;
+  if (isBNeg) {
+    tmp2 = malloc(bytes * sizeof(uint8_t));
+    bignum_make_positive(b, tmp2, length_in_bits);
+  }
+  else
+    tmp2 = b;
 
-    bignum_mul(tmp1, tmp2, c, length_in_bits);
+  bignum_mul(tmp1, tmp2, c, length_in_bits);
 
-    if (isANeg != isBNeg)
-      bignum_make_negative(c, c, length_in_bits);
+  if (isANeg != isBNeg)
+    bignum_make_negative(c, c, length_in_bits);
 
-    if (isBNeg)
-      free(tmp2);
+  if (isBNeg)
+    free(tmp2);
 
-    if (isANeg)
-      free(tmp1);
+  if (isANeg)
+    free(tmp1);
 }
 
 void bignum_div_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits) {
@@ -160,33 +140,35 @@ void bignum_div_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bit
     free(tmp1);
 }
 
-void bignum_from_int(uint8_t* n, uint32_t i, uint8_t length_in_bytes) {
-  require(n, "n is null");
+void bignum_from_int_unsigned(uint8_t* n, UNSIGNED_TYPE i, uint8_t length_in_bytes) {
+  REQUIRE(n, "n is null");
   memset(n, 0, length_in_bytes);
+  int max_length = MIN(length_in_bytes, sizeof(UNSIGNED_TYPE));
 
-  for (int j = length_in_bytes - 1; j >= 0; j--) {
+  for (int j = length_in_bytes - 1; j >= length_in_bytes - max_length; j--) {
     uint32_t r = (length_in_bytes - 1 - j);
-    uint32_t mask = ((uint32_t)0xff) << (r * 8);
+    UNSIGNED_TYPE mask = ((UNSIGNED_TYPE)0xff) << (r * 8);
     n[j] = (i & mask) >> r * 8;
   }
 }
 
-void bignum_from_int_signed(uint8_t* n, DTYPE_TMP i, uint8_t length_in_bytes)
+void bignum_from_int_signed(uint8_t* n, SIGNED_TYPE i, uint8_t length_in_bytes)
 {
-  require(n, "n is null");
+  REQUIRE(n, "n is null");
   memset(n, 0, length_in_bytes);
+  int max_length = MIN(length_in_bytes, sizeof(SIGNED_TYPE));
 
-  for (int j = length_in_bytes - 1; j >= 0; j--) {
+  for (int j = length_in_bytes - 1; j >= length_in_bytes - max_length; j--) {
     int r = (length_in_bytes - 1 - j);
-    DTYPE_TMP mask = ((DTYPE_TMP)0xff) << (r * 8);
+    UNSIGNED_TYPE mask = ((UNSIGNED_TYPE)0xff) << (r * 8);
     n[j] = (i & mask) >> r * 8;
   }
 }
 
-uint32_t bignum_to_int(uint8_t* n, uint8_t length) {
-  uint8_t a = MIN(length, 4);
+UNSIGNED_TYPE bignum_to_int(uint8_t* n, uint8_t length) {
+  uint8_t a = MIN(length, sizeof(UNSIGNED_TYPE));
 
-  uint32_t r = 0;
+  UNSIGNED_TYPE r = 0;
   for (int i = a - 1; i >= 0; i--) {
     uint32_t factor = (a - i - 1) * 8;
     r += (n[i] * (1 << factor));
@@ -195,7 +177,7 @@ uint32_t bignum_to_int(uint8_t* n, uint8_t length) {
   return r;
 }
 
-DTYPE_TMP bignum_to_int_signed(uint8_t* n, uint8_t length) {
+SIGNED_TYPE bignum_to_int_signed(uint8_t* n, uint8_t length) {
   if (!(n[0] >> 7))
     return bignum_to_int(n, length);
 
@@ -258,58 +240,22 @@ void bignum_cast_signed(uint8_t* a, uint8_t length_a_in_bits, uint8_t* b, uint8_
     b[i] = sign ? 0xff : 0;
 }
 
-void bignum_dec(uint8_t* n, uint8_t length)
-{
-  require(n, "n is null");
-
-  DTYPE tmp, res;
-  int i;
-  for (i = length - 1; i >= 0; --i)
-  {
-    tmp = n[i];
-    res = tmp - 1;
-    n[i] = res;
-
-    if (!(res > tmp))
-      break;
-  }
-}
-
-void bignum_inc(uint8_t* n, uint8_t length)
-{
-  require(n, "n is null");
-
-  DTYPE res;
-  DTYPE_TMP tmp; /* copy of n */
-
-  int i;
-  for (i = length - 1; i >= 0; --i)
-  {
-    tmp = n[i];
-    res = tmp + 1;
-    n[i] = res;
-
-    if (res > tmp)
-      break;
-  }
-}
-
 void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t bits_in_first_byte = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
 
-  DTYPE_TMP tmp;
+  UNSIGNED_TYPE tmp;
   int carry = 0;
   for (int i = 0; i < bytes; ++i)
   {
-    tmp = (DTYPE_TMP)a[bytes - 1 - i] + b[bytes - 1 - i] + carry;
-    carry = (tmp > MAX_VAL);
-    c[bytes - 1 - i] = (tmp & MAX_VAL);
+    tmp = (UNSIGNED_TYPE)a[bytes - 1 - i] + b[bytes - 1 - i] + carry;
+    carry = (tmp > 0xff);
+    c[bytes - 1 - i] = (tmp & 0xff);
   }
 
   bignum_truncate(c, bits_in_first_byte);
@@ -317,20 +263,20 @@ void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_sub(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
-  DTYPE_TMP res, tmp1, tmp2;
+  UNSIGNED_TYPE res, tmp1, tmp2;
   int borrow = 0;
   for (int i = bytes - 1; i >= 0; --i)
   {
-    tmp1 = (DTYPE_TMP)a[i] + (MAX_VAL + 1); /* + number_base */
-    tmp2 = (DTYPE_TMP)b[i] + borrow;;
+    tmp1 = (UNSIGNED_TYPE)a[i] + (0xff + 1); /* + number_base */
+    tmp2 = (UNSIGNED_TYPE)b[i] + borrow;;
     res = (tmp1 - tmp2);
-    c[i] = (DTYPE)(res & MAX_VAL); /* "modulo number_base" == "% (number_base - 1)" if number_base is 2^N */
-    borrow = (res <= MAX_VAL);
+    c[i] = (uint8_t)(res & 0xff); /* "modulo number_base" == "% (number_base - 1)" if number_base is 2^N */
+    borrow = (res <= 0xff);
   }
 
   bignum_truncate(c, BITS_IN_FIRST_BYTE(bytes, length_in_bits));
@@ -338,9 +284,9 @@ void bignum_sub(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
   uint8_t* row = malloc(bytes * sizeof(uint8_t));
@@ -358,7 +304,6 @@ void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
       if (i + j + 1 >= bytes)
       {
         memset(tmp, 0, bytes);
-
         uint16_t intermediate = ((uint16_t)a[i] * (uint16_t)b[j]);
         bignum_from_int_signed(tmp, intermediate, bytes);  
         _rshift_word(tmp, (bytes - 1 - i) + (bytes - 1 - j), bytes);
@@ -375,9 +320,9 @@ void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
   if (bignum_cmp(a, b, bytes) == -1) {
@@ -393,7 +338,7 @@ void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
   bignum_assign(denom, b, bytes);                   // denom = b
   bignum_assign(tmp, a, bytes);                     // tmp   = a
 
-  const DTYPE_TMP half_max = 1 + (DTYPE_TMP)(MAX_VAL / 2);
+  const UNSIGNED_TYPE half_max = 1 + (UNSIGNED_TYPE)(0xff / 2);
   bool overflow = false;
   while (bignum_cmp(denom, a, bytes) != LARGER)     // while (denom <= a) {
   {
@@ -431,9 +376,9 @@ void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_lshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(nbits >= 0, "no negative shifts");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(nbits >= 0, "no negative shifts");
 
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
@@ -461,9 +406,9 @@ void bignum_lshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 
 void bignum_rshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(nbits >= 0, "no negative shifts");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(nbits >= 0, "no negative shifts");
 
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
@@ -493,8 +438,8 @@ void bignum_lshift_signed(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_b
 }
 
 void bignum_rshift_signed(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits) {  
-  uint8_t bytes = BITS_TO_BYTES(length_in_bits); // 4
-  uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits); // 4
+  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
+  uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
 
   uint8_t sign = GET_SIGN(a, first_bits);
 
@@ -561,7 +506,7 @@ void _rshift_word_signed(uint8_t* a, int nwords, uint8_t length_in_bits) {
     return;
   }
 
-  uint8_t mask = 255 ^ first_byte_mask;
+  uint8_t mask = 0xff ^ first_byte_mask;
 
   int i = bytes - 1;
   for (; i >= nwords; i--)
@@ -580,9 +525,9 @@ void bignum_mod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length)
   /*
     Take divmod and throw away div part
   */
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   uint8_t* tmp = malloc(length * sizeof(uint8_t));
 
@@ -600,9 +545,9 @@ void bignum_divmod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* d, uint8_t lengt
     example:
       mod(8, 3) = 8 - ((8 / 3) * 3) = 2
   */
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   uint8_t* tmp = malloc(length * sizeof(uint8_t));
 
@@ -618,9 +563,9 @@ void bignum_divmod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* d, uint8_t lengt
 
 void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   for (int i = 0; i < length_in_bytes; ++i)
     c[i] = (a[i] & b[i]);
@@ -628,9 +573,9 @@ void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 
 void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   for (int i = 0; i < length_in_bytes; ++i)
     c[i] = (a[i] | b[i]);
@@ -638,9 +583,9 @@ void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 
 void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 {
-  require(a, "a is null");
-  require(b, "b is null");
-  require(c, "c is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+  REQUIRE(c, "c is null");
 
   for (int i = 0; i < length_in_bytes; ++i)
     c[i] = (a[i] ^ b[i]);
@@ -648,8 +593,8 @@ void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
 
 int bignum_cmp(uint8_t* a, uint8_t* b, uint8_t length)
 {
-  require(a, "a is null");
-  require(b, "b is null");
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
 
   int i = -1;
   do
@@ -704,7 +649,7 @@ int bignum_cmp_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
 
 int bignum_is_zero(uint8_t* n, uint8_t length)
 {
-  require(n, "n is null");
+  REQUIRE(n, "n is null");
 
   for (int i = 0; i < length; ++i)
     if (n[i])
@@ -800,8 +745,8 @@ void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
 
 void bignum_assign(uint8_t* dst, uint8_t* src, uint8_t length_in_bytes)
 {
-  require(dst, "dst is null");
-  require(src, "src is null");
+  REQUIRE(dst, "dst is null");
+  REQUIRE(src, "src is null");
 
   for (int i = 0; i < length_in_bytes; ++i)
     dst[i] = src[i];
@@ -837,7 +782,7 @@ void bignum_concat_arr_arr(uint8_t* a, uint8_t length_a_in_bits, uint8_t* b, uin
   free(tmp_a);
 }
 
-void bignum_concat_arr_int(uint8_t* a, uint8_t length_a_in_bits, uint32_t b, uint8_t length_b_in_bits, uint8_t* c) {
+void bignum_concat_arr_int(uint8_t* a, uint8_t length_a_in_bits, UNSIGNED_TYPE b, uint8_t length_b_in_bits, uint8_t* c) {
   uint8_t length_b_in_bytes = BITS_TO_BYTES(length_b_in_bits);
   uint8_t *tmp = malloc(length_b_in_bytes * sizeof(uint8_t));
   bignum_from_int_signed(tmp, b, length_b_in_bytes);
@@ -846,7 +791,7 @@ void bignum_concat_arr_int(uint8_t* a, uint8_t length_a_in_bits, uint32_t b, uin
   free(tmp);
 }
 
-void bignum_concat_int_int(uint32_t a, uint8_t length_a_in_bits, uint32_t b, uint8_t length_b_in_bits, uint8_t* c) {
+void bignum_concat_int_int(UNSIGNED_TYPE a, uint8_t length_a_in_bits, UNSIGNED_TYPE b, uint8_t length_b_in_bits, uint8_t* c) {
   uint8_t length_a_in_bytes = BITS_TO_BYTES(length_a_in_bits);
   uint8_t length_b_in_bytes = BITS_TO_BYTES(length_b_in_bits);
   uint8_t *tmp_a = malloc(length_a_in_bytes * sizeof(uint8_t));
@@ -860,7 +805,7 @@ void bignum_concat_int_int(uint32_t a, uint8_t length_a_in_bits, uint32_t b, uin
   free(tmp_a);
 }
 
-void bignum_concat_int_arr(uint32_t a, uint8_t length_a_in_bits, uint8_t* b, uint8_t length_b_in_bits, uint8_t* c) {
+void bignum_concat_int_arr(UNSIGNED_TYPE a, uint8_t length_a_in_bits, uint8_t* b, uint8_t length_b_in_bits, uint8_t* c) {
   uint8_t length_a_in_bytes = BITS_TO_BYTES(length_a_in_bits);
   uint8_t *tmp = malloc(length_a_in_bytes * sizeof(uint8_t));
   bignum_from_int_signed(tmp, a, length_a_in_bytes);
@@ -887,7 +832,7 @@ void bignum_slice(uint8_t* a, uint8_t length, uint8_t* c, uint8_t from, uint8_t 
   c[0] &= mask;
 }
 
-uint32_t bignum_slice_int(uint8_t* a, uint8_t length, uint8_t from, uint8_t to) {
+UNSIGNED_TYPE bignum_slice_int(uint8_t* a, uint8_t length, uint8_t from, uint8_t to) {
   uint8_t from_byte = from / 8; // 0
   uint8_t to_byte = to / 8 + 1; // 2
   uint8_t new_length = to_byte - from_byte; // 2
@@ -910,8 +855,8 @@ void bignum_truncate(uint8_t* a, uint8_t remaining_bits) {
 void _rshift_word(uint8_t* a, int nwords, uint8_t length)
 {
   /* Naive method: */
-  require(a, "a is null");
-  require(nwords >= 0, "no negative shifts");
+  REQUIRE(a, "a is null");
+  REQUIRE(nwords >= 0, "no negative shifts");
 
   int i;
   if (nwords >= length)
@@ -931,8 +876,8 @@ void _rshift_word(uint8_t* a, int nwords, uint8_t length)
 
 void _lshift_word(uint8_t* a, int nwords, uint8_t length)
 {
-  require(a, "a is null");
-  require(nwords >= 0, "no negative shifts");
+  REQUIRE(a, "a is null");
+  REQUIRE(nwords >= 0, "no negative shifts");
 
   int i;
   /* Shift whole words */
@@ -949,7 +894,7 @@ void _lshift_word(uint8_t* a, int nwords, uint8_t length)
 
 void _lshift_one_bit(uint8_t* a, uint8_t length)
 {
-  require(a, "a is null");
+  REQUIRE(a, "a is null");
 
   for (int i = 0; i < length - 1; ++i)
     a[i] = (a[i] << 1) | (a[i + 1] >> 7);
@@ -959,7 +904,7 @@ void _lshift_one_bit(uint8_t* a, uint8_t length)
 
 void _rshift_one_bit(uint8_t* a, uint8_t length)
 {
-  require(a, "a is null");
+  REQUIRE(a, "a is null");
 
   for (int i = length - 1; i >= 1; --i)
     a[i] = (a[i] >> 1) | (a[i - 1] << 7);

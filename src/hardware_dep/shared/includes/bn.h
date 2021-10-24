@@ -23,79 +23,62 @@ There may well be room for performance-optimizations and improvements.
 #include <stdint.h>
 #include <assert.h>
 
-
-/* This macro defines the word size in bytes of the array that constitues the big-number data structure. */
-#ifndef WORD_SIZE
-  #define WORD_SIZE 1
-#endif
-
-
-/* Here comes the compile-time specialization for how large the underlying array size should be. */
-/* The choices are 1, 2 and 4 bytes in size with uint32, uint64 for WORD_SIZE==4, as temporary. */
-#ifndef WORD_SIZE
-  #error Must define WORD_SIZE to be 1, 2, 4
-#elif (WORD_SIZE == 1)
-  /* Data type of array in structure */
-  #define DTYPE                    uint8_t
-  /* bitmask for getting MSB */
-  #define DTYPE_MSB                ((DTYPE_TMP)(0x80))
-  /* Data-type larger than DTYPE, for holding intermediate results of calculations */
-  #define DTYPE_TMP                uint32_t
-  /* sprintf format string */
-  #define SPRINTF_FORMAT_STR       "%.02x"
-  #define SSCANF_FORMAT_STR        "%2hhx"
-  /* Max value of integer type */
-  #define MAX_VAL                  ((DTYPE_TMP)0xFF)
-#endif
-#ifndef DTYPE
-  #error DTYPE must be defined to uint8_t, uint16_t uint32_t or whatever
-#endif
-
-
 /* Custom assert macro - easy to disable */
-#define require(p, msg) assert(p && msg)
+#define REQUIRE(p, msg) assert(p && msg)
 
 /* Helper macros */
-#define BITS_TO_BYTES(bits) (bits + 7) / 8
-#define BITS_IN_FIRST_BYTE(bytes, bits) 8 - (bytes * 8 - bits)
+#define BITS_TO_BYTES(bits) ((bits + 7) / 8)
+#define BITS_IN_FIRST_BYTE(bytes, bits) (8 - (bytes * 8 - bits))
 #define BIT_MASK(bits) ((1 << bits) - 1)
 #define GET_SIGN(arr, first_bits) (arr[0] >> (first_bits - 1))
+
+/* Types */
+#define SIGNED_TYPE int
+#define UNSIGNED_TYPE uint32_t
 
 /* Tokens returned by bignum_cmp() for value comparison */
 enum { SMALLER = -1, EQUAL = 0, LARGER = 1 };
 
 /* Initialization functions: */
-// void bignum_init(struct bn* n);
-void bignum_from_int(uint8_t* n, uint32_t i, uint8_t length_in_bytes);
-void bignum_from_int_signed(uint8_t* n, DTYPE_TMP i, uint8_t length_in_bytes);
-DTYPE_TMP bignum_to_int(uint8_t* n, uint8_t length);
-uint32_t bignum_to_int_signed(uint8_t* n, uint8_t length);
+
+#define BIGNUM_FROM_INT(n, i, length_in_bytes) _Generic((i), \
+  UNSIGNED_TYPE: bignum_from_int_unsigned, \
+  SIGNED_TYPE: bignum_from_int_signed \
+)(n, i, length_in_bytes)
+
+void bignum_from_int_unsigned(uint8_t* n, UNSIGNED_TYPE i, uint8_t length_in_bytes);
+void bignum_from_int_signed(uint8_t* n, SIGNED_TYPE i, uint8_t length_in_bytes);
+
+UNSIGNED_TYPE bignum_to_int(uint8_t* n, uint8_t length);
+SIGNED_TYPE bignum_to_int_signed(uint8_t* n, uint8_t length);
 void bignum_cast(uint8_t* a, uint8_t length_a_in_bits, uint8_t* b, uint8_t length_b_in_bits);
 void bignum_cast_signed(uint8_t* a, uint8_t length_a, uint8_t* b, uint8_t length_b);
 
-#define bignum_concat(a, la, b, lb, c) _Generic((a), \
+// Concatenation
+
+#define BIGNUM_CONCAT(a, la, b, lb, c) _Generic((a), \
   uint8_t*: _Generic((b), \
     uint8_t*: bignum_concat_arr_arr, \
-    uint32_t: bignum_concat_arr_int), \
-  uint32_t: _Generic((b), \
+    UNSIGNED_TYPE: bignum_concat_arr_int), \
+  UNSIGNED_TYPE: _Generic((b), \
     uint8_t*: bignum_concat_int_arr,\
-    uint32_t: bignum_concat_int_int \
+    UNSIGNED_TYPE: bignum_concat_int_int \
   ))(a, la, b, lb, c)
+
+void bignum_concat_arr_arr(uint8_t* a, uint8_t length_a, uint8_t* b, uint8_t length_b, uint8_t* c);
+void bignum_concat_arr_int(uint8_t* a, uint8_t length_a, UNSIGNED_TYPE b, uint8_t length_b, uint8_t* c);
+void bignum_concat_int_arr(UNSIGNED_TYPE a, uint8_t length_a, uint8_t* b, uint8_t length_b, uint8_t* c);
+void bignum_concat_int_int(UNSIGNED_TYPE a, uint8_t length_a, UNSIGNED_TYPE b, uint8_t length_b, uint8_t* c);
 
 void _lshift_one_bit(uint8_t* a, uint8_t length);
 void _rshift_one_bit(uint8_t* a, uint8_t length);
 
 void _rshift_word_signed(uint8_t* a, int nwords, uint8_t length_in_bits);
 
-void bignum_concat_arr_arr(uint8_t* a, uint8_t length_a, uint8_t* b, uint8_t length_b, uint8_t* c);
-void bignum_concat_arr_int(uint8_t* a, uint8_t length_a, uint32_t b, uint8_t length_b, uint8_t* c);
-void bignum_concat_int_arr(uint32_t a, uint8_t length_a, uint8_t* b, uint8_t length_b, uint8_t* c);
-void bignum_concat_int_int(uint32_t a, uint8_t length_a, uint32_t b, uint8_t length_b, uint8_t* c);
-
 void bignum_truncate(uint8_t* a, uint8_t remaining_bits);
 
 void bignum_slice(uint8_t* a, uint8_t length_in_bits, uint8_t* c, uint8_t from, uint8_t to);
-uint32_t bignum_slice_int(uint8_t* a, uint8_t length_in_bits, uint8_t from, uint8_t to);
+UNSIGNED_TYPE bignum_slice_int(uint8_t* a, uint8_t length_in_bits, uint8_t from, uint8_t to);
 
 /* Basic arithmetic operations: */
 void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a + b */
@@ -137,8 +120,6 @@ int bignum_ls_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 int bignum_le_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 
 int  bignum_is_zero(uint8_t* n, uint8_t length);                         /* For comparison with zero */
-void bignum_inc(uint8_t* n, uint8_t length);                             /* Increment: add one to n */
-void bignum_dec(uint8_t* n, uint8_t length);                             /* Decrement: subtract one from n */
 // void bignum_pow(struct bn* a, struct bn* b, struct bn* c); /* Calculate a^b -- e.g. 2^10 => 1024 */
 // void bignum_isqrt(struct bn* a, struct bn* b);             /* Integer square root -- e.g. isqrt(5) => 2*/
 void bignum_assign(uint8_t* dst, uint8_t* src, uint8_t length);        /* Copy src into dst -- dst := src */

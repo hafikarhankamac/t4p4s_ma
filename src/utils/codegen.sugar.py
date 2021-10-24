@@ -912,9 +912,10 @@ def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variabl
         name = generate_var_name('value', str(e.id))
         #pre[ ${gen_array(name, dst_width)}
 
+        #pre[ bignum_from_int($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
+
         if e.expr.type.size <= MAX_BIT_SIZE:
-            cast_template = 'bignum_from_int_signed({}, {}, {});' if e.expr.type.isSigned else 'bignum_from_int({}, {}, {});'
-            #pre[ ${cast_template.format(name, evaluated_expr, dst_width)}
+            #pre[ bignum_from_int($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
         else:
             cast_template = 'bignum_cast_signed({}, {}, {}, {});' if e.expr.type.isSigned and e.destType.isSigned else 'bignum_cast({}, {}, {}, {});'
             #pre[ ${cast_template.format(evaluated_expr, e.expr.type.size, name, e.destType.size)}
@@ -1497,13 +1498,12 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
         if not format_as_value:
             #[ FLD(${e.expr.hdr_ref.name}, ${fldname})
         elif e.type.size > 32 or needs_variable:
-            #var_name = generate_var_name(f"hdr_{e.expr.hdr_ref.name}_{fldname}")
             var_name = generate_var_name('value', str(e.id))
-            byte_size = (e.type.size + 7) // 8
+            byte_size = bits_to_bytes(e.type.size)
 
             hdrname = e.expr.member
 
-            #pre[ uint8_t ${var_name}[${byte_size}];
+            #pre[ ${gen_array(var_name, byte_size)}
             #pre[ EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), ${var_name});
 
             return var_name
@@ -1544,14 +1544,14 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
     elif nt == 'Mux':
         #[ (${format_expr(e.e0)} ? ${format_expr(e.e1)} : ${format_expr(e.e2)})
     elif nt == 'Slice':
-        if hasattr(e.e0.type, 'size') and e.e0.type.size > 32:
+        if hasattr(e.e0.type, 'size') and e.e0.type.size > MAX_BIT_SIZE:
             name = generate_var_name('value', str(e.id))
             evaluated_expr = format_expr(e.e0)
             m = int(format_expr(e.e1))
             l = int(format_expr(e.e2))
             new_width = bits_to_bytes(m - l)
 
-            if e.type.size > 32:
+            if e.type.size > MAX_BIT_SIZE:
                 #pre[ ${gen_array(name, new_width)}
                 #pre[ bignum_slice($evaluated_expr, ${e.e0.type.size}, $name, $l, $m);
                 return name

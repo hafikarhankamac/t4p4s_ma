@@ -753,27 +753,27 @@ void bignum_assign(uint8_t* dst, uint8_t* src, uint8_t length_in_bytes)
 }
 
 void bignum_concat_arr_arr(uint8_t* a, uint8_t length_a_in_bits, uint8_t* b, uint8_t length_b_in_bits, uint8_t* c) {
-  uint8_t length_a_in_bytes = BITS_TO_BYTES(length_a_in_bits); // 1
-  uint8_t length_b_in_bytes = BITS_TO_BYTES(length_b_in_bits); // 1
-  uint8_t first_bits_a = BITS_IN_FIRST_BYTE(length_a_in_bytes, length_a_in_bits); // 3
-  uint8_t first_bits_b = BITS_IN_FIRST_BYTE(length_b_in_bytes, length_b_in_bits); // 3
+  uint8_t length_a_in_bytes = BITS_TO_BYTES(length_a_in_bits);
+  uint8_t length_b_in_bytes = BITS_TO_BYTES(length_b_in_bits);
+  uint8_t first_bits_a = BITS_IN_FIRST_BYTE(length_a_in_bytes, length_a_in_bits);
+  uint8_t first_bits_b = BITS_IN_FIRST_BYTE(length_b_in_bytes, length_b_in_bits);
 
-  uint8_t new_length_in_bits = length_a_in_bits + length_b_in_bits; // 6
-  uint8_t new_length_in_bytes = BITS_TO_BYTES(new_length_in_bits); // 1
+  uint8_t new_length_in_bits = length_a_in_bits + length_b_in_bits;
+  uint8_t new_length_in_bytes = BITS_TO_BYTES(new_length_in_bits);
 
   uint8_t *tmp_a = malloc(length_a_in_bytes * sizeof(uint8_t));
   uint8_t *tmp_b = malloc(length_b_in_bytes * sizeof(uint8_t));
   bignum_assign(tmp_b, b, length_b_in_bytes);
 
-  uint8_t mask = BIT_MASK(length_b_in_bytes - length_b_in_bits);
-  uint8_t value_to_be_moved = (mask & a[length_a_in_bytes - 1]) << first_bits_b;
+  uint8_t mask = BIT_MASK(length_b_in_bytes * 8 - length_b_in_bits);
+  uint8_t value_to_be_moved = (mask & a[length_a_in_bytes - 1]) << (first_bits_b == 8 ? 0 : first_bits_b);
 
   tmp_b[0] |= value_to_be_moved;
 
-  bignum_rshift(a, tmp_a, length_b_in_bytes - length_b_in_bits, length_a_in_bits); // a, tmp_a, 5, 3
+  bignum_rshift(a, tmp_a, length_b_in_bytes * 8 - length_b_in_bits, length_a_in_bits);
 
   for (int i = 0; i < new_length_in_bytes - length_b_in_bytes; i++) 
-    c[i] = tmp_a[length_a_in_bytes - (new_length_in_bytes - length_a_in_bytes) + i];
+    c[i] = tmp_a[length_a_in_bytes - (new_length_in_bytes - length_b_in_bytes) + i];
 
   for (int i = 0; i < length_b_in_bytes; i++)
     c[new_length_in_bytes - length_b_in_bytes + i] = tmp_b[i];

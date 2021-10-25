@@ -1547,7 +1547,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             evaluated_expr = format_expr(e.e0)
             m = int(format_expr(e.e1))
             l = int(format_expr(e.e2))
-            new_width = bits_to_bytes(m - l)
+            new_width = bits_to_bytes(m - l + 1)
 
             if e.type.size > MAX_BIT_SIZE:
                 #pre[ ${gen_array(name, new_width)}

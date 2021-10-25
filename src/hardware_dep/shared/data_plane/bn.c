@@ -143,10 +143,10 @@ void bignum_div_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bit
 void bignum_from_int_unsigned(uint8_t* n, UNSIGNED_TYPE i, uint8_t length_in_bytes) {
   REQUIRE(n, "n is null");
   memset(n, 0, length_in_bytes);
-  int max_length = MIN(length_in_bytes, sizeof(UNSIGNED_TYPE));
+  int max_length = MIN(length_in_bytes, sizeof(UNSIGNED_TYPE)); // 4
 
   for (int j = length_in_bytes - 1; j >= length_in_bytes - max_length; j--) {
-    uint32_t r = (length_in_bytes - 1 - j);
+    uint32_t r = (length_in_bytes - 1 - j); // 3
     UNSIGNED_TYPE mask = ((UNSIGNED_TYPE)0xff) << (r * 8);
     n[j] = (i & mask) >> r * 8;
   }
@@ -816,31 +816,31 @@ void bignum_concat_int_arr(UNSIGNED_TYPE a, uint8_t length_a_in_bits, uint8_t* b
 
 void bignum_slice(uint8_t* a, uint8_t length, uint8_t* c, uint8_t from, uint8_t to) {
   uint8_t from_byte = from / 8;
-  uint8_t to_byte = to / 8 + 1;
+  uint8_t to_byte = BITS_TO_BYTES(to);
   uint8_t new_length = to_byte - from_byte;
 
   for (int i = 0; i < new_length; i++)
     c[i] = a[from_byte + i];
 
   uint8_t r_shift_value = to_byte * 8 - to - 1;
-
-  bignum_rshift(c, c, r_shift_value, new_length);
-
+  bignum_rshift(c, c, r_shift_value, to - from + 1);
   uint8_t rest = (to_byte * 8 - to - 1) + (from - from_byte * 8);
 
-  uint8_t mask = BIT_MASK(8 - rest);
-  c[0] &= mask;
+  if (rest != 0) {
+    uint8_t mask = BIT_MASK(8 - rest);
+    c[0] &= mask;
+  }
 }
 
 UNSIGNED_TYPE bignum_slice_int(uint8_t* a, uint8_t length, uint8_t from, uint8_t to) {
-  uint8_t from_byte = from / 8; // 0
-  uint8_t to_byte = to / 8 + 1; // 2
-  uint8_t new_length = to_byte - from_byte; // 2
+  uint8_t from_byte = from / 8;
+  uint8_t to_byte = to / 8 + 1;
+  uint8_t new_length = to_byte - from_byte;
 
   uint8_t *tmp = malloc(new_length * sizeof(uint8_t));
   bignum_slice(a, length, tmp, from, to);
 
-  int r = bignum_to_int(tmp, new_length);
+  UNSIGNED_TYPE r = bignum_to_int(tmp, new_length);
 
   free(tmp);
   return r;

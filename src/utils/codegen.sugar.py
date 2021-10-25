@@ -912,10 +912,8 @@ def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variabl
         name = generate_var_name('value', str(e.id))
         #pre[ ${gen_array(name, dst_width)}
 
-        #pre[ bignum_from_int($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
-
         if e.expr.type.size <= MAX_BIT_SIZE:
-            #pre[ bignum_from_int($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
+            #pre[ BIGNUM_FROM_INT($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
         else:
             cast_template = 'bignum_cast_signed({}, {}, {}, {});' if e.expr.type.isSigned and e.destType.isSigned else 'bignum_cast({}, {}, {}, {});'
             #pre[ ${cast_template.format(evaluated_expr, e.expr.type.size, name, e.destType.size)}

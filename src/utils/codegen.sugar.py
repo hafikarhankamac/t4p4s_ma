@@ -913,7 +913,7 @@ def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variabl
         #pre[ ${gen_array(name, dst_width)}
 
         if e.expr.type.size <= MAX_BIT_SIZE:
-            #pre[ BIGNUM_FROM_INT($evaluated_expr, ${e.expr.type.size}, $name, ${e.destType.size});
+            #pre[ BIGNUM_FROM_INT($evaluated_expr, ${bits_to_bytes(e.destType.size)}, $name);
         else:
             cast_template = 'bignum_cast_signed({}, {}, {}, {});' if e.expr.type.isSigned and e.destType.isSigned else 'bignum_cast({}, {}, {}, {});'
             #pre[ ${cast_template.format(evaluated_expr, e.expr.type.size, name, e.destType.size)}
@@ -1563,7 +1563,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             dst_width = bits_to_bytes(e.type.size)
 
             #pre[ ${gen_array(name, dst_width)}
-            #pre[ bignum_concat(${format_expr(e.left)}, ${e.left.type.size}, ${format_expr(e.right)}, ${e.right.type.size}, $name);
+            #pre[ BIGNUM_CONCAT(${format_expr(e.left)}, ${e.left.type.size}, ${format_expr(e.right)}, ${e.right.type.size}, $name);
 
             return name
         #[ ((${format_expr(e.left)} << ${e.right.type.size}) | ${format_expr(e.right)})

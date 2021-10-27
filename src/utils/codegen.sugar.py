@@ -22,8 +22,8 @@ BINARY_COMPLEX_OPS_ARR_BITS = {
     'BAnd': ['bignum_and({0}, {1}, {2}, {3})', 'bignum_and_signed({0}, {1}, {2}, {3})'],
     'BOr': ['bignum_or({0}, {1}, {2}, {3})', 'bignum_or_signed({0}, {1}, {2}, {3})'],
     'BXor': ['bignum_xor({0}, {1}, {2}, {3})', 'bignum_xor_signed({0}, {1}, {2}, {3})'],
-    'Shl': ['bignum_lshift({0}, {1}, {2}, {3})', 'bignum_lshift_signed({0}, {1}, {2}, {3})'],
-    'Shr': ['bignum_rshift({0}, {1}, {2}, {3})', 'bignum_rshift_signed({0}, {1}, {2}, {3})']
+    'Shl': ['bignum_lshift({0}, {2}, {1}, {3})', 'bignum_lshift_signed({0}, {2}, {1}, {3})'],
+    'Shr': ['bignum_rshift({0}, {2}, {1}, {3})', 'bignum_rshift_signed({0}, {2}, {1}, {3})']
 }
 
 BINARY_OPS_BYTES = {
@@ -53,7 +53,10 @@ def bits_to_bytes(bits):
     return (bits + 7) // 8
 
 def gen_array(name, length):
-    return 'uint8_t {}[{}];'.format(name, length)
+    return f'uint8_t {name}[{length}];'
+
+def is_array(type) -> bool:
+    return hasattr(type, 'size') and type.size > MAX_BIT_SIZE
 
 def type_to_str(t):
     if t.node_type == 'Type_Bits':
@@ -1398,8 +1401,8 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                 is_signed = 1 if e.type.isSigned else 0
 
                 # In case the shifting argument has an array type
-                if e.right.type.size > MAX_BIT_SIZE:
-                    r = 'bignum_to_int({}, {})'.format(right, bits_to_bytes(e.right.type.size))
+                if is_array(e.right.type):
+                    right = 'bignum_to_int({}, {})'.format(right, bits_to_bytes(e.right.type.size))
 
                 #pre[ ${gen_array(name, byte_width)}
                 #pre[ ${BINARY_COMPLEX_OPS_ARR_BITS[e.node_type][is_signed].format(left, right, name, e.type.size)};

@@ -1341,11 +1341,10 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
         if nt == 'Neg':
             if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
                 name = generate_var_name('value', e.id)
-                evaluated_expr = format_expr(e.expr)
                 byte_width = bits_to_bytes(e.type.size)
 
-                prepend_statement(gen_array(name, byte_width))
-                prepend_statement('bignum_negate({}, {}, {});'.format(evaluated_expr, name, e.type.size))
+                #pre[ ${gen_array(name, byte_width)}
+                #pre[ bignum_negate($fe, $name, ${e.type.size});
                 return name
             else:
                 if e.type.node_type == 'Type_Bits' and not e.type.isSigned:
@@ -1356,11 +1355,10 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
         elif nt == 'Cmpl':
             if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
                 name = generate_var_name('value', e.id)
-                evaluated_expr = format_expr(e.expr)
                 byte_width = bits_to_bytes(e.type.size)
 
-                prepend_statement(gen_array(name, byte_width))
-                prepend_statement('bignum_not({}, {}, {});'.format(evaluated_expr, name, byte_width))
+                #pre[ ${gen_array(name, byte_width)}
+                #pre[ bignum_not($fe, $name, ${e.type.size});
                 return name
             else:
                 fe2 = f'~({fe})'

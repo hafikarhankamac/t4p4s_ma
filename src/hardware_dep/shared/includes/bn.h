@@ -100,9 +100,9 @@ void bignum_make_negative(uint8_t* a, uint8_t* b, uint8_t length);
 void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 
 /* Bitwise operations: */
-void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes); /* c = a & b */
-void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes);  /* c = a | b */
-void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes); /* c = a ^ b */
+void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a & b */
+void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);  /* c = a | b */
+void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a ^ b */
 void bignum_not(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 
 /* Shifts */

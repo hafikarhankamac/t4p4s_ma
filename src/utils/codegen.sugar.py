@@ -26,10 +26,6 @@ BINARY_COMPLEX_OPS_ARR_BITS = {
     'Shr': ['bignum_rshift({0}, {2}, {1}, {3})', 'bignum_rshift_signed({0}, {2}, {1}, {3})']
 }
 
-BINARY_OPS_BYTES = {
-
-}
-
 BINARY_SIMPLE_OPS_ARR = { 
     'Equ': ['(0 == memcmp({}, {}, {}))', 'bignum_cmp_signed({}, {}, {})'],
     'Neq': ['(0 != memcmp({}, {}, {}))', '(0 != bignum_cmp_signed({}, {}, {}))'],
@@ -1339,7 +1335,7 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
     if nt in unary_ops:
         fe = format_expr(e.expr)
         if nt == 'Neg':
-            if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+            if is_array(e.type):
                 name = generate_var_name('value', e.id)
                 byte_width = bits_to_bytes(e.type.size)
 
@@ -1353,7 +1349,7 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                 else:
                     #[ (-$fe)
         elif nt == 'Cmpl':
-            if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+            if is_array(e.type):
                 name = generate_var_name('value', e.id)
                 byte_width = bits_to_bytes(e.type.size)
 
@@ -1364,7 +1360,7 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                 fe2 = f'~({fe})'
                 #[ ${masking(e.type, fe2)}
         elif nt == 'LNot':
-            star = '*' if hasattr(e.expr.type, 'size') and e.expr.type.size > MAX_BIT_SIZE else ''
+            star = '*' if is_array(e.expr.type) else ''
             #[ (!${star}${fe})
     else:
         left = format_expr(e.left)
@@ -1541,7 +1537,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
     elif nt == 'Mux':
         #[ (${format_expr(e.e0)} ? ${format_expr(e.e1)} : ${format_expr(e.e2)})
     elif nt == 'Slice':
-        if hasattr(e.e0.type, 'size') and e.e0.type.size > MAX_BIT_SIZE:
+        if is_array(e.e0.type):
             name = generate_var_name('value', str(e.id))
             evaluated_expr = format_expr(e.e0)
             m = int(format_expr(e.e1))
@@ -1557,7 +1553,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
 
         #= gen_format_slice(e)
     elif nt == 'Concat':
-        if hasattr(e.type, 'size') and e.type.size > MAX_BIT_SIZE:
+        if is_array(e.type):
             name = generate_var_name('value', str(e.id))
             dst_width = bits_to_bytes(e.type.size)
 

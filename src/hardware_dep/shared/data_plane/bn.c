@@ -41,10 +41,10 @@ void bignum_make_negative(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
 }
 
 void bignum_not(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
-  uint8_t bits_in_first = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
+  uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
+  uint8_t bits_in_first = BITS_IN_FIRST_BYTE(length_in_bytes, length_in_bits);
 
-  for (int i = 0; i < bytes; i++) 
+  for (int i = 0; i < length_in_bytes; i++) 
     b[i] = 0xff - a[i];
 
   bignum_truncate(b, bits_in_first);
@@ -362,7 +362,7 @@ void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
     if (bignum_cmp(tmp, denom, bytes) != SMALLER)  //   if (dividend >= denom)
     {
       bignum_sub(tmp, denom, tmp, length_in_bits);         //     dividend -= denom;
-      bignum_or(c, current, c, bytes);              //     answer |= current;
+      bignum_or(c, current, c, length_in_bits);              //     answer |= current;
     }
     _rshift_one_bit(current, bytes);                //   current >>= 1;
     _rshift_one_bit(denom, bytes);                  //   denom >>= 1;
@@ -561,34 +561,37 @@ void bignum_divmod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* d, uint8_t lengt
   bignum_sub(a, tmp, d, length);
 }
 
-void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
+void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
   REQUIRE(a, "a is null");
   REQUIRE(b, "b is null");
   REQUIRE(c, "c is null");
+  uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
-    c[i] = (a[i] & b[i]);
+    c[i] = a[i] & b[i];
 }
 
-void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
+void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
   REQUIRE(a, "a is null");
   REQUIRE(b, "b is null");
   REQUIRE(c, "c is null");
+  uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
-    c[i] = (a[i] | b[i]);
+    c[i] = a[i] | b[i];
 }
 
-void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bytes)
+void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
   REQUIRE(a, "a is null");
   REQUIRE(b, "b is null");
   REQUIRE(c, "c is null");
+  uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
-    c[i] = (a[i] ^ b[i]);
+    c[i] = a[i] ^ b[i];
 }
 
 int bignum_cmp(uint8_t* a, uint8_t* b, uint8_t length)
@@ -659,6 +662,9 @@ int bignum_is_zero(uint8_t* n, uint8_t length)
 }
 
 void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
+  REQUIRE(a, "a is null");
+  REQUIRE(b, "b is null");
+
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
   uint8_t sign = GET_SIGN(a, first_bits);

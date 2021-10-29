@@ -116,7 +116,7 @@ def gen_format_type(t, resolve_names = True, use_array = False, addon = ""):
         if use_array:
             #[ $base $addon[(${t.size} + 7) / 8]
         else:
-            ptr = '*' if t.size > 32 else ''
+            ptr = '*' if t.size > MAX_BIT_SIZE else ''
             #[ $base$ptr $addon
     elif t.node_type == 'Type_Enum':
         name = t.c_name if 'c_name' in t else t.name
@@ -145,14 +145,14 @@ def gen_format_type(t, resolve_names = True, use_array = False, addon = ""):
 
 def gen_format_type_mask(t):
     if t.node_type == 'Type_Bits' and not t.isSigned:
-        if t.size <= 32:
+        if t.size <= MAX_BIT_SIZE:
             var = generate_var_name(f"bitmask_{t.size}b")
             mask = hex((2 ** t.size) - 1)
-            masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32
+            masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32 if t.size <= 32 else 64
             #pre[ uint${masksize}_t $var = $mask;
             #[ $var
         else:
-            addError('formatting a type mask', f'Masked type is {t.size} bits, only 32 or less is supported')
+            addError('formatting a type mask', f'Masked type is {t.size} bits, only {MAX_BIT_SIZE} or less is supported')
     else:
         addError('formatting a type mask', 'Currently only bit<w> is supported!')
 
@@ -289,7 +289,7 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
 def is_primitive(typenode):
     """Returns true if the argument node is compiled to a non-reference C type."""
     # TODO determine better if the source is a reference or not
-    return typenode.node_type == "Type_Boolean" or (typenode.node_type == 'Type_Bits' and typenode.size <= 32)
+    return typenode.node_type == "Type_Boolean" or (typenode.node_type == 'Type_Bits' and typenode.size <= MAX_BIT_SIZE)
 
 
 def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_hdrname, dst_fld_name):
@@ -330,7 +330,7 @@ def gen_format_statement_fieldref(dst, src):
     dst_name = dst.expr.member if dst.expr.node_type == 'Member' else dst.expr.path.name if dst.expr('hdr_ref', lambda h: h.urtype.is_metadata) else dst.expr._hdr_ref._path.name
     dst_hdrname, dst_fld_name = member_to_hdr_fld(dst)
 
-    if dst_width <= 32:
+    if dst_width <= MAX_BIT_SIZE:
         #= gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_hdrname, dst_fld_name)
     else:
         #= gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_hdrname, dst_fld_name)
@@ -351,9 +351,9 @@ def gen_do_assignment(dst, src):
         #[ do_assignment(HDR(${dst_hdrname}), HDR(${src_hdrname}), SHORT_STDPARAMS_IN);
     elif dst.type.node_type == 'Type_Bits':
         # TODO refine the condition to find out whether to use an assignment or memcpy
-        requires_memcpy = src.type.size > 32 or 'decl_ref' in dst
+        requires_memcpy = src.type.size > MAX_BIT_SIZE or 'decl_ref' in dst
         # is_assignable = src.type.size in [8, 32]
-        is_assignable = src.type.size <= 32
+        is_assignable = src.type.size <= MAX_BIT_SIZE
 
         if src.type.node_type == 'Type_Bits' and not requires_memcpy:
             if is_assignable:
@@ -371,7 +371,7 @@ def gen_do_assignment(dst, src):
                         else:
                             hdrname, fldname = get_hdrfld_name(dst)
 
-                        if dst.urtype.size <= 32:
+                        if dst.urtype.size <= MAX_BIT_SIZE:
                             # (${format_type(dst.type)})(${format_expr(src, expand_parameters=True)})
                             is_local = 'path' in src and 'name' in src.path and is_control_local_var(src.path.name)
                             srcbuf = casting(dst.type, is_local, format_expr(src, expand_parameters=True))
@@ -383,20 +383,20 @@ def gen_do_assignment(dst, src):
                     else:
                         #[ debug("       : " T4LIT(${format_expr(dst)},header) " = " T4LIT(%d,bytes) " (" T4LIT(%${(src.type.size+7)//8}x,bytes) ")\n", ${format_expr(dst)}, ${format_expr(dst)});
 
-                        if dst.urtype.size <= 32:
+                        if dst.urtype.size <= MAX_BIT_SIZE:
                             #[ ${format_expr(dst)} = (${format_type(dst.type)})(${format_expr(src, expand_parameters=True)}));
                         else:
                             #TODO
                             pass
             else:
                 if 'decl_ref' in dst:
-                    addError("Assigning variable", f"Variable {dst.path.name} is larger than 32 bits, assignment currently unsupported")
+                    addError("Assigning variable", f"Variable {dst.path.name} is larger than {MAX_BIT_SIZE} bits, assignment currently unsupported")
                     #[ // TODO something like: ${format_expr(dst)} = ${format_expr(src)};
                 else:
                     hdr = dst.expr.hdr_ref
                     fldname = dst.member
 
-                    if dst.type.size <= 32:
+                    if dst.type.size <= MAX_BIT_SIZE:
                         #[ ${format_expr(dst)} = ${format_expr(src)};
                     else:
                         tmpvar = generate_var_name('assignment')
@@ -661,7 +661,7 @@ def get_short_type(n):
     if n.node_type == 'Type_List':
         return f'{get_short_type(n.components[0])}s'
     if n.node_type == 'Type_Bits':
-        if n.size > 32:
+        if n.size > MAX_BIT_SIZE:
             return 'buf'
         sign = 'i' if n.isSigned else 'u'
         size = '8' if n.size <= 8 else '16' if n.size <= 16 else '32'
@@ -820,8 +820,8 @@ def gen_method_lookahead(e):
     arg0 = e.typeArguments[0]
     size = arg0.size
 
-    if size > 32:
-        addError('doing lookahead', f'Lookahead was called on a type that is {size} bits long; maximum supported length is 32')
+    if size > MAX_BIT_SIZE:
+        addError('doing lookahead', f'Lookahead was called on a type that is {size} bits long; maximum supported length is {MAX_BIT_SIZE}')
 
     byte_size = (size+7) // 8
     if byte_size == 3:
@@ -949,11 +949,11 @@ def get_select_conds(select_expr, case):
 
         if case_type == 'DefaultExpression':
             conds.append('true /* default */')
-        elif case_type == 'Constant' and select_type == 'Type_Bits' and 32 < size and size % 8 == 0:
+        elif case_type == 'Constant' and select_type == 'Type_Bits' and MAX_BIT_SIZE < size and size % 8 == 0:
             byte_array = int_to_big_endian_byte_array_with_length(c.value, size/8)
             pres.append(f'uint8_t {gen_var_name(c)}[{size/8}] = {byte_array};')
             conds.append(f'memcmp({gen_var_name(k)}, {gen_var_name(c)}, {size / 8}) == 0')
-        elif size <= 32:
+        elif size <= MAX_BIT_SIZE:
             if case_type == 'Range':
                 conds.append('{0} <= {1} && {1} <= {2}'.format(format_expr(c.left), gen_var_name(k), format_expr(c.right)))
             elif case_type == 'Mask':
@@ -970,7 +970,7 @@ def gen_fmt_SelectExpression(e, format_as_value=True, expand_parameters=False, n
     #Generate local variables for select values
     for k in e.select.components:
         varname = gen_var_name(k)
-        if k.type.node_type == 'Type_Bits' and k.type.size <= 32:
+        if k.type.node_type == 'Type_Bits' and k.type.size <= MAX_BIT_SIZE:
             deref = "" if 'path' not in k else "*" if is_control_local_var(k.path.name, start_node=k) else ""
             #pre[ ${format_type(k.type)} $varname = $deref(${format_expr(k)});
         elif k.type.node_type == 'Type_Bits' and k.type.size % 8 == 0:
@@ -1028,7 +1028,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
             #pre} }
-            if size <= 32:
+            if size <= MAX_BIT_SIZE:
                 #pre[ ${format_type(fldtype)} $var = is_header_valid(HDR($hdrname), pd) ? GET_INT32_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec);
             else:
                 byte_width = (size+7) // 8
@@ -1153,7 +1153,7 @@ def gen_pre_format_call_extern_make_buf_data(component, vardata, varoffset):
         #pre[     $varoffset += (${component.destType.urtype.size}+7)/8;
     elif component.node_type == 'Constant':
         cast = generate_var_name('const')
-        if component.urtype.size > 32:
+        if component.urtype.size > MAX_BIT_SIZE:
             name, hex_content = make_const(component)
             const_var = generate_var_name(f"const{component.type.size}_", name)
 
@@ -1291,7 +1291,7 @@ def gen_fmt_StructInitializerExpression(e, format_as_value=True, expand_paramete
         if tref and tref.is_metadata:
             #[ .${component.name} = (GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member}))),
         else:
-            if ce.type.size <= 32:
+            if ce.type.size <= MAX_BIT_SIZE:
                 #[ .${component.name} = ${gen_format_expr(ce)},
             else:
                 #[ /* ${component.name}/${ce.type.size}b will be initialised afterwards */
@@ -1309,7 +1309,7 @@ def gen_fmt_StructExpression(e, format_as_value=True, expand_parameters=False, n
             if tref and tref.is_metadata:
                 #pre[ $varname.${component.name} = (GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member})));
             else:
-                if ce.type.size <= 32:
+                if ce.type.size <= MAX_BIT_SIZE:
                     #pre[ $varname.${component.name} = ${gen_format_expr(ce)};
                 else:
                     bitsize = (ce.type.size+7)//8
@@ -1320,7 +1320,7 @@ def gen_fmt_StructExpression(e, format_as_value=True, expand_parameters=False, n
 
 def gen_fmt_Constant(e, format_as_value=True, expand_parameters=False, needs_variable=False, funname_override=None):
     if e.type.node_type == 'Type_Bits':
-        if e.type.size > 32 or needs_variable:
+        if e.type.size > MAX_BIT_SIZE or needs_variable:
             name, hex_content = make_const(e)
             const_var = generate_var_name(f"const{e.type.size}_", name)
 
@@ -1372,11 +1372,8 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
         size = e.left.type.size
         if size <= MAX_BIT_SIZE:
             if nt in simple_binary_ops:
-                if nt == 'Equ' and size > 32:
-                    #[ 0 == memcmp($left, $right, (${size} + 7) / 8)
-                else:
-                    op = simple_binary_ops[nt]
-                    #[ (($left) ${op} ($right))
+                op = simple_binary_ops[nt]
+                #[ (($left) ${op} ($right))
             elif nt == 'Sub' and e.type.node_type == 'Type_Bits' and not e.type.isSigned:
                 #Subtraction on unsigned values is performed by adding the negation of the second operand
                 expr_to_mask = f'{left} + ({2 ** e.type.size}-{right})'
@@ -1433,8 +1430,8 @@ def gen_format_slice(e):
     #pre[ int ${var_dst} = ${dst_size};
     #pre[ int ${var_end_offset} = ${format_expr(e.e2)};
     #pre[ int ${var_offset} = ${var_src} - (${var_end_offset} + ${var_dst});
-    if dst_size <= 32:
-        if src_size <= 32:
+    if dst_size <= MAX_BIT_SIZE:
+        if src_size <= MAX_BIT_SIZE:
             slicexpr = f'{src} >> {var_offset}'
             #[ ${masking(e.type, slicexpr)}
         elif dst_size % 8 == 0 and src_size % 8 == 0:
@@ -1453,7 +1450,8 @@ def gen_format_slice(e):
         else:
             addError('formatting >> operator', f'Unsupported slice: source or destination is not multibyte size)')
     else:
-        addError('formatting >> operator', f'Unsupported slice: result is bigger than 32 bits ({size} bits)')
+        # This function isn't even called when size > MAX_BIT_SIZE
+        addError('formatting >> operator', f'Unsupported slice: result is bigger than {MAX_BIT_SIZE} bits ({size} bits)')
 
 
 def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_variable=False, funname_override=None):
@@ -1496,7 +1494,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
         # note: this special case is here because it uses #pre; it should be in 'gen_fmt_Member'
         if not format_as_value:
             #[ FLD(${e.expr.hdr_ref.name}, ${fldname})
-        elif e.type.size > 32 or needs_variable:
+        elif e.type.size > MAX_BIT_SIZE or needs_variable:
             var_name = generate_var_name('value', str(e.id))
             byte_size = bits_to_bytes(e.type.size)
 
@@ -1624,7 +1622,7 @@ def make_digest_fldvars(e):
     fldvars = {}
 
     for hdrname, fldname, size in fld_infos(e):
-        if size <= 32:
+        if size <= MAX_BIT_SIZE:
             fldtxt = f'fld_{hdrname}_{fldname}'
             fldvar = generate_var_name(fldtxt)
             fldvars[fldtxt] = fldvar
@@ -1634,7 +1632,7 @@ def make_digest_fldvars(e):
 def gen_print_digest_fields(e, fldvars):
     #pre[ debug("    " T4LIT(<,outgoing) " " T4LIT(Sending digest,outgoing) " to port " T4LIT(%d,port) "\n", ${e.arguments[0].expression.value});
     for hdrname, fldname, size in fld_infos(e):
-        if size <= 32:
+        if size <= MAX_BIT_SIZE:
             sz = ((size+7)//8) * 8
             fldtxt = f'fld_{hdrname}_{fldname}'
             fldvar = fldvars[fldtxt]
@@ -1653,7 +1651,7 @@ def gen_add_digest_fields(e, var, fldvars):
     #pre[ #else
     #pre[     ctrl_plane_digest $var = create_digest(bg, "$name");
     for hdrname, fldname, size in fld_infos(e):
-        if size <= 32:
+        if size <= MAX_BIT_SIZE:
             sz = ((size+7)//8) * 8
             fldtxt = f'fld_{hdrname}_{fldname}'
             fldvar = fldvars[fldtxt]
@@ -1688,7 +1686,7 @@ def format_declaration(d, varname_override = None):
 def format_type(t, varname = None, resolve_names = True, addon = ""):
     with SugarStyle("inline_comment"):
         use_array = varname is not None
-        if 'size' in t.urtype and t.urtype.size <= 32:
+        if 'size' in t.urtype and t.urtype.size <= MAX_BIT_SIZE:
             use_array = False
         result = gen_format_type(t, resolve_names, use_array=use_array, addon=addon).strip()
 

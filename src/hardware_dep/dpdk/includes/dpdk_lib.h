@@ -53,14 +53,17 @@
 uint8_t topbits_1(uint8_t data, int bits);
 uint16_t topbits_2(uint16_t data, int bits);
 uint32_t topbits_4(uint32_t data, int bits);
+uint64_t topbits_8(uint64_t data, int bits);
 
 uint8_t net2t4p4s_1(uint8_t data);
 uint16_t net2t4p4s_2(uint16_t data);
 uint32_t net2t4p4s_4(uint32_t data);
+uint64_t net2t4p4s_8(uint64_t data);
 
 uint8_t t4p4s2net_1(uint8_t data);
 uint16_t t4p4s2net_2(uint16_t data);
 uint32_t t4p4s2net_4(uint32_t data);
+uint64_t t4p4s2net_8(uint64_t data);
 
 //=============================================================================
 // Timings

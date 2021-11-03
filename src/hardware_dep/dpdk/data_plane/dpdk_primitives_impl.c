@@ -49,12 +49,16 @@ void MODIFY_INT32_INT32_BITS_PACKET(packet_descriptor_t* pd, header_instance_t h
 */
 
 // TODO simplify all other interface macros, too
-void MODIFY_INT32_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint32_t value32) {
-    MODIFY_INT32_INT32_AUTO(handle(header_desc_ins(pd, h), f), value32);
+void MODIFY_INT32_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint64_t value64) {
+
+    // header_desc_ins(pd, h) fetches the header from the packet
+    // handle(header, f) collects all informations about the field
+
+    MODIFY_INT32_INT32_AUTO(handle(header_desc_ins(pd, h), f), value64);
 }
 
 
-void set_field(fldT f[], bufT b[], uint32_t value32, int bit_width) {
+void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
 #ifdef T4P4S_DEBUG
     // exactly one of `f` and `b` have to be non-zero
     assert((f == 0) != (b == 0));
@@ -69,11 +73,11 @@ void set_field(fldT f[], bufT b[], uint32_t value32, int bit_width) {
               field_names[fld.fld],
               bit_width,
               byte_width,
-              value32,
+              value64,
               2 * byte_width,
-              value32);
+              value64);
 
-        MODIFY_INT32_INT32_AUTO_PACKET(fld.pd, fld.hdr, fld.fld, value32);
+        MODIFY_INT32_INT32_AUTO_PACKET(fld.pd, fld.hdr, fld.fld, value64);
     }
 
     // TODO implement this case, too

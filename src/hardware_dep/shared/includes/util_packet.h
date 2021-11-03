@@ -22,7 +22,7 @@ typedef struct {
     int      bytecount;
     int      bitoffset;
     int      byteoffset;
-    uint32_t mask;
+    uint64_t mask;
     int      fixed_width;
 } bitfield_handle_t;
 

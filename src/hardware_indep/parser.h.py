@@ -15,6 +15,8 @@
 #[     MODIFIED,
 #} } parsed_field_attr_t;
 
+from compiler_common import MAX_BIT_SIZE
+
 all_fields = [(hdr, fld) for hdr in hlir.header_instances for fld in hdr.urtype.fields]
 parsed_fields = [(hdr, fld) for hdr, fld in all_fields if not fld.preparsed]
 
@@ -24,7 +26,7 @@ for hdr in hlir.header_instances:
 
 #{ typedef struct {
 for hdr, fld in parsed_fields:
-    #[     uint32_t FLD(${hdr.name},${fld._expression.name});
+    #[     uint${MAX_BIT_SIZE}_t FLD(${hdr.name},${fld._expression.name});
 #[
 
 for hdr, fld in parsed_fields:
@@ -99,7 +101,7 @@ if len(hlir.header_stacks) == 0:
 #[     const int               bit_offset;
 #[     const int               byte_width;
 #[     const int               byte_offset;
-#[     const uint32_t          mask;
+#[     const uint${MAX_BIT_SIZE}_t          mask;
 #[     const bool              is_metadata;
 #[     const header_instance_t header_instance;
 #} } fld_info_t;

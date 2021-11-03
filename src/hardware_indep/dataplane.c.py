@@ -3,7 +3,7 @@
 
 from utils.codegen import format_declaration, format_statement, format_expr, format_type, gen_format_type, get_method_call_env
 from compiler_log_warnings_errors import addError, addWarning
-from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen
+from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen, MAX_BIT_SIZE
 
 #[ #include "dataplane_impl.h"
 #[ #include "dataplane.h"
@@ -18,8 +18,8 @@ table_infos = [(table, table.short_name + ("/keyless" if table.key_length_bits =
 # Table application
 
 for type in unique_everseen([comp['type'] for table in hlir.tables for smem in table.direct_meters + table.direct_counters for comp in smem.components]):
-    #[ void apply_direct_smem_$type(register_uint32_t* smem, uint32_t value, char* table_name, char* smem_type_name, char* smem_name) {
-    #[    debug("     : applying apply_direct_smem_$type(register_uint32_t (*smem)[1], uint32_t value, char* table_name, char* smem_type_name, char* smem_name)");
+    #[ void apply_direct_smem_$type(register_uint32_t* smem, uint${MAX_BIT_SIZE}_t value, char* table_name, char* smem_type_name, char* smem_name) {
+    #[    debug("     : applying apply_direct_smem_$type(register_uint32_t (*smem)[1], uint${MAX_BIT_SIZE}_t value, char* table_name, char* smem_type_name, char* smem_name)");
     #[ }
 
 ################################################################################

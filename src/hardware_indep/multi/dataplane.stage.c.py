@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2021 Eotvos Lorand University, Budapest, Hungary
 
+from compiler_common import MAX_BIT_SIZE
+
 compiler_common.current_compilation['is_multicompiled'] = True
 
 part_count = compiler_common.current_compilation['multi']
@@ -85,8 +87,8 @@ else:
 
     for ctl, idx, comp in ctl_stages:
         #{ void control_stage_${ctl.name}_${idx}(control_locals_${ctl.name}_t* local_vars, STDPARAMS)  {
-        #[     uint32_t value32, res32;
-        #[     (void)value32, (void)res32;
+        #[     uint${MAX_BIT_SIZE}_t value${MAX_BIT_SIZE}, res${MAX_BIT_SIZE};
+        #[     (void)value${MAX_BIT_SIZE}, (void)res${MAX_BIT_SIZE};
         compiler_common.enclosing_control = ctl
         #= format_statement(comp, ctl)
         compiler_common.enclosing_control = None

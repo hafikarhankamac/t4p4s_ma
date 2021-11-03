@@ -3,7 +3,7 @@
 
 from compiler_log_warnings_errors import addError, addWarning
 from utils.codegen import format_expr, format_type, format_statement, format_declaration
-from compiler_common import statement_buffer_value, generate_var_name, get_hdr_name
+from compiler_common import statement_buffer_value, generate_var_name, get_hdr_name, MAX_BIT_SIZE
 
 import functools
 
@@ -212,7 +212,7 @@ for s in parser.states:
 
     for idx, component in enumerate(s.components):
         #{ void ${state_component_name(s, idx, component)}(STDPARAMS) {
-        #[     uint32_t res32; (void)res32;
+        #[     uint${MAX_BIT_SIZE}_t res${MAX_BIT_SIZE}; (void)res${MAX_BIT_SIZE};
         #[     parser_state_t* local_vars = pstate;
 
         if 'call' in component:

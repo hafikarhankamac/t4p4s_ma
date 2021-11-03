@@ -4,7 +4,7 @@
 from utils.codegen import format_expr, make_const
 import utils.codegen
 from compiler_log_warnings_errors import addError, addWarning
-from compiler_common import generate_var_name, prepend_statement
+from compiler_common import generate_var_name, prepend_statement, MAX_BIT_SIZE
 
 #[ #include "dataplane.h"
 #[ #include "actions.h"
@@ -133,7 +133,7 @@ for table in hlir.tables:
         #{         .${action_id}_params = {
         for param, value_expr in zip(params, args):
             _, hex_content = make_const(value_expr.expression)
-            if param.urtype.size <= 32:
+            if param.urtype.size <= MAX_BIT_SIZE:
                 #[             .${param.name} = ${value_expr.expression.value},
             else:
                 #[             .${param.name} = { ${hex_content} }, // ${value_expr.expression.value}

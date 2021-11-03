@@ -2,11 +2,13 @@
 # Copyright 2020 Eotvos Lorand University, Budapest, Hungary
 
 # this allows proper filename display in error messages
+
 current_compilation = None
 type_env = {}
 
 ################################################################################
 
+MAX_BIT_SIZE = 32
 file_indent_str = "    "
 file_indentation_level = 0
 

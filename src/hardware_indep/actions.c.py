@@ -3,7 +3,7 @@
 
 from compiler_log_warnings_errors import addError, addWarning
 from utils.codegen import format_declaration, format_statement, format_expr, format_type, get_method_call_env
-from compiler_common import types, unique_everseen
+from compiler_common import types, unique_everseen, MAX_BIT_SIZE
 
 #[ #include <unistd.h>
 
@@ -24,13 +24,13 @@ for mcall in hlir.all_nodes.by_type('MethodCallStatement').map('methodCall').fil
     digest = mcall.typeArguments[0]
     funname = f'{mcall.method.path.name}__{digest.path.name}'
 
-    #{ ${format_type(mcall.urtype)} $funname(uint32_t /* ignored */ receiver, ctrl_plane_digest cpd, SHORT_STDPARAMS) {
+    #{ ${format_type(mcall.urtype)} $funname(uint${MAX_BIT_SIZE}_t /* ignored */ receiver, ctrl_plane_digest cpd, SHORT_STDPARAMS) {
     #[     debug(" " T4LIT(<<<<,outgoing) " " T4LIT(Sending digest,outgoing) " to port " T4LIT(%d,port) " using extern " T4LIT(extern_Digest_pack,extern) " for " T4LIT(cpd,extern) "\n", STD_DIGEST_RECEIVER_ID);
 
     #[    /* ctrl_plane_digest cpd = create_digest(bg, "digest");
 
     for fld in digest.urtype.fields:
-        if fld.urtype.size > 32:
+        if fld.urtype.size > MAX_BIT_SIZE:
             #[     dbg_bytes(digest.${fld.name}, (${fld.urtype.size}+7)/8, "       : $[field]{fld.name}/" T4LIT(${fld.urtype.size}) " = ");
             #[     add_digest_field(cpd, digest.${fld.name}, ${fld.urtype.size});
         else:

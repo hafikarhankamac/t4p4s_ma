@@ -3,7 +3,7 @@
 
 from utils.codegen import format_declaration, format_statement, format_expr, format_type, gen_format_type, get_method_call_env
 from compiler_log_warnings_errors import addError, addWarning
-from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen
+from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen, MAX_BIT_SIZE
 
 #[ #include "dataplane_impl.h"
 
@@ -26,15 +26,15 @@ for table in hlir.tables:
             #[         return;
             #}     }
 
-            if f.size <= 32:
-                #[     EXTRACT_INT32_BITS_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), *(uint32_t*)key);
-                #[     key += sizeof(uint32_t);
-            elif f.size > 32 and f.size % 8 == 0:
+            if f.size <= MAX_BIT_SIZE:
+                #[     EXTRACT_INT32_BITS_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), *(uint${MAX_BIT_SIZE}_t*)key);
+                #[     key += sizeof(uint${MAX_BIT_SIZE}_t);
+            elif f.size > MAX_BIT_SIZE and f.size % 8 == 0:
                 byte_width = (f.size+7)//8
                 #[     EXTRACT_BYTEBUF_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), key);
                 #[     key += ${byte_width};
             else:
-                addWarning("table key computation", f"Skipping unsupported field {f.id} ({f.size} bits): it is over 32 bits long and not byte aligned")
+                addWarning("table key computation", f"Skipping unsupported field {f.id} ({f.size} bits): it is over {MAX_BIT_SIZE} bits long and not byte aligned")
         else:
             fx = f.expression
             if fx.node_type == 'MethodCallExpression':
@@ -42,7 +42,7 @@ for table in hlir.tables:
                 var = generate_var_name(f'mcall_{fx.method.member}')
                 #[     ${format_type(fx.type)} $var = ${format_expr(fx)};
                 #[     memcpy(key, &$var, ${byte_width});
-            elif f.size <= 32 or f.size % 8 == 0:
+            elif f.size <= MAX_BIT_SIZE or f.size % 8 == 0:
                 if fx.node_type == 'Slice':
                     high = fx.e1.value
                     low = fx.e2.value
@@ -70,7 +70,7 @@ for table in hlir.tables:
                 fld_name = fx.path.name
                 #[     memcpy(key, &((control_locals_${table.control.name}_t*) pd->control_locals)->${fld_name}, ${byte_width});
             else:
-                addWarning("table key computation", f"Skipping unsupported key component {fx.path.name} ({f.size} bits): it is over 32 bits long and not byte aligned")
+                addWarning("table key computation", f"Skipping unsupported key component {fx.path.name} ({f.size} bits): it is over {MAX_BIT_SIZE} bits long and not byte aligned")
                 continue
 
             #[     key += ${byte_width};

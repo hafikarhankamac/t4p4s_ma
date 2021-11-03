@@ -3,7 +3,7 @@
 
 from utils.codegen import format_declaration, format_statement, format_expr, format_type, gen_format_type, get_method_call_env
 from compiler_log_warnings_errors import addError, addWarning
-from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen
+from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen, MAX_BIT_SIZE
 
 #[ #include "dataplane_impl.h"
 
@@ -50,7 +50,7 @@ for table in hlir.tables:
 
         fmt_long_param = lambda sz: ('%02x%02x ' * (sz//2) + ('%02x' if sz%2 == 1 else '')).strip()
 
-        param_fmts = (f'" T4LIT(%d) "=" T4LIT(%0{(sz+3)//4}x,bytes) "' if sz <= 32 else f'(" T4LIT({fmt_long_param((sz+7)//8)},bytes) ")' for param in params for sz in [param.urtype.size])
+        param_fmts = (f'" T4LIT(%d) "=" T4LIT(%0{(sz+3)//4}x,bytes) "' if sz <= MAX_BIT_SIZE else f'(" T4LIT({fmt_long_param((sz+7)//8)},bytes) ")' for param in params for sz in [param.urtype.size])
         params_str = ", ".join((f'%s" T4LIT({param.name},field) "/" T4LIT({param.urtype.size}b) "={fmt}' for param, fmt in zip(params, param_fmts)))
         if params_str != "":
             params_str = f'({params_str})'
@@ -58,7 +58,7 @@ for table in hlir.tables:
         #[         sprintf(out, "${params_str}%s",
         for param in params:
             bytesz = (param.urtype.size+7)//8
-            if param.urtype.size <= 32:
+            if param.urtype.size <= MAX_BIT_SIZE:
                 bytesz_aligned = 1 if bytesz == 1 else 2 if bytesz == 2 else 4
                 converter = '' if bytesz == 1 else f't4p4s2net_{bytesz_aligned}'
 

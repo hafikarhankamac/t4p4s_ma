@@ -3,14 +3,14 @@
 
 from utils.codegen import format_declaration, format_statement, format_expr, format_type, gen_format_type, get_method_call_env
 from compiler_log_warnings_errors import addError, addWarning
-from compiler_common import types, generate_var_name, get_hdrfld_name, unique_everseen
+from compiler_common import MAX_BIT_SIZE, types, generate_var_name, get_hdrfld_name, unique_everseen
 
 #[ #include "dataplane_impl.h"
 
 for hdr in hlir.header_instances:
     #{ void update_hdr_${hdr.name}(STDPARAMS) {
     for fld in hdr.urtype.fields:
-        if fld.preparsed or fld.urtype.size > 32:
+        if fld.preparsed or fld.urtype.size > MAX_BIT_SIZE:
             continue
 
         #{     if (pd->fields.FLD_ATTR(${hdr.name},${fld.name}) == MODIFIED) {

@@ -3,7 +3,7 @@
 
 from compiler_log_warnings_errors import addError, addWarning
 from utils.codegen import format_expr, format_type, format_statement, format_declaration
-from compiler_common import statement_buffer_value, generate_var_name, get_hdr_name
+from compiler_common import MAX_BIT_SIZE, statement_buffer_value, generate_var_name, get_hdr_name
 
 import functools
 
@@ -63,11 +63,14 @@ for hdr in hlir.header_instances:
             hdr_startidxs[hdr.name] = fldidx
 
         not0 = 0xffffffff
-        shift_up = (32 - fld.urtype.size) % 32
+        shift_up = (MAX_BIT_SIZE - fld.urtype.size) % MAX_BIT_SIZE
         top_bits = (not0 << shift_up) & not0
         mask = top_bits >> (fld.offset % 8)
         mask_txt = f'{mask:08x}'
-        binary_txt = '_'.join(f'{mask:032b}'[i:i+8] for i in range(0, 32, 8))
+
+        x = f'{mask:032b}' if MAX_BIT_SIZE == 32 else f'{mask:064b}'
+
+        binary_txt = '_'.join(x[i:i+8] for i in range(0, MAX_BIT_SIZE, 8))
 
         #[     // field ${hdr.name}.${fld.name}
         #{     {
@@ -75,7 +78,7 @@ for hdr in hlir.header_instances:
         #[         .bit_width = ${fld.urtype.size},
         #[         .bit_offset = ${fld.offset} % 8,
         #[         .byte_offset = ${fld.offset} / 8,
-        #[         .mask = __bswap_constant_32(0x${mask_txt}), // ${fld.urtype.size} bits at offset ${fld.offset}: ${binary_txt}
+        #[         .mask = __bswap_constant_${MAX_BIT_SIZE}(0x${mask_txt}), // ${fld.urtype.size} bits at offset ${fld.offset}: ${binary_txt}
         #[         .is_metadata = ${'true' if hdr.urtype.is_metadata else 'false'},
         #[         .header_instance = HDR(${'all_metadatas' if hdr.urtype.is_metadata else hdr.name}),
         #}     },

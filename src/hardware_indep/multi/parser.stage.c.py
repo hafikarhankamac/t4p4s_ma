@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2021 Eotvos Lorand University, Budapest, Hungary
 
+from compiler_common import MAX_BIT_SIZE
+
 compiler_common.current_compilation['is_multicompiled'] = True
 
 part_count = compiler_common.current_compilation['multi']
@@ -47,9 +49,9 @@ else:
         #[     hdr->var_width_field_bitwidth = vwlen;
 
         for fld in hdrtype.fields:
-            if fld.preparsed and fld.size <= 32:
-                #[     EXTRACT_INT32_AUTO_PACKET(pd, hdr, FLD(hdr,${fld.name}), value32)
-                #[     pd->fields.FLD(hdr,${fld.name}) = value32;
+            if fld.preparsed and fld.size <= MAX_BIT_SIZE:
+                #[     EXTRACT_INT32_AUTO_PACKET(pd, hdr, FLD(hdr,${fld.name}), value${MAX_BIT_SIZE})
+                #[     pd->fields.FLD(hdr,${fld.name}) = value${MAX_BIT_SIZE};
                 #[     pd->fields.ATTRFLD(hdr,${fld.name}) = NOT_MODIFIED;
 
         #[     dbg_bytes(hdr->pointer, hdr->length,

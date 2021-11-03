@@ -5,13 +5,12 @@ from inspect import getmembers, isfunction
 import sys
 
 from compiler_log_warnings_errors import addWarning, addError
-from compiler_common import types, with_base, resolve_reference, is_subsequent, groupby, group_references, fldid, fldid2, pp_type_16, make_const, SugarStyle, prepend_statement, append_statement, is_control_local_var, generate_var_name, pre_statement_buffer, post_statement_buffer, enclosing_control, unique_everseen, unspecified_value, get_raw_hdr_name, get_hdr_name, get_hdrfld_name, split_join_text
+from compiler_common import MAX_BIT_SIZE, types, with_base, resolve_reference, is_subsequent, groupby, group_references, fldid, fldid2, pp_type_16, make_const, SugarStyle, prepend_statement, append_statement, is_control_local_var, generate_var_name, pre_statement_buffer, post_statement_buffer, enclosing_control, unique_everseen, unspecified_value, get_raw_hdr_name, get_hdr_name, get_hdrfld_name, split_join_text
 from hlir16.hlir_attrs import simple_binary_ops, complex_binary_ops
 from itertools import takewhile
 
 ################################################################################
 
-MAX_BIT_SIZE = 32
 BINARY_COMPLEX_OPS_ARR_BITS = {
     'Add': ['bignum_add({0}, {1}, {2}, {3})', 'bignum_add_signed({0}, {1}, {2}, {3})'],
     'Sub': ['bignum_sub({0}, {1}, {2}, {3})', 'bignum_sub_signed({0}, {1}, {2}, {3})'],
@@ -43,7 +42,7 @@ funname_map = {
 ################################################################################
 
 def sizeup(size, use_array):
-    return 8 if use_array else 8 if size <= 8 else 16 if size <= 16 else 32 if size <= 32 else 8
+    return 8 if use_array else 8 if size <= 8 else 16 if size <= 16 else 32 if size <= 32 else MAX_BIT_SIZE if size <= MAX_BIT_SIZE else 8
 
 def bits_to_bytes(bits):
     return (bits + 7) // 8
@@ -196,6 +195,8 @@ def bit_bounding_unit(t):
         return "16"
     if t.size <= 32:
         return "32"
+    if t.size <= MAX_BIT_SIZE:
+        return str(MAX_BIT_SIZE)
     return "bytebuf"
 
 def member_to_hdr_fld_info(member_expr):
@@ -289,7 +290,7 @@ def is_primitive(typenode):
 
 
 def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_bytewidth, dst_name, dst_hdrname, dst_fld_name):
-    bitlen = 8 if dst.urtype.size <= 8 else 16 if dst.urtype.size <= 16 else 32
+    bitlen = 8 if dst.urtype.size <= 8 else 16 if dst.urtype.size <= 16 else 32 if dst.urtype.size <= 32 else 64
     bytelen = 1 if dst.urtype.size <= 8 else 2 if dst.urtype.size <= 16 else 4
     varname = generate_var_name(f'value{bitlen}b')
     if src.node_type == 'PathExpression':
@@ -660,7 +661,7 @@ def get_short_type(n):
         if n.size > MAX_BIT_SIZE:
             return 'buf'
         sign = 'i' if n.isSigned else 'u'
-        size = '8' if n.size <= 8 else '16' if n.size <= 16 else '32'
+        size = '8' if n.size <= 8 else '16' if n.size <= 16 else '32' if n.size <= 32 else '64'
         return f'{sign}{size}'
     return n.name
 
@@ -887,7 +888,7 @@ def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variabl
             elif et.isSigned and not edt.isSigned: #Cast from int<w> to bit<w>
                 #[ ${masking(edt, fe)}
             elif not et.isSigned and edt.isSigned: #Cast from bit<w> to int<w>
-                if edt.size in {8,16,32}:
+                if edt.size in {8,16,32,MAX_BIT_SIZE}:
                     #[ (($ft)$fe)
                 else:
                     addError('formatting an expression', f'Cast from bit<{et.size}> to int<{edt.size}> is not supported! (Only int<8>, int<16> and int<32> are supported.)')
@@ -927,7 +928,7 @@ def gen_fmt_ComplexOp(e, op, format_as_value=True, expand_parameters=False):
     elif e.type.node_type == 'Type_Bits':
         if not e.type.isSigned:
             #[ ${masking(e.type, op_expr)}
-        elif e.type.size in {8,16,32}:
+        elif e.type.size in {8,16,32,MAX_BIT_SIZE}:
             #[ ((${format_type(e.type)})${op_expr})
         else:
             addError('formatting an expression', f'Expression of type {e.node_type} is not supported on int<{e.type.size}>. (Only int<8>, int<16> and int<32> are supported.)')

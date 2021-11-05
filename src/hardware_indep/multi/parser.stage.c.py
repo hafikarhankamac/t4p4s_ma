@@ -22,8 +22,8 @@ else:
         #[ #include "parser_stages.h"
 
         #{ int parser_extract_${hdr.name}(uint32_t vwlen, STDPARAMS) {
-        #[     uint32_t value32; (void)value32;
-        #[     uint32_t res32; (void)res32;
+        #[     uint${MAX_BIT_SIZE}_t value${MAX_BIT_SIZE}; (void)value${MAX_BIT_SIZE};
+        #[     uint${MAX_BIT_SIZE}_t res${MAX_BIT_SIZE}; (void)res${MAX_BIT_SIZE};
         #[     parser_state_t* local_vars = pstate;
 
         hdrtype = hdr.urtype
@@ -50,7 +50,7 @@ else:
 
         for fld in hdrtype.fields:
             if fld.preparsed and fld.size <= MAX_BIT_SIZE:
-                #[     EXTRACT_INT32_AUTO_PACKET(pd, hdr, FLD(hdr,${fld.name}), value${MAX_BIT_SIZE})
+                #[     EXTRACT_INT64_AUTO_PACKET(pd, hdr, FLD(hdr,${fld.name}), value${MAX_BIT_SIZE})
                 #[     pd->fields.FLD(hdr,${fld.name}) = value${MAX_BIT_SIZE};
                 #[     pd->fields.ATTRFLD(hdr,${fld.name}) = NOT_MODIFIED;
 

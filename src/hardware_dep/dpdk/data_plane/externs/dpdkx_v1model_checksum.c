@@ -17,7 +17,7 @@ void verify_checksum(bool cond, uint8_buffer_t data, bitfield_handle_t cksum_fie
         if (algorithm == enum_HashAlgorithm_csum16) {
             calculated_cksum = rte_raw_cksum(data.buffer, data.buffer_size);
             calculated_cksum = (calculated_cksum == 0xffff) ? calculated_cksum : ((~calculated_cksum) & 0xffff);
-            EXTRACT_INT32_BITS(cksum_field_handle, current_cksum)
+            EXTRACT_INT64_BITS(cksum_field_handle, current_cksum)
         }
 
 #ifdef T4P4S_DEBUG
@@ -29,7 +29,7 @@ void verify_checksum(bool cond, uint8_buffer_t data, bitfield_handle_t cksum_fie
 #endif
 
         if (unlikely(calculated_cksum != current_cksum)) {
-            MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
+            MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
         }
     }
 }
@@ -47,7 +47,7 @@ void update_checksum(bool cond, uint8_buffer_t data, bitfield_handle_t cksum_fie
         debug("       : Packet checksum " T4LIT(updated,status) " to " T4LIT(%04x,bytes) "\n", calculated_cksum);
 
         // TODO temporarily disabled: this line modifies a lookup table's pointer instead of a checksum field
-        MODIFY_INT32_INT32_BITS(cksum_field_handle, calculated_cksum)
+        MODIFY_INT64_INT64_BITS(cksum_field_handle, calculated_cksum)
     }
 }
 
@@ -56,7 +56,7 @@ void verify_checksum_offload__u8s__u16(bitfield_handle_t cksum_field_handle, enu
 
     if ((pd->wrapper->ol_flags & PKT_RX_IP_CKSUM_BAD) != 0) {
         uint32_t res32;
-        MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
+        MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
 
         debug("       : Verifying packet checksum: " T4LIT(%04x,bytes) "\n", res32);
     }
@@ -67,7 +67,7 @@ void verify_checksum_offload(bitfield_handle_t cksum_field_handle, enum_HashAlgo
 
     if ((pd->wrapper->ol_flags & PKT_RX_IP_CKSUM_BAD) != 0) {
         uint32_t res32;
-        MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
+        MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), FLD(all_metadatas,checksum_error), 1)
 
         debug("       : Verifying packet checksum: " T4LIT(%04x,bytes) "\n", res32);
     }
@@ -80,7 +80,7 @@ void update_checksum_offload(bitfield_handle_t cksum_field_handle, enum_HashAlgo
     pd->wrapper->l3_len = len_l3;
     pd->wrapper->ol_flags |= PKT_TX_IPV4 | PKT_TX_IP_CKSUM;
     uint32_t res32;
-    MODIFY_INT32_INT32_BITS(cksum_field_handle, 0)
+    MODIFY_INT64_INT64_BITS(cksum_field_handle, 0)
 
     debug("       : Updating packet checksum (offload)\n");
     // TODO implement offload

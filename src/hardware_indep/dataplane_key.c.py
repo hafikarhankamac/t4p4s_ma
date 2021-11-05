@@ -27,7 +27,7 @@ for table in hlir.tables:
             #}     }
 
             if f.size <= MAX_BIT_SIZE:
-                #[     EXTRACT_INT32_BITS_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), *(uint${MAX_BIT_SIZE}_t*)key);
+                #[     EXTRACT_INT64_BITS_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), *(uint${MAX_BIT_SIZE}_t*)key);
                 #[     key += sizeof(uint${MAX_BIT_SIZE}_t);
             elif f.size > MAX_BIT_SIZE and f.size % 8 == 0:
                 byte_width = (f.size+7)//8

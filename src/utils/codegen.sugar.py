@@ -372,7 +372,7 @@ def gen_do_assignment(dst, src):
                             # (${format_type(dst.type)})(${format_expr(src, expand_parameters=True)})
                             is_local = 'path' in src and 'name' in src.path and is_control_local_var(src.path.name)
                             srcbuf = casting(dst.type, is_local, format_expr(src, expand_parameters=True))
-                            #[ MODIFY_INT32_INT32_BITS_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $srcbuf);
+                            #[ MODIFY_INT64_INT64_BITS_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $srcbuf);
                         else:
                             pass
 
@@ -429,7 +429,7 @@ def gen_do_assignment(dst, src):
         fldname = dst.member
 
         #pre[ ${format_type(dst.type)} $tmpvar = ${format_expr(src, expand_parameters=True)};
-        #[ MODIFY_INT32_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &$tmpvar, sizeof(${format_type(dst.type)}));
+        #[ MODIFY_INT64_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &$tmpvar, sizeof(${format_type(dst.type)}));
     else:
         #[ ${format_expr(dst)} = ${format_expr(src, expand_parameters=True)};
 
@@ -740,7 +740,7 @@ def gen_format_extern_single(m, mcall, smem_type, is_possibly_multiple, packets_
             ae = arg.expression
             hdrname = ae.expr.member if 'expr' in ae and 'member' in ae.expr else ae.expr.hdr_ref.name
             fldname = ae.member
-            #[ MODIFY_INT32_INT32_BITS_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), *$var);
+            #[ MODIFY_INT64_INT64_BITS_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), *$var);
 
 
 def is_ref(node):
@@ -1011,7 +1011,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             #pre{ if (!is_header_valid(HDR(${hdr.name}), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(${hdr.name},warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
             #pre} }
-            #[ (is_header_valid(HDR(${hdr.name}), pd) ? GET_INT32_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${e.member})) : ($unspec))
+            #[ (is_header_valid(HDR(${hdr.name}), pd) ? GET_INT64_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${e.member})) : ($unspec))
         else:
             is_meta = hdr.urtype('is_metadata', False)
             hdrname = "all_metadatas" if is_meta else hdr.name
@@ -1026,7 +1026,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
             #pre} }
             if size <= MAX_BIT_SIZE:
-                #pre[ ${format_type(fldtype)} $var = is_header_valid(HDR($hdrname), pd) ? GET_INT32_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec);
+                #pre[ ${format_type(fldtype)} $var = is_header_valid(HDR($hdrname), pd) ? GET_INT64_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec);
             else:
                 byte_width = (size+7) // 8
                 hex_content = split_join_text(f'{unspec}', 2, "0x", ", ")
@@ -1286,7 +1286,7 @@ def gen_fmt_StructInitializerExpression(e, format_as_value=True, expand_paramete
         ce = component.expression
         tref = ce.expr("ref.urtype")
         if tref and tref.is_metadata:
-            #[ .${component.name} = (GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member}))),
+            #[ .${component.name} = (GET_INT64_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member}))),
         else:
             if ce.type.size <= MAX_BIT_SIZE:
                 #[ .${component.name} = ${gen_format_expr(ce)},
@@ -1304,7 +1304,7 @@ def gen_fmt_StructExpression(e, format_as_value=True, expand_parameters=False, n
         else:
             tref = ce.expr("ref.urtype")
             if tref and tref.is_metadata:
-                #pre[ $varname.${component.name} = (GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member})));
+                #pre[ $varname.${component.name} = (GET_INT64_AUTO_PACKET(pd, HDR(all_metadatas), FLD(${tref.name},${ce.member})));
             else:
                 if ce.type.size <= MAX_BIT_SIZE:
                     #pre[ $varname.${component.name} = ${gen_format_expr(ce)};
@@ -1509,7 +1509,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(%s,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n", hdr_infos[HDR($hdrname)].name);
             #pre} }
-            #[ (is_header_valid(HDR(${hdrname}), pd) ? GET_INT32_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec))
+            #[ (is_header_valid(HDR(${hdrname}), pd) ? GET_INT64_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec))
     elif nt in complex_cases:
         case = complex_cases[nt]
         if nt == 'SelectExpression':
@@ -1633,7 +1633,7 @@ def gen_print_digest_fields(e, fldvars):
             sz = ((size+7)//8) * 8
             fldtxt = f'fld_{hdrname}_{fldname}'
             fldvar = fldvars[fldtxt]
-            #pre[ uint${sz}_t $fldvar = GET_INT32_AUTO_PACKET(pd,HDR($hdrname),FLD($hdrname,$fldname));
+            #pre[ uint${sz}_t $fldvar = GET_INT64_AUTO_PACKET(pd,HDR($hdrname),FLD($hdrname,$fldname));
             #pre[ dbg_bytes(&$fldvar, (${size}+7)/8, "        : "T4LIT(${hdrname},header)"."T4LIT(${fldname},field)"/"T4LIT(${size})" = ");
         else:
             #pre[ dbg_bytes(get_fld_pointer(pd, FLD($hdrname,$fldname)), (${size}+7)/8, "        : "T4LIT(${hdrname},header)"."T4LIT(${fldname},field)"/"T4LIT(${size})" = ");

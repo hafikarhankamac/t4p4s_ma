@@ -40,7 +40,7 @@
 #define MODIFY_INT32_BYTEBUF(pd, dstfield, src, srclen) { \
     value32 = 0; \
     memcpy(&value32, src, srclen); \
-    MODIFY_INT32_INT32_AUTO(pd, dstfield, value32); \
+    MODIFY_INT64_INT64_AUTO(pd, dstfield, value32); \
 }
 
 // Modifies a field in the packet by a uint32_t value (no byteorder conversion) [MAX 4 BYTES]
@@ -75,7 +75,7 @@
 // Modifies a field in the packet by a uint32_t value with byte conversion when necessary [MAX 4 BYTES]
 // assuming `uint32_t res32' is in the scope
 #define MODIFY_INT32_INT32_AUTO(pd, dstfield, value) { \
-    if(field_desc(dstfield).meta) MODIFY_INT32_INT32_BITS(pd, dstfield, value) else MODIFY_INT32_INT32_HTON(pd, dstfield, value) \
+    if(field_desc(dstfield).meta) MODIFY_INT64_INT64_BITS(pd, dstfield, value) else MODIFY_INT64_INT64_HTON(pd, dstfield, value) \
 }
 
 //TODO: This should be simplified or separated into multiple macros
@@ -114,7 +114,7 @@
 
 // Extracts a field to the given uint32_t variable with byte conversion when necessary [MAX 4 BYTES]
 #define EXTRACT_INT32_AUTO(pd, field, dst) { \
-    if(field_desc(field).meta) EXTRACT_INT32_BITS(pd, field, dst) else EXTRACT_INT32_NTOH(pd, field, dst) \
+    if(field_desc(field).meta) EXTRACT_INT64_BITS(pd, field, dst) else EXTRACT_INT64_NTOH(pd, field, dst) \
 }
 
 // Extracts a field to the given destination [ONLY BYTE ALIGNED]

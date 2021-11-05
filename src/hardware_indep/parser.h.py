@@ -82,6 +82,8 @@ if len(hlir.header_stacks) == 0:
 #[ // TODO documentation
 #[ #define mod_top(n, bits) (((bits-(n%bits)) % bits))
 
+
+# TODO: Do I have to change this?
 #[ // Produces a 32 bit int that has n bits on at the top end.
 #[ #define uint32_top_bits(n) (0xffffffff << mod_top(n, 32))
 

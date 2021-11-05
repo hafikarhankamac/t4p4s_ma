@@ -11,9 +11,9 @@ void check_hdr_is_valid(packet_descriptor_t* pd, header_instance_t hdr, const ch
     }
 }
 
-/*void GET_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld) {
+/*void GET_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld) {
     check_hdr_is_valid(pd, hdr, "get");
-    GET_INT32_AUTO(handle(header_desc_ins(pd, hdr), fld));
+    GET_INT64_AUTO(handle(header_desc_ins(pd, hdr), fld));
 }
 
 void EXTRACT_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* dst) {
@@ -21,14 +21,14 @@ void EXTRACT_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hdr, fiel
     EXTRACT_BYTEBUF(handle(header_desc_ins(pd, hdr), fld), dst);
 }
 
-void EXTRACT_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* dst) {
+void EXTRACT_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* dst) {
     check_hdr_is_valid(pd, hdr, "read");
-    EXTRACT_INT32_AUTO(handle(header_desc_ins(pd, hdr), fld), dst);
+    EXTRACT_INT64_AUTO(handle(header_desc_ins(pd, hdr), fld), dst);
 }
 
-void EXTRACT_INT32_BITS_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* dst) {
+void EXTRACT_INT64_BITS_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* dst) {
     check_hdr_is_valid(pd, hdr, "read");
-    EXTRACT_INT32_BITS(handle(header_desc_ins(pd, hdr), fld), dst);
+    EXTRACT_INT64_BITS(handle(header_desc_ins(pd, hdr), fld), dst);
 }
 */
 
@@ -37,24 +37,24 @@ void MODIFY_BYTEBUF_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hd
     MODIFY_BYTEBUF_BYTEBUF(handle(header_desc_ins(pd, hdr), fld), src, srclen);
 }
 
-/*void MODIFY_INT32_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* src, int srclen) {
+/*void MODIFY_INT64_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, void* src, int srclen) {
     check_hdr_is_valid(pd, hdr, "read");
-    MODIFY_INT32_BYTEBUF(handle(header_desc_ins(pd, hdr), fld), src, srclen);
+    MODIFY_INT64_BYTEBUF(handle(header_desc_ins(pd, hdr), fld), src, srclen);
 }
 
-void MODIFY_INT32_INT32_BITS_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, uint32_t value32) {
+void MODIFY_INT64_INT64_BITS_PACKET(packet_descriptor_t* pd, header_instance_t hdr, field_instance_t fld, uint32_t value32) {
     check_hdr_is_valid(pd, hdr, "read");
-    MODIFY_INT32_INT32_BITS(handle(header_desc_ins(pd, hdr), fld), value32);
+    MODIFY_INT64_INT64_BITS(handle(header_desc_ins(pd, hdr), fld), value32);
 }
 */
 
 // TODO simplify all other interface macros, too
-void MODIFY_INT32_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint64_t value64) {
+void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint64_t value64) {
 
     // header_desc_ins(pd, h) fetches the header from the packet
     // handle(header, f) collects all informations about the field
 
-    MODIFY_INT32_INT32_AUTO(handle(header_desc_ins(pd, h), f), value64);
+    MODIFY_INT64_INT64_AUTO(handle(header_desc_ins(pd, h), f), value64);
 }
 
 
@@ -77,7 +77,7 @@ void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
               2 * byte_width,
               value64);
 
-        MODIFY_INT32_INT32_AUTO_PACKET(fld.pd, fld.hdr, fld.fld, value64);
+        MODIFY_INT64_INT64_AUTO_PACKET(fld.pd, fld.hdr, fld.fld, value64);
     }
 
     // TODO implement this case, too

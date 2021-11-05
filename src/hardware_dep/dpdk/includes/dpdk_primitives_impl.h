@@ -80,17 +80,17 @@
 
 // Modifies a field in the packet by the given source and length (byte conversion when necessary) [MAX 4 BYTES]
 // assuming `uint32_t value32' is in the scope
-#define MODIFY_INT32_BYTEBUF(dst_fd, src, srclen) { \
+#define MODIFY_INT64_BYTEBUF(dst_fd, src, srclen) { \
     value64 = 0; \
     memcpy(&value64, src, srclen); \
-    MODIFY_INT32_INT32_AUTO(dst_fd, value64); \
+    MODIFY_INT64_INT64_AUTO(dst_fd, value64); \
 }
 
 #define MASK_AT(value64,mask,bitcount) ((value64 & ((mask) >> (bitcount))) << (bitcount))
 
 // Modifies a field in the packet by a uint32_t value (no byteorder conversion) [MAX 4 BYTES]
 // assuming `uint32_t res32' is in the scope
-#define MODIFY_INT32_INT32_BITS(dst_fd, value64) { \
+#define MODIFY_INT64_INT64_BITS(dst_fd, value64) { \
     { \
         uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd)); \
         if (dst_fd.bytecount == 1) { \
@@ -112,7 +112,7 @@
 
 // Modifies a field in the packet by a uint32_t value with byte conversion (always) [MAX 4 BYTES]
 // assuming `uint32_t res32' is in the scope
-#define MODIFY_INT32_INT32_HTON(dst_fd, value64) { \
+#define MODIFY_INT64_INT64_HTON(dst_fd, value64) { \
     { \
         uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd)); \
         if (dst_fd.bytecount == 1) \
@@ -129,8 +129,8 @@
 
 // Modifies a field in the packet by a uint32_t value with byte conversion when necessary [MAX 4 BYTES]
 // assuming `uint32_t res32' is in the scope
-#define MODIFY_INT32_INT32_AUTO(dst_fd, value64) { \
-    if (dst_fd.meta) { MODIFY_INT32_INT32_BITS(dst_fd, value64) } else { MODIFY_INT32_INT32_HTON(dst_fd, value64) } \
+#define MODIFY_INT64_INT64_AUTO(dst_fd, value64) { \
+    if (dst_fd.meta) { MODIFY_INT64_INT64_BITS(dst_fd, value64) } else { MODIFY_INT64_INT64_HTON(dst_fd, value64) } \
 }
 
 /*******************************************************************************
@@ -139,7 +139,7 @@
 
 //TODO: This should be simplified or separated into multiple macros
 // Gets the value of a field
-#define GET_INT32_AUTO(fd) (fd.meta ? \
+#define GET_INT64_AUTO(fd) (fd.meta ? \
     (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
                                         ((FLD_BYTES(fd) & MASK_LOW(fd)) | \
                                         ((FLD_BYTES(fd) & MASK_MID(fd)) >> fd.bitoffset) | \
@@ -155,7 +155,7 @@
 *******************************************************************************/
 
 // Extracts a field to the given uint32_t variable with byte conversion (always) [MAX 4 BYTES]
-#define EXTRACT_INT32_NTOH(fd, dst) { \
+#define EXTRACT_INT64_NTOH(fd, dst) { \
     if (fd.bytecount == 1) \
         dst =                  FLD_MASKED_BYTES(fd) >> (8  - fd.bitcount); \
     else if (fd.bytecount == 2) \
@@ -167,7 +167,7 @@
 }
 
 // Extracts a field to the given uint32_t variable (no byteorder conversion) [MAX 4 BYTES]
-#define EXTRACT_INT32_BITS(fd, dst) { \
+#define EXTRACT_INT64_BITS(fd, dst) { \
     if (fd.bytecount == 1) \
         dst = FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount); \
     else if (fd.bytecount == 2) \
@@ -182,8 +182,8 @@
 }
 
 // Extracts a field to the given uint32_t variable with byte conversion when necessary [MAX 4 BYTES]
-#define EXTRACT_INT32_AUTO(fd, dst) { \
-    if (fd.meta) { EXTRACT_INT32_BITS(fd, dst) } else { EXTRACT_INT32_NTOH(fd, dst) } \
+#define EXTRACT_INT64_AUTO(fd, dst) { \
+    if (fd.meta) { EXTRACT_INT64_BITS(fd, dst) } else { EXTRACT_INT64_NTOH(fd, dst) } \
 }
 
 // Extracts a field to the given destination [ONLY BYTE ALIGNED]
@@ -196,4 +196,4 @@
 
 void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width);
 
-void MODIFY_INT32_INT32_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint64_t value64);
+void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h, field_instance_t f, uint64_t value64);

@@ -40,9 +40,9 @@ for loc in parser.parserLocals:
 ################################################################################
 
 #{ void drop_packet(STDPARAMS) {
-#[     uint32_t value32; (void)value32;
-#[     uint32_t res32; (void)res32;
-#[     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_DROP_VALUE);
+#[     uint${MAX_BIT_SIZE}_t value${MAX_BIT_SIZE}; (void)value${MAX_BIT_SIZE};
+#[     uint${MAX_BIT_SIZE}_t res${MAX_BIT_SIZE}; (void)res${MAX_BIT_SIZE};
+#[     MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_DROP_VALUE);
 #} }
 
 

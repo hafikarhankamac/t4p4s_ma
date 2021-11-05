@@ -14,7 +14,7 @@ for hdr in hlir.header_instances:
             continue
 
         #{     if (pd->fields.FLD_ATTR(${hdr.name},${fld.name}) == MODIFIED) {
-        #[         MODIFY_INT32_INT32_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${fld.name}), pd->fields.FLD(${hdr.name},${fld.name}));
+        #[         MODIFY_INT64_INT64_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${fld.name}), pd->fields.FLD(${hdr.name},${fld.name}));
         #}     }
     #} }
     #[

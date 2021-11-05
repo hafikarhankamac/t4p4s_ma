@@ -22,17 +22,17 @@ typedef struct {
 
 // Extract operations
 
-#define GET_INT32_AUTO_PACKET(pd , h, f) GET_INT32_AUTO(handle(header_desc_ins(pd , h), f))
-#define GET_INT32_AUTO_BUFFER(buf, w, f) GET_INT32_AUTO(handle(header_desc_buf(buf, w), f))
+#define GET_INT64_AUTO_PACKET(pd , h, f) GET_INT64_AUTO(handle(header_desc_ins(pd , h), f))
+#define GET_INT64_AUTO_BUFFER(buf, w, f) GET_INT64_AUTO(handle(header_desc_buf(buf, w), f))
 
 #define EXTRACT_BYTEBUF_PACKET(pd , h, f, dst) EXTRACT_BYTEBUF(handle(header_desc_ins(pd , h), f), dst)
 #define EXTRACT_BYTEBUF_BUFFER(buf, w, f, dst) EXTRACT_BYTEBUF(handle(header_desc_buf(buf, w), f), dst)
 
-#define EXTRACT_INT32_AUTO_PACKET(pd , h, f, dst) EXTRACT_INT32_AUTO(handle(header_desc_ins(pd , h), f), dst)
-#define EXTRACT_INT32_AUTO_BUFFER(buf, w, f, dst) EXTRACT_INT32_AUTO(handle(header_desc_buf(buf, w), f), dst)
+#define EXTRACT_INT64_AUTO_PACKET(pd , h, f, dst) EXTRACT_INT64_AUTO(handle(header_desc_ins(pd , h), f), dst)
+#define EXTRACT_INT64_AUTO_BUFFER(buf, w, f, dst) EXTRACT_INT64_AUTO(handle(header_desc_buf(buf, w), f), dst)
 
-#define EXTRACT_INT32_BITS_PACKET(pd , h, f, dst) EXTRACT_INT32_BITS(handle(header_desc_ins(pd , h), f), dst)
-#define EXTRACT_INT32_BITS_BUFFER(buf, w, f, dst) EXTRACT_INT32_BITS(handle(header_desc_buf(buf, w), f), dst)
+#define EXTRACT_INT64_BITS_PACKET(pd , h, f, dst) EXTRACT_INT64_BITS(handle(header_desc_ins(pd , h), f), dst)
+#define EXTRACT_INT64_BITS_BUFFER(buf, w, f, dst) EXTRACT_INT64_BITS(handle(header_desc_buf(buf, w), f), dst)
 
 // Modify operations
 
@@ -40,13 +40,13 @@ void MODIFY_BYTEBUF_BYTEBUF_PACKET(packet_descriptor_t* pd, header_instance_t hd
 
 #define MODIFY_BYTEBUF_BYTEBUF_BUFFER(buf, w, f, src, srclen) MODIFY_BYTEBUF_BYTEBUF(handle(header_desc_buf(buf, w), f), src, srclen);
 
-#define MODIFY_INT32_BYTEBUF_PACKET(pd , h, f, src, srclen) MODIFY_INT32_BYTEBUF(handle(header_desc_ins(pd , h), f), src, srclen);
-#define MODIFY_INT32_BYTEBUF_BUFFER(buf, w, f, src, srclen) MODIFY_INT32_BYTEBUF(handle(header_desc_buf(buf, w), f), src, srclen);
+#define MODIFY_INT64_BYTEBUF_PACKET(pd , h, f, src, srclen) MODIFY_INT64_BYTEBUF(handle(header_desc_ins(pd , h), f), src, srclen);
+#define MODIFY_INT64_BYTEBUF_BUFFER(buf, w, f, src, srclen) MODIFY_INT64_BYTEBUF(handle(header_desc_buf(buf, w), f), src, srclen);
 
-#define MODIFY_INT32_INT32_BITS_PACKET(pd , h, f, value32) MODIFY_INT32_INT32_BITS(handle(header_desc_ins(pd , h), f), value32);
-#define MODIFY_INT32_INT32_BITS_BUFFER(buf, w, f, value32) MODIFY_INT32_INT32_BITS(handle(header_desc_buf(buf, w), f), value32);
+#define MODIFY_INT64_INT64_BITS_PACKET(pd , h, f, value64) MODIFY_INT64_INT64_BITS(handle(header_desc_ins(pd , h), f), value64);
+#define MODIFY_INT64_INT64_BITS_BUFFER(buf, w, f, value64) MODIFY_INT64_INT64_BITS(handle(header_desc_buf(buf, w), f), value64);
 
-#define MODIFY_INT32_INT32_AUTO_BUFFER(buf, w, f, value32) MODIFY_INT32_INT32_AUTO(handle(header_desc_buf(buf, w), f), value32);
+#define MODIFY_INT64_INT64_AUTO_BUFFER(buf, w, f, value64) MODIFY_INT64_INT64_AUTO(handle(header_desc_buf(buf, w), f), value64);
 
 // Extract statement
 

@@ -78,8 +78,8 @@ for hdr in hlir.header_instances.filter('urtype.is_metadata', False):
 #[     init_headers(SHORT_STDPARAMS_IN);
 #[     reset_headers(SHORT_STDPARAMS_IN);
 
-#[     uint32_t res32;
-#[     MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_INIT_VALUE);
+#[     uint${MAX_BIT_SIZE}_t res${MAX_BIT_SIZE};
+#[     MODIFY_INT64_INT64_BITS_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD, EGRESS_INIT_VALUE);
 #} }
 
 ################################################################################
@@ -224,7 +224,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #} }
 
 #{ bool is_packet_dropped(STDPARAMS) {
-#[      return GET_INT32_AUTO_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD) == EGRESS_DROP_VALUE;
+#[      return GET_INT64_AUTO_PACKET(pd, HDR(all_metadatas), EGRESS_META_FLD) == EGRESS_DROP_VALUE;
 #} }
 
 

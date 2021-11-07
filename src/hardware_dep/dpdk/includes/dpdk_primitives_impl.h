@@ -98,13 +98,10 @@
         } else if (dst_fd.bytecount == 2) { \
             res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0); \
             res64 |= MASK_AT(value64, MASK_TOP(dst_fd), 16 - dst_fd.bitwidth); \
-        } else if (dst_fd.bytecount <= 4) { \
+        } else { \
             res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0); \
             res64 |= MASK_AT(value64, MASK_MID(dst_fd), dst_fd.bitoffset); \
             res64 |= MASK_AT(value64, MASK_TOP(dst_fd), dst_fd.bytecount * 8 - dst_fd.bitwidth); \
-        } \
-        else { \
-            // TODO \
         } \
         memcpy(dst_fd.byte_addr, &res64, dst_fd.bytecount); \
     } \
@@ -173,12 +170,10 @@
     else if (fd.bytecount == 2) \
         dst = (FLD_BYTES(fd) & MASK_LOW(fd)) | \
              ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (16 - fd.bitwidth)); \
-    else if (fd.bytecount == 4) \
+    else \
         dst = (FLD_BYTES(fd) & MASK_LOW(fd)) | \
              ((FLD_BYTES(fd) & MASK_MID(fd)) >> fd.bitoffset) | \
              ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (fd.bytecount * 8 - fd.bitwidth)); \
-    else { \ // TODO
-    } \
 }
 
 // Extracts a field to the given uint32_t variable with byte conversion when necessary [MAX 4 BYTES]

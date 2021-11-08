@@ -40,7 +40,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         standard_metadata.egress_port = port;
     }
     @name(".bcast") action bcast() {
-        standard_metadata.egress_port = 9w100;
+        standard_metadata.egress_port = 9w3;
     }
     @name(".mac_learn") action mac_learn() {
         digest<mac_learn_digest>((bit<32>)1024, { hdr.ethernet.srcAddr, standard_metadata.ingress_port });

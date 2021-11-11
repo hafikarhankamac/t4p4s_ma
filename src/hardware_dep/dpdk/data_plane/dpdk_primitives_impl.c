@@ -54,7 +54,12 @@ void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h
     // header_desc_ins(pd, h) fetches the header from the packet
     // handle(header, f) collects all informations about the field
 
-    MODIFY_INT64_INT64_AUTO(handle(header_desc_ins(pd, h), f), value64);
+    bitfield_handle_t fd = handle(header_desc_buf(pd, h), f);
+
+    if (fd.meta)
+        MODIFY_INT64_INT64_BITS(fd, value64);
+    else
+        MODIFY_INT64_INT64_HTON(fd, value64);
 }
 
 

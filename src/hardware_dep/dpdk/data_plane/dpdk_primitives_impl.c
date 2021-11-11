@@ -62,21 +62,6 @@ void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h
         MODIFY_INT64_INT64_HTON(fd, value64);
 }
 
-void MODIFY_INT64_INT64_HTON(bitfield_handle_t dst_fd, uint64_t value64) {
-    uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd));
-
-    if (dst_fd.bytecount == 1) {
-        res64 |= (value64 << (8 - dst_fd.bitcount) & FLD_MASK(dst_fd));
-    } else if (dst_fd.bytecount == 2) {
-        res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0);
-        res64 |= MASK_AT(value64, MASK_TOP(dst_fd), 16 - dst_fd.bitwidth);
-    } else {
-        res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0);
-        res64 |= MASK_AT(value64, MASK_MID(dst_fd), dst_fd.bitoffset);
-        res64 |= MASK_AT(value64, MASK_TOP(dst_fd), dst_fd.bytecount * 8 - dst_fd.bitwidth);
-    }
-    memcpy(dst_fd.byte_addr, &res64, dst_fd.bytecount);
-}
 
 void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
 #ifdef T4P4S_DEBUG

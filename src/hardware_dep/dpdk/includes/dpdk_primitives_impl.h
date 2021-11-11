@@ -57,11 +57,8 @@
 #define BYTECOUNT(fd)  ((fd.bitcount - 1) / 8)
 
 #define MASK_LOW(fd) (FLD_MASK(fd) & 0xffUL) // Gets the lowest byte
-#define MASK_MID(fd) (FLD_MASK(fd) & (~0UL >> ((8 - BYTECOUNT(fd)) * 8)) & ~0xffUL) // Gets the second and third bytes (counting from the right)
+#define MASK_MID(fd) (FLD_MASK(fd) & (~0UL >> ((8 - BYTECOUNT(fd)) * 8)) & ~0xffUL) // Gets the middle bytes
 #define MASK_TOP(fd) (FLD_MASK(fd) & (0xffUL << (BYTECOUNT(fd) * 8))) // Gets the highest byte depending on the size
-
-// TODO
-#define MAST_HIGH(fd) (FLD_MASK(fd) & ((~0UL >> ((8 - BYTECOUNT(fd)) * 8)) & 0xffffffff00000000))
 
 /*******************************************************************************
    Modify - statement - bytebuf
@@ -75,11 +72,11 @@
 }
 
 /*******************************************************************************
-   Modify - statement - int32
+   Modify - statement - int64
 *******************************************************************************/
 
 // Modifies a field in the packet by the given source and length (byte conversion when necessary) [MAX 4 BYTES]
-// assuming `uint32_t value32' is in the scope
+// assuming `uint64_t value64' is in the scope
 #define MODIFY_INT64_BYTEBUF(dst_fd, src, srclen) { \
     value64 = 0; \
     memcpy(&value64, src, srclen); \
@@ -88,8 +85,8 @@
 
 #define MASK_AT(value64,mask,bitcount) ((value64 & ((mask) >> (bitcount))) << (bitcount))
 
-// Modifies a field in the packet by a uint32_t value (no byteorder conversion) [MAX 4 BYTES]
-// assuming `uint32_t res32' is in the scope
+// Modifies a field in the packet by a uint64_t value (no byteorder conversion) [MAX 4 BYTES]
+// assuming `uint64_t res64' is in the scope
 #define MODIFY_INT64_INT64_BITS(dst_fd, value64) { \
     { \
         uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd)); \
@@ -107,8 +104,8 @@
     } \
 }
 
-// Modifies a field in the packet by a uint32_t value with byte conversion (always) [MAX 4 BYTES]
-// assuming `uint32_t res32' is in the scope
+// Modifies a field in the packet by a uint64_t value with byte conversion (always) [MAX 4 BYTES]
+// assuming `uint64_t res64' is in the scope
 #define MODIFY_INT64_INT64_HTON(dst_fd, value64) { \
     { \
         uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd)); \
@@ -124,8 +121,8 @@
     } \
 }
 
-// Modifies a field in the packet by a uint32_t value with byte conversion when necessary [MAX 4 BYTES]
-// assuming `uint32_t res32' is in the scope
+// Modifies a field in the packet by a uint64_t value with byte conversion when necessary [MAX 4 BYTES]
+// assuming `uint64_t res64' is in the scope
 #define MODIFY_INT64_INT64_AUTO(dst_fd, value64) { \
     if (dst_fd.meta) { MODIFY_INT64_INT64_BITS(dst_fd, value64) } else { MODIFY_INT64_INT64_HTON(dst_fd, value64) } \
 }
@@ -134,24 +131,24 @@
    Extract - expression (unpack value and return it)
 *******************************************************************************/
 
-//TODO: This should be simplified or separated into multiple macros
 // Gets the value of a field
-#define GET_INT64_AUTO(fd) (fd.meta ? \
-    (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
+
+#define GET_INT64_AUTO_META(fd) (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
                                         ((FLD_BYTES(fd) & MASK_LOW(fd)) | \
                                         ((FLD_BYTES(fd) & MASK_MID(fd)) >> fd.bitoffset) | \
-                                        ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (fd.bytecount * 8 - fd.bitwidth)))) :\
-                                        // TODO
+                                        ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (fd.bytecount * 8 - fd.bitwidth))))
+
+#define GET_INT64_AUTO_NON_META(fd) \
     (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
         (fd.bytecount == 2 ? (rte_be_to_cpu_16(FLD_MASKED_BYTES(fd)) >> (16 - fd.bitcount)) : \
-            (rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount)))))
-            // TODO
+            (d.bytecount <= 4 ? (rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount)) : \
+                rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount))))
 
 /*******************************************************************************
    Extract - statement (unpack value to a destination variable)
 *******************************************************************************/
 
-// Extracts a field to the given uint32_t variable with byte conversion (always) [MAX 4 BYTES]
+// Extracts a field to the given uint64_t variable with byte conversion (always) [MAX 4 BYTES]
 #define EXTRACT_INT64_NTOH(fd, dst) { \
     if (fd.bytecount == 1) \
         dst =                  FLD_MASKED_BYTES(fd) >> (8  - fd.bitcount); \
@@ -163,7 +160,7 @@
         dst = rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount);
 }
 
-// Extracts a field to the given uint32_t variable (no byteorder conversion) [MAX 4 BYTES]
+// Extracts a field to the given uint64_t variable (no byteorder conversion) [MAX 4 BYTES]
 #define EXTRACT_INT64_BITS(fd, dst) { \
     if (fd.bytecount == 1) \
         dst = FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount); \
@@ -176,7 +173,7 @@
              ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (fd.bytecount * 8 - fd.bitwidth)); \
 }
 
-// Extracts a field to the given uint32_t variable with byte conversion when necessary [MAX 4 BYTES]
+// Extracts a field to the given uint64_t variable with byte conversion when necessary [MAX 4 BYTES]
 #define EXTRACT_INT64_AUTO(fd, dst) { \
     if (fd.meta) { EXTRACT_INT64_BITS(fd, dst) } else { EXTRACT_INT64_NTOH(fd, dst) } \
 }

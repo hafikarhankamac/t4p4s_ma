@@ -57,6 +57,68 @@ void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h
     MODIFY_INT64_INT64_AUTO(handle(header_desc_ins(pd, h), f), value64);
 }
 
+void MODIFY_INT64_INT64_AUTO(bitfield_handle_t dst_fd, uint64_t value64) {
+    if (dst_fd.meta)
+        MODIFY_INT64_INT64_BITS(dst_fd, value64)
+    else
+        MODIFY_INT64_INT64_HTON(dst_fd, value64)
+}
+
+void MODIFY_INT64_INT64_HTON(bitfield_handle_t dst_fd, uint64_t value64) {
+    uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd));
+    
+    if (dst_fd.bytecount == 1)
+        res64 |= (value64 << (8 - dst_fd.bitcount)) & FLD_MASK(dst_fd);
+    else if (dst_fd.bytecount == 2)
+        res64 |= rte_cpu_to_be_16(value64 << (16 - dst_fd.bitcount)) & FLD_MASK(dst_fd);
+    else if (dst_fd.bytecount <= 4)
+        res64 |= rte_cpu_to_be_32(value64 << (32 - dst_fd.bitcount)) & FLD_MASK(dst_fd);
+    else
+        res64 |= rte_cpu_to_be_64(value64 << (64 - dst_fd.bitcount)) & FLD_MASK(dst_fd);
+
+    memcpy(dst_fd.byte_addr, &res64, dst_fd.bytecount);
+}
+
+void MODIFY_INT64_INT64_BITS(bitfield_handle_t dst_fd, uint64_t value64) {
+    uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd));
+    if (dst_fd.bytecount == 1) {
+        res64 |= (value64 << (8 - dst_fd.bitcount) & FLD_MASK(dst_fd));
+    } else if (dst_fd.bytecount == 2) {
+        res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0);
+        res64 |= MASK_AT(value64, MASK_TOP(dst_fd), 16 - dst_fd.bitwidth);
+    } else {
+        res64 |= MASK_AT(value64, MASK_LOW(dst_fd), 0);
+        res64 |= MASK_AT(value64, MASK_MID(dst_fd), dst_fd.bitoffset);
+        res64 |= MASK_AT(value64, MASK_TOP(dst_fd), dst_fd.bytecount * 8 - dst_fd.bitwidth);
+    }
+    memcpy(dst_fd.byte_addr, &res64, dst_fd.bytecount);
+}
+
+uint64_t GET_INT64_AUTO(bitfield_handle_t fd) {
+    return fd.meta ? GET_INT64_AUTO_META(fd) : GET_INT64_AUTO_NON_META(fd)
+}
+
+uint64_t GET_INT64_AUTO_META(bitfield_handle_t fd) {
+    if (fd.bytecount == 1)
+        return FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount);
+
+    return (FLD_BYTES(fd) & MASK_LOW(fd)) |
+            ((FLD_BYTES(fd) & MASK_MID(fd)) >> fd.bitoffset) |
+            ((FLD_BYTES(fd) & MASK_TOP(fd)) >> (fd.bytecount * 8 - fd.bitwidth));
+}
+
+uint64_t GET_INT64_AUTO_NON_META(bitfield_handle_t fd) {
+    if (fd.bytecount == 1)
+        return FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount);
+    
+    if (fd.bytecount == 2)
+        return rte_be_to_cpu_16(FLD_MASKED_BYTES(fd)) >> (16 - fd.bitcount);
+
+    if (fd.bytecount <= 4)
+        return rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount);
+
+    return rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount);
+}
 
 void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
 #ifdef T4P4S_DEBUG

@@ -49,8 +49,8 @@
 /* Casts */
 #define FLD_BYTES(fd) (  fd.bytecount == 1 ? (*(uint8_t*)  fd.byte_addr) : \
                          ( fd.bytecount == 2 ? (*(uint16_t*) fd.byte_addr) : \
-                         ( fd.bytecount <= 4 ? (*(uint32_t*) fd.byte_addr) ) : \
-                                                (*(uint64_t*) fd.byte_addr)))
+                         ( fd.bytecount <= 4 ? (*(uint32_t*) fd.byte_addr) : \
+                                                (*(uint64_t*) fd.byte_addr))) )
 
 #define FLD_MASKED_BYTES(fd) (FLD_BYTES(fd) & FLD_MASK(fd))
 
@@ -133,6 +133,8 @@
 
 // Gets the value of a field
 
+#define GET_INT64_AUTO(fd) (fd.meta ? GET_INT64_AUTO_META(fd) : GET_INT64_AUTO_NON_META(fd))
+
 #define GET_INT64_AUTO_META(fd) (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
                                         ((FLD_BYTES(fd) & MASK_LOW(fd)) | \
                                         ((FLD_BYTES(fd) & MASK_MID(fd)) >> fd.bitoffset) | \
@@ -157,7 +159,7 @@
     else if (fd.bytecount <= 4) \
         dst = rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount); \
     else \
-        dst = rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount);
+        dst = rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount); \
 }
 
 // Extracts a field to the given uint64_t variable (no byteorder conversion) [MAX 4 BYTES]

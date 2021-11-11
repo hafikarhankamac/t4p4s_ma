@@ -1630,7 +1630,7 @@ def gen_print_digest_fields(e, fldvars):
     #pre[ debug("    " T4LIT(<,outgoing) " " T4LIT(Sending digest,outgoing) " to port " T4LIT(%d,port) "\n", ${e.arguments[0].expression.value});
     for hdrname, fldname, size in fld_infos(e):
         if size <= MAX_BIT_SIZE:
-            sz = ((size+7)//8) * 8
+            sz = sizeup(size, False)
             fldtxt = f'fld_{hdrname}_{fldname}'
             fldvar = fldvars[fldtxt]
             #pre[ uint${sz}_t $fldvar = GET_INT64_AUTO_PACKET(pd,HDR($hdrname),FLD($hdrname,$fldname));

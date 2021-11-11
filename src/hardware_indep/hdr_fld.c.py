@@ -62,7 +62,7 @@ for hdr in hlir.header_instances:
         if hdr.name not in hdr_startidxs:
             hdr_startidxs[hdr.name] = fldidx
 
-        not0 = 0xffffffff
+        not0 = 0xffffffff_ffffffff
         shift_up = (MAX_BIT_SIZE - fld.urtype.size) % MAX_BIT_SIZE
         top_bits = (not0 << shift_up) & not0
         mask = top_bits >> (fld.offset % 8)

@@ -143,7 +143,7 @@
 #define GET_INT64_AUTO_NON_META(fd) \
     (fd.bytecount == 1 ? (FLD_MASKED_BYTES(fd) >> (8 - fd.bitcount)) : \
         (fd.bytecount == 2 ? (rte_be_to_cpu_16(FLD_MASKED_BYTES(fd)) >> (16 - fd.bitcount)) : \
-            (d.bytecount <= 4 ? (rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount)) : \
+            (fd.bytecount <= 4 ? (rte_be_to_cpu_32(FLD_MASKED_BYTES(fd)) >> (32 - fd.bitcount)) : \
                 rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount))))
 
 /*******************************************************************************

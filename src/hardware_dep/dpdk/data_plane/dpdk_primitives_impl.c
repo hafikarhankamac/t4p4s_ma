@@ -59,14 +59,14 @@ void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h
 
 void MODIFY_INT64_INT64_AUTO(bitfield_handle_t dst_fd, uint64_t value64) {
     if (dst_fd.meta)
-        MODIFY_INT64_INT64_BITS(dst_fd, value64)
+        MODIFY_INT64_INT64_BITS(dst_fd, value64);
     else
-        MODIFY_INT64_INT64_HTON(dst_fd, value64)
+        MODIFY_INT64_INT64_HTON(dst_fd, value64);
 }
 
 void MODIFY_INT64_INT64_HTON(bitfield_handle_t dst_fd, uint64_t value64) {
     uint64_t res64 = (FLD_BYTES(dst_fd) & ~FLD_MASK(dst_fd));
-    
+
     if (dst_fd.bytecount == 1)
         res64 |= (value64 << (8 - dst_fd.bitcount)) & FLD_MASK(dst_fd);
     else if (dst_fd.bytecount == 2)
@@ -95,7 +95,7 @@ void MODIFY_INT64_INT64_BITS(bitfield_handle_t dst_fd, uint64_t value64) {
 }
 
 uint64_t GET_INT64_AUTO(bitfield_handle_t fd) {
-    return fd.meta ? GET_INT64_AUTO_META(fd) : GET_INT64_AUTO_NON_META(fd)
+    return fd.meta ? GET_INT64_AUTO_META(fd) : GET_INT64_AUTO_NON_META(fd);
 }
 
 uint64_t GET_INT64_AUTO_META(bitfield_handle_t fd) {

@@ -47,7 +47,7 @@ void update_checksum(bool cond, uint8_buffer_t data, bitfield_handle_t cksum_fie
         debug("       : Packet checksum " T4LIT(updated,status) " to " T4LIT(%04x,bytes) "\n", calculated_cksum);
 
         // TODO temporarily disabled: this line modifies a lookup table's pointer instead of a checksum field
-        MODIFY_INT64_INT64_BITS(cksum_field_handle, calculated_cksum)
+        MODIFY_INT64_INT64_BITS(cksum_field_handle, calculated_cksum);
     }
 }
 
@@ -80,7 +80,7 @@ void update_checksum_offload(bitfield_handle_t cksum_field_handle, enum_HashAlgo
     pd->wrapper->l3_len = len_l3;
     pd->wrapper->ol_flags |= PKT_TX_IPV4 | PKT_TX_IP_CKSUM;
     uint32_t res32;
-    MODIFY_INT64_INT64_BITS(cksum_field_handle, 0)
+    MODIFY_INT64_INT64_BITS(cksum_field_handle, 0);
 
     debug("       : Updating packet checksum (offload)\n");
     // TODO implement offload

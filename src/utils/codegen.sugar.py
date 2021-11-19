@@ -920,9 +920,9 @@ def gen_fmt_Cast(e, format_as_value=True, expand_parameters=False, needs_variabl
 
         return name
 
-def gen_fmt_ComplexOp(e, op, format_as_value=True, expand_parameters=False):
+def gen_fmt_ComplexOp(e, left, right, op, format_as_value=True, expand_parameters=False):
     et = e.type
-    op_expr = f'({format_expr(e.left)}{op}{format_expr(e.right)})'
+    op_expr = f'({left}{op}{right})'
     if e.type.node_type == 'Type_InfInt':
         #= op_expr
     elif e.type.node_type == 'Type_Bits':
@@ -1380,7 +1380,7 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                 #[ ((${right}>${size}) ? 0 : (${left} >> ${right}))
             else:
                 #These formatting rules MUST follow the previous special cases
-                #= gen_fmt_ComplexOp(e, complex_binary_ops[nt], format_as_value, expand_parameters)
+                #= gen_fmt_ComplexOp(e, left, right, complex_binary_ops[nt], format_as_value, expand_parameters)
         else:
             if nt in BINARY_SIMPLE_OPS_ARR:
                 if e.left.type.isSigned:
@@ -1506,9 +1506,11 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             size = e.expr.fld_ref.urtype.size
             unspec = unspecified_value(size)
 
+            #pre[ #ifdef T4P4S_DEBUG
             #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(%s,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n", hdr_infos[HDR($hdrname)].name);
             #pre} }
+            #pre[ #endif
             #[ (is_header_valid(HDR(${hdrname}), pd) ? GET_INT64_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec))
     elif nt in complex_cases:
         case = complex_cases[nt]

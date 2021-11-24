@@ -231,7 +231,7 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
 
         if 'fld_ref' in src:
             hdrinst = 'all_metadatas' if src.expr.urtype.is_metadata else src.expr.member
-            #[ if (is_header_valid(HDR(${hdrinst}), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR(${hdrinst}), ${member_to_fld_name(src)}, ${src_pointer});
+            #[ if (is_header_valid(HDR(${hdrinst}), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR(${hdrinst}), ${member_to_fld_name(src)}, ${src_pointer}); }
             #[ else {
             #[  uint8_t $rand_name[$byte_size] = $unspec_arr;
             #[  memcpy($src_pointer, $rand_name, $byte_size)
@@ -244,7 +244,7 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
             hdrname, fldname = get_hdrfld_name(src)
 
             if hdrname is not None and fldname is not None:
-                #[ if (is_header_valid(HDR(${hdrname}), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $src_pointer);
+                #[ if (is_header_valid(HDR(${hdrname}), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $src_pointer); }
                 #[ else {
                 #[  uint8_t $rand_name[$byte_size] = $unspec_arr;
                 #[  memcpy($src_pointer, $rand_name, $byte_size)
@@ -990,7 +990,7 @@ def gen_fmt_SelectExpression(e, format_as_value=True, expand_parameters=False, n
             rand_name = generate_var_name('rand', k.id)
             hdrinst = 'all_metadatas' if k.urtype.is_metadata else k.member
             #pre[ uint8_t $varname[${k.type.size/8}];
-            #pre[ if (is_header_valid(HDR(${hdrinst}), pd)) EXTRACT_BYTEBUF_PACKET(pd, ${format_expr(k, False)}, $varname);'
+            #pre[ if (is_header_valid(HDR(${hdrinst}), pd)) { EXTRACT_BYTEBUF_PACKET(pd, ${format_expr(k, False)}, $varname); }
             #pre[ else {
             #pre[     uint8_t $rand_name[$byte_size] = $unspec_arr;
             #pre[     memcpy($varname, $rand_name, $byte_size);
@@ -1060,7 +1060,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
                 var2 = generate_var_name('member')
 
                 #pre[ uint8_t $var2[${byte_width}] = { ${hex_content} };
-                #pre[ if (is_header_valid(HDR($hdrname), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $var2);
+                #pre[ if (is_header_valid(HDR($hdrname), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $var2); }
                 #pre[ uint8_t* $var = $var2;
             #[ $var
     else:
@@ -1163,7 +1163,7 @@ def gen_pre_format_call_extern_make_buf_data(component, vardata, varoffset):
             #pre[     memcpy($vardata + $varoffset, pd->headers[HDR($hdrname)].pointer, hdr_infos[HDR($hdrname)].byte_width);
             #pre[     $varoffset += hdr_infos[HDR($hdrname)].byte_width;
         else:
-            #pre[     if (is_header_valid(HDR($hdrname), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $vardata + $varoffset);
+            #pre[     if (is_header_valid(HDR($hdrname), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), $vardata + $varoffset); }
             #pre[     $varoffset += fld_infos[FLD($hdrname,$fldname)].byte_width;
     elif component.node_type == 'PathExpression':
         name = component.path.name
@@ -1342,7 +1342,7 @@ def gen_fmt_StructExpression(e, format_as_value=True, expand_parameters=False, n
                     byte_size = bits_to_bytes(ce.type.size)
                     unspec_arr = unspecified_value_arr(byte_size)
                     rand_name = generate_var_name('rand', ce.id)
-                    #pre[ if (is_header_valid(HDR(${hdrname}), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &($varname.${component.name}));
+                    #pre[ if (is_header_valid(HDR(${hdrname}), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &($varname.${component.name})); }
                     #pre[ else $varname.${component.name} = ${unspec_arr};
                     #pre[     uint8_t $rand_name[$byte_size] = $unspec_arr;
                     #pre[     memcpy(&($varname.${component.name}), $rand_name, $byte_size);
@@ -1535,7 +1535,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             hdrname = e.expr.member
 
             #pre[ ${gen_array(var_name, byte_size)}
-            #pre[ if (is_header_valid(HDR(${hdrname}), pd)) EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), ${var_name});
+            #pre[ if (is_header_valid(HDR(${hdrname}), pd)) { EXTRACT_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), ${var_name}); }
             #pre[ else {
             #pre[     uint8_t $var_name2[$byte_size] = ${unspec_arr};
             #pre[     memcpy($var_name, $var_name2, $byte_size);

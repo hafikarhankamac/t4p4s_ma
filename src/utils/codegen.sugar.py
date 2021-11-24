@@ -1034,6 +1034,7 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             #pre{ if (!is_header_valid(HDR(${hdr.name}), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(${hdr.name},warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
             #pre} }
+            #pre[ #endif
             #[ (is_header_valid(HDR(${hdr.name}), pd) ? GET_INT32_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${e.member})) : ($unspec))
         else:
             is_meta = hdr.urtype('is_metadata', False)
@@ -1550,6 +1551,7 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
             #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(%s,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n", hdr_infos[HDR($hdrname)].name);
             #pre} }
+            #pre[ #endif
             #[ (is_header_valid(HDR(${hdrname}), pd) ? GET_INT32_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec))
     elif nt in complex_cases:
         case = complex_cases[nt]

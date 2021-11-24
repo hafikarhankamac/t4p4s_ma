@@ -233,6 +233,22 @@ def unspecified_value(size):
         hashed = int(hashlib.md5(txt.encode('utf-8')).hexdigest(), 16) % max_val
         return f'0x{hashed:x} /* pseudorandom {size} bit value */'
 
+def unspecified_value_arr(size):
+    import hashlib
+
+    if current_compilation['use_real_random']:
+        s = ', '.join([f'0x{randint(0, 255):x}' for i in range(size) ])
+        return f'{{ {s} }}'
+    else:
+        txt = current_compilation['from'] + current_compilation['to']
+        elems = []
+
+        for i in range(size):
+            hashed = int(hashlib.md5(txt.encode('utf-8')).hexdigest(), 16) % 255
+            elems.append(f'0x{hashed:x}')
+
+        s = ', '.join(elems)
+        return f'{{ {s} }}'
 # ################################################################################
 
 def is_meta(node):

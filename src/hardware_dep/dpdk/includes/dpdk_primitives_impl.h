@@ -143,10 +143,7 @@ uint64_t GET_INT64_AUTO_NON_META(bitfield_handle_t fd);
 }
 
 // Extracts a field to the given destination [ONLY BYTE ALIGNED]
-#define EXTRACT_BYTEBUF(fd, dst) { \
-    memcpy(dst, fd.byte_addr, fd.bytewidth); \
-}
-
+void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst);
 
 /*******************************************************************************/
 

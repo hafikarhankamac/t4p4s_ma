@@ -120,6 +120,34 @@ uint64_t GET_INT64_AUTO_NON_META(bitfield_handle_t fd) {
     return rte_be_to_cpu_64(FLD_MASKED_BYTES(fd)) >> (64 - fd.bitcount);
 }
 
+void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
+    if (fd.bitoffset == 0 && fd.bitwidth == fd.bytewidth * 8) {
+        memcpy(dst, fd.byte_addr, fd.bytewidth);
+    }
+    else {
+        uint8_t x = (fd.bitoffset + fd.bitwidth) % 8;
+        uint8_t y = 8 - x;
+        uint8_t temp = 0;
+
+        for (int i = fd.byte_width - 1; i > 0; i--) {
+
+            temp = (*(fd.byte_addr + i)) >> y;
+            temp = temp | ((*(fd.byte_addr + i - 1)) << x);
+
+            if (i == 1 && x < fd.bitoffset) {
+                temp = temp & ((1 << (fd.bitoffset - x)) - 1);
+            }
+
+            memcpy(dst + i, &temp, 1);
+        }
+
+        if (x > fd.bitoffset) {
+            temp = (*(fd.byte_addr) >> y) & ((1 << (fd.bitoffset - x)) - 1);
+            memcpy(dst, &temp, 1);
+        }
+    }
+}
+
 void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
 #ifdef T4P4S_DEBUG
     // exactly one of `f` and `b` have to be non-zero

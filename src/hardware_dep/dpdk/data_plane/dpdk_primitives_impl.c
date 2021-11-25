@@ -156,28 +156,28 @@ void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srcl
     /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/
     uint8_t byte_length = (srclen + 7) / 8;
 
-    if (fd.bitoffset == 0 && fd.bytewidth * 8 = fd.bitwidth) {
+    if (dst_fd.bitoffset == 0 && dst_fd.bytewidth * 8 = dst_fd.bitwidth) {
         memcpy(dst_fd.byte_addr, src, byte_length);
     }
     else {
-        uint8_t bits_in_last_byte = (fd.bitoffset + fd.bitwidth) % 8; // i. e. offset of next field
+        uint8_t bits_in_last_byte = (dst_fd.bitoffset + dst_fd.bitwidth) % 8; // i. e. offset of next field
         uint8_t remaining_bits = (8 - bits_in_last_byte) % 8;
         uint8_t current_byte = 0;
 
         current_byte = src[byte_length - 1] << bits_in_last_byte;
-        current_byte |= (*(fd.byte_addr + fd.bytecount - 1)) & ((1 << remaining_bits) - 1);
+        current_byte |= (*(dst_fd.byte_addr + dst_fd.bytecount - 1)) & ((1 << remaining_bits) - 1);
 
-        memcpy(fd.byte_addr + fd.bytecount - 1, &current_byte, 1);
+        memcpy(dst_fd.byte_addr + dst_fd.bytecount - 1, &current_byte, 1);
 
         for (int i = byte_length - 1; i > 0; i--) {
             current_byte = src[i] >> remaining_bits;
             current_byte = src[i - 1] << bits_in_last_byte;
-            memcpy(fd.byte_addr + i, &current_byte, 1);
+            memcpy(dst_fd.byte_addr + i, &current_byte, 1);
         }
 
         current_byte = src[0] >> remaining_bits;
-        current_byte |= (*(fd.byte_addr)) & ((1 << fd.bitoffset) - 1);
-        memcpy(fd.byte_addr, &current_byte, 1);
+        current_byte |= (*(dst_fd.byte_addr)) & ((1 << dst_fd.bitoffset) - 1);
+        memcpy(dst_fd.byte_addr, &current_byte, 1);
     }
 }
 

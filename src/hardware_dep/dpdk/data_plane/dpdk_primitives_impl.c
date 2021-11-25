@@ -125,11 +125,11 @@ void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
         memcpy(dst, fd.byte_addr, fd.bytewidth);
     }
     else {
-        uint8_t bits_in_last_byte = (fd.bitoffset + fd.bitwidth) % 8); // i. e. offset of next field
+        uint8_t bits_in_last_byte = (fd.bitoffset + fd.bitwidth) % 8; // i. e. offset of next field
         uint8_t remaining_bits = (8 - bits_in_last_byte) % 8;
         uint8_t current_byte = 0;
 
-        for (int i = fd.bytewidth - 1; i > 0; i--) {
+        for (int i = fd.bytecount - 1; i > 0; i--) {
             current_byte = (*(fd.byte_addr + i)) >> remaining_bits;
 
             // We add parts of the previous byte only if the end is unaligned
@@ -138,10 +138,10 @@ void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
 
             // If the current offset is higher than the next offset we need to mask
             if (i == 1 && bits_in_last_byte && bits_in_last_byte < fd.bitoffset) {
-                current_byte &= ((1 << (fd.bitoffset - bits_in_last_byte)) - 1);
+                current_byte &= ((1 << (8 - (fd.bitoffset - bits_in_last_byte))) - 1);
             }
 
-            memcpy(dst + i, &current_byte, 1);
+            memcpy(dst - (fd.bytecount - fd.bytewidth) + i, &current_byte, 1);
         }
 
         // If the current offset is lower than the next offset we need to put the rest in the first byte

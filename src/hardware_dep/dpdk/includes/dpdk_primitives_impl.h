@@ -65,11 +65,7 @@
 *******************************************************************************/
 
 // Modifies a field in the packet by the given source and length [ONLY BYTE ALIGNED]
-#define MODIFY_BYTEBUF_BYTEBUF(dst_fd, src, srclen) { \
-    /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/ \
-    memset(dst_fd.byte_addr, 0, dst_fd.bytewidth - srclen); \
-    memcpy(dst_fd.byte_addr + (dst_fd.bytewidth - srclen), src, srclen); \
-}
+void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srclen);
 
 /*******************************************************************************
    Modify - statement - int64

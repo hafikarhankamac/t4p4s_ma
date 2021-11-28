@@ -57,6 +57,79 @@ void MODIFY_INT64_INT64_AUTO_PACKET(packet_descriptor_t* pd, header_instance_t h
     MODIFY_INT64_INT64_AUTO(handle(header_desc_ins(pd, h), f), value64);
 }
 
+void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
+    if (fd.bitoffset == 0 && fd.bitwidth == fd.bytewidth * 8) {
+        memcpy(dst, fd.byte_addr, fd.bytewidth);
+    }
+    else {
+        uint8_t bits_in_last_byte = (fd.bitoffset + fd.bitwidth) % 8; // i. e. offset of next field
+        uint8_t remaining_bits = (8 - bits_in_last_byte) % 8;
+        uint8_t current_byte = 0;
+
+        for (int i = fd.bytecount - 1; i > 0; i--) {
+            current_byte = (*(fd.byte_addr + i)) >> remaining_bits;
+
+            // We add parts of the previous byte only if the end is unaligned
+            if (bits_in_last_byte)
+                current_byte |= ((*(fd.byte_addr + i - 1)) << bits_in_last_byte);
+
+            // If the current offset is higher than the next offset we need to mask
+            if (i == 1 && bits_in_last_byte && bits_in_last_byte < fd.bitoffset) {
+                current_byte &= ((1 << (8 - (fd.bitoffset - bits_in_last_byte))) - 1);
+            }
+
+            memcpy(dst - (fd.bytecount - fd.bytewidth) + i, &current_byte, 1);
+        }
+
+        // If the current offset is lower than the next offset we need to put the rest in the first byte
+        if (!bits_in_last_byte || bits_in_last_byte > fd.bitoffset) {
+            current_byte = (*(fd.byte_addr) >> remaining_bits) & ((1 << (fd.bitoffset - bits_in_last_byte)) - 1);
+            memcpy(dst, &current_byte, 1);
+        }
+    }
+}
+
+
+void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srclen) {
+    /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/
+    uint8_t byte_length = (srclen + 7) / 8;
+
+    if (dst_fd.bitoffset == 0 && dst_fd.bytewidth * 8 == dst_fd.bitwidth) {
+        memcpy(dst_fd.byte_addr, src, byte_length);
+    }
+    else {
+        uint8_t bits_in_last_byte = (dst_fd.bitoffset + dst_fd.bitwidth) % 8; // i. e. offset of next field
+        uint8_t remaining_bits = (8 - bits_in_last_byte) % 8;
+        uint8_t current_byte = 0;
+
+        // The last byte will likely overlap with the next field
+        current_byte = src[byte_length - 1] << remaining_bits;
+        current_byte |= (*(dst_fd.byte_addr + dst_fd.bytecount - 1)) & ((1 << remaining_bits) - 1);
+
+        memcpy(dst_fd.byte_addr + dst_fd.bytecount - 1, &current_byte, 1);
+
+        for (int i = byte_length - 1; i > 0; i--) {
+            current_byte = src[i] >> bits_in_last_byte;
+            current_byte |= src[i - 1] << remaining_bits;
+
+            if (i == 1 && dst_fd.bitoffset < bits_in_last_byte) {
+                current_byte &= ((1 << (8 - dst_fd.bitoffset)) - 1);
+                current_byte |= (*dst_fd.byte_addr) & (((1 << dst_fd.bitoffset) - 1) << (8 - dst_fd.bitoffset));
+            }
+
+            memcpy(dst_fd.byte_addr - (1 - (dst_fd.bytecount - dst_fd.bytewidth)) + i, &current_byte, 1);
+        }
+
+        // If the bit offset is higher (within the byte) than the next one, src will be one byte shorter than
+        // the bytes occupied by the field. We have to fill in the last field now.
+        if (dst_fd.bitoffset && dst_fd.bitoffset >= bits_in_last_byte) {
+            current_byte = (src[0] >> bits_in_last_byte) & ((1 << (8 - dst_fd.bitoffset)) - 1);
+            current_byte |= (*(dst_fd.byte_addr)) & (((1 << dst_fd.bitoffset) - 1) << (8 - dst_fd.bitoffset) );
+            memcpy(dst_fd.byte_addr, &current_byte, 1);
+        }
+    }
+}
+
 
 void set_field(fldT f[], bufT b[], uint64_t value64, int bit_width) {
 #ifdef T4P4S_DEBUG

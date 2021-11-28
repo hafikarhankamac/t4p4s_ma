@@ -156,7 +156,7 @@ void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srcl
     /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/
     uint8_t byte_length = (srclen + 7) / 8;
 
-    if (dst_fd.bitoffset == 0 && dst_fd.bytewidth * 8 = dst_fd.bitwidth) {
+    if (dst_fd.bitoffset == 0 && dst_fd.bytewidth * 8 == dst_fd.bitwidth) {
         memcpy(dst_fd.byte_addr, src, byte_length);
     }
     else {
@@ -164,6 +164,7 @@ void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srcl
         uint8_t remaining_bits = (8 - bits_in_last_byte) % 8;
         uint8_t current_byte = 0;
 
+        // The last byte will likely overlap with the next field
         current_byte = src[byte_length - 1] << remaining_bits;
         current_byte |= (*(dst_fd.byte_addr + dst_fd.bytecount - 1)) & ((1 << remaining_bits) - 1);
 
@@ -178,10 +179,12 @@ void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srcl
                 current_byte |= (*dst_fd.byte_addr) & (((1 << dst_fd.bitoffset) - 1) << (8 - dst_fd.bitoffset));
             }
 
-            memcpy(dst_fd.byte_addr - (1 - dst_fd.bytecount - dst_fd.bytewidth) + i, &current_byte, 1);
+            memcpy(dst_fd.byte_addr - (1 - (dst_fd.bytecount - dst_fd.bytewidth)) + i, &current_byte, 1);
         }
 
-        if (dst_fd.bitoffset && dst_fd.bitoffset > bits_in_last_byte) {
+        // If the bit offset is higher (within the byte) than the next one, src will be one byte shorter than
+        // the bytes occupied by the field. We have to fill in the last field now.
+        if (dst_fd.bitoffset && dst_fd.bitoffset >= bits_in_last_byte) {
             current_byte = (src[0] >> bits_in_last_byte) & ((1 << (8 - dst_fd.bitoffset)) - 1);
             current_byte |= (*(dst_fd.byte_addr)) & (((1 << dst_fd.bitoffset) - 1) << (8 - dst_fd.bitoffset) );
             memcpy(dst_fd.byte_addr, &current_byte, 1);

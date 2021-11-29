@@ -29,12 +29,10 @@ for table in hlir.tables:
             if f.size <= MAX_BIT_SIZE:
                 #[     EXTRACT_INT32_BITS_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), *(uint${MAX_BIT_SIZE}_t*)key);
                 #[     key += sizeof(uint${MAX_BIT_SIZE}_t);
-            elif f.size > MAX_BIT_SIZE and f.size % 8 == 0:
+            else:
                 byte_width = (f.size+7)//8
                 #[     EXTRACT_BYTEBUF_PACKET(pd, HDR(${hi_name}), FLD(${f.header.name},${f.field_name}), key);
                 #[     key += ${byte_width};
-            else:
-                addWarning("table key computation", f"Skipping unsupported field {f.id} ({f.size} bits): it is over {MAX_BIT_SIZE} bits long and not byte aligned")
         else:
             fx = f.expression
             if fx.node_type == 'MethodCallExpression':

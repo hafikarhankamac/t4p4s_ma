@@ -62,12 +62,8 @@
    Modify - statement - bytebuf
 *******************************************************************************/
 
-// Modifies a field in the packet by the given source and length [ONLY BYTE ALIGNED]
-#define MODIFY_BYTEBUF_BYTEBUF(dst_fd, src, srclen) { \
-    /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/ \
-    memset(dst_fd.byte_addr, 0, dst_fd.bytewidth - srclen); \
-    memcpy(dst_fd.byte_addr + (dst_fd.bytewidth - srclen), src, srclen); \
-}
+void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srclen);
+
 
 /*******************************************************************************
    Modify - statement - int32
@@ -170,10 +166,7 @@
     if (fd.meta) { EXTRACT_INT32_BITS(fd, dst) } else { EXTRACT_INT32_NTOH(fd, dst) } \
 }
 
-// Extracts a field to the given destination [ONLY BYTE ALIGNED]
-#define EXTRACT_BYTEBUF(fd, dst) { \
-    memcpy(dst, fd.byte_addr, fd.bytewidth); \
-}
+void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst);
 
 
 /*******************************************************************************/

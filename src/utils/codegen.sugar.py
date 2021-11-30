@@ -1030,11 +1030,11 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
         if e.expr.urtype.node_type == 'Type_Header':
             size = hdr.urtype.fields.get(e.member).size
             unspec = unspecified_value(size)
-            #pre[ #ifdef T4P4S_DEBUG
-            #pre{ if (!is_header_valid(HDR(${hdr.name}), pd)) {
-            #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(${hdr.name},warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
-            #pre} }
-            #pre[ #endif
+            # #pre[ #ifdef T4P4S_DEBUG
+            # #pre{ if (!is_header_valid(HDR(${hdr.name}), pd)) {
+            # #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(${hdr.name},warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
+            # #pre} }
+            # #pre[ #endif
             #[ (is_header_valid(HDR(${hdr.name}), pd) ? GET_INT64_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${e.member})) : ($unspec))
         else:
             is_meta = hdr.urtype('is_metadata', False)
@@ -1046,10 +1046,10 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             unspec = 0 if is_meta else unspecified_value(size)
             var = generate_var_name('member')
 
-            #pre[ #ifdef T4P4S_DEBUG
-            #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
-            #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
-            #pre} }
+            # #pre[ #ifdef T4P4S_DEBUG
+            # #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
+            # #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
+            # #pre} }
             #pre[ #endif
             if size <= MAX_BIT_SIZE:
                 #pre[ ${format_type(fldtype)} $var = is_header_valid(HDR($hdrname), pd) ? GET_INT64_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec);
@@ -1071,11 +1071,11 @@ def gen_fmt_Member(e, format_as_value=True, expand_parameters=False, needs_varia
             fld = e.member
             size = hdr.urtype.fields.get(e.member).size
             unspec = unspecified_value(size)
-            #pre[ #ifdef T4P4S_DEBUG
-            #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
-            #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT($fld,field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
-            #pre} }
-            #pre[ #endif
+            # #pre[ #ifdef T4P4S_DEBUG
+            # #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
+            # #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT($hdrname,warning) "." T4LIT($fld,field) ", returning \"unspecified\" value " T4LIT($unspec) "\n");
+            # #pre} }
+            # #pre[ #endif
             #[ (is_header_valid(HDR($hdrname), pd) ? pd->fields.FLD($hdr,$fld) : ($unspec))
         elif e.expr.node_type == 'MethodCallExpression':
             # note: this is an apply_result_t, it cannot be invalid
@@ -1547,11 +1547,11 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
             size = e.expr.fld_ref.urtype.size
             unspec = unspecified_value(size)
 
-            #pre[ #ifdef T4P4S_DEBUG
-            #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
-            #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(%s,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n", hdr_infos[HDR($hdrname)].name);
-            #pre} }
-            #pre[ #endif
+            # #pre[ #ifdef T4P4S_DEBUG
+            # #pre{ if (!is_header_valid(HDR($hdrname), pd)) {
+            # #pre[     debug("   " T4LIT(!!,warning) " Access to field in invalid header " T4LIT(%s,warning) "." T4LIT(${e.member},field) ", returning \"unspecified\" value " T4LIT($unspec) "\n", hdr_infos[HDR($hdrname)].name);
+            # #pre} }
+            # #pre[ #endif
             #[ (is_header_valid(HDR(${hdrname}), pd) ? GET_INT64_AUTO_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname)) : ($unspec))
     elif nt in complex_cases:
         case = complex_cases[nt]

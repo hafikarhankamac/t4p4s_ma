@@ -179,7 +179,7 @@ def int_to_big_endian_byte_array_with_length(value, width, base=10):
     array = []
     while value > 0:
         array.append(int(value % 256))
-        value /= 256
+        value = value >> 8
     array.reverse()
     array_len = len(array)
     padded_array = [0 for i in range(width-array_len)] + array[array_len-min(array_len, width) : array_len]

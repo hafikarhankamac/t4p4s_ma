@@ -284,7 +284,9 @@ def gen_format_statement_fieldref_wide(dst, src, dst_width, dst_is_vw, dst_bytew
         #[ pd->headers[$dst_hdrname].var_width_field_bitwidth = ${src_vw_bitwidth};
         #[ pd->headers[$dst_hdrname].length = ($dst_fixed_size + pd->headers[$dst_hdrname].var_width_field_bitwidth)/8;
 
-    #[ MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, $dst_hdrname, $dst_fld_name, $src_pointer, $dst_width);
+    #[ if (likely(is_header_valid($dst_hdrname, pd))) {
+    #[     MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, $dst_hdrname, $dst_fld_name, $src_pointer, $dst_width);
+    #[ }
 
     #[ dbg_bytes($src_pointer, $dst_bytewidth,
     #[      "    " T4LIT(=,field) " Set " T4LIT(%s,header) "." T4LIT(%s,field) "/" T4LIT(%db) " (" T4LIT(%d) "B) = ",
@@ -409,7 +411,9 @@ def gen_do_assignment(dst, src):
                     else:
                         tmpvar = generate_var_name('assignment')
                         #[ ${format_type(dst.type)} $tmpvar = (${format_type(dst.type)})(${format_expr(src, expand_parameters=True, needs_variable=True)});
-                        #[ MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${fldname}), &$tmpvar, sizeof(${format_type(dst.type)}));
+                        #[ if (likely(is_header_valid(HDR(${hdr.name}), pd))) {
+                        #[     MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${fldname}), &$tmpvar, sizeof(${format_type(dst.type)}));
+                        #[ }
                         #[ dbg_bytes(get_fld_pointer(pd, FLD(${hdr.name},${fldname})), sizeof(${format_type(dst.type)}), "        : "T4LIT(${hdr.name},header)"."T4LIT(${fldname},field)"/"T4LIT(%zuB)" = ", sizeof(${format_type(dst.type)}));
         else:
             srcexpr = format_expr(src, expand_parameters=True, needs_variable=True)
@@ -428,7 +432,9 @@ def gen_do_assignment(dst, src):
                 fldname = dst.member
                 #[ ${format_type(dst.type)} $tmpvar = $net2t4p4s((${format_type(dst.type)})(${format_expr(src, expand_parameters=True, needs_variable=True)}));
                 #[ dbg_bytes(&($srcexpr), $size, "    : Set " T4LIT(%s,header) "." T4LIT(%s,field) "/" T4LIT(%dB) " = " T4LIT(%s,header) " = ", "$hdrname", "$fldname", $size, "$srctxt");
-                #[ MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &$tmpvar, $dst.type.size);
+                #[ if (likely(is_header_valid(HDR($hdrname), pd))) {
+                #[     MODIFY_BYTEBUF_BYTEBUF_PACKET(pd, HDR($hdrname), FLD($hdrname,$fldname), &$tmpvar, $dst.type.size);
+                #[ }
             else:
                 deref = "*" if src.node_type in ("Constant", "Member") and size <= 4 else ""
                 #[ ${format_type(dst.type)} $tmpvar = $deref(${format_type(dst.type)}$deref)((${format_expr(src, expand_parameters=True, needs_variable=True)}));

@@ -10,8 +10,8 @@ from compiler_common import MAX_BIT_SIZE, types, generate_var_name, get_hdrfld_n
 for hdr in hlir.header_instances:
     #{ void update_hdr_${hdr.name}(STDPARAMS) {
     for fld in hdr.urtype.fields:
-        if fld.preparsed or fld.urtype.size > MAX_BIT_SIZE:
-            continue
+        # if fld.preparsed or fld.urtype.size > MAX_BIT_SIZE:
+        continue
 
         #{     if (pd->fields.FLD_ATTR(${hdr.name},${fld.name}) == MODIFIED) {
         #[         MODIFY_INT64_INT64_AUTO_PACKET(pd, HDR(${hdr.name}), FLD(${hdr.name},${fld.name}), pd->fields.FLD(${hdr.name},${fld.name}));

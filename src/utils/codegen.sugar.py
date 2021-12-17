@@ -139,17 +139,14 @@ def gen_format_type(t, resolve_names = True, use_array = False, addon = ""):
         #[ TODO_TYPE_FOR_${t.name} /* placeholder type for ${t.node_type} */
 
 def gen_format_type_mask(t):
-    if t.node_type == 'Type_Bits' and not t.isSigned:
-        if t.size <= MAX_BIT_SIZE:
-            var = generate_var_name(f"bitmask_{t.size}b")
-            mask = hex((2 ** t.size) - 1)
-            masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32 if t.size <= 32 else 64
-            #pre[ uint${masksize}_t $var = $mask;
-            #[ $var
-        else:
-            addError('formatting a type mask', f'Masked type is {t.size} bits, only {MAX_BIT_SIZE} or less is supported')
+    if t.size <= MAX_BIT_SIZE:
+        var = generate_var_name(f"bitmask_{t.size}b")
+        mask = hex((2 ** t.size) - 1)
+        masksize = 8 if t.size <= 8 else 16 if t.size <= 16 else 32 if t.size <= 32 else 64
+        #pre[ uint${masksize}_t $var = $mask;
+        #[ $var
     else:
-        addError('formatting a type mask', 'Currently only bit<w> is supported!')
+        addError('formatting a type mask', f'Masked type is {t.size} bits, only {MAX_BIT_SIZE} or less is supported')
 
 def gen_format_declaration(d, varname_override):
     var_name = d.name if varname_override is None else varname_override

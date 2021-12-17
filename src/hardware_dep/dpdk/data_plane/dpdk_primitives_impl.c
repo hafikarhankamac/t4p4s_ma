@@ -91,7 +91,6 @@ void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
 
 
 void MODIFY_BYTEBUF_BYTEBUF(bitfield_handle_t dst_fd, uint8_t* src, uint8_t srclen) {
-    /*TODO: If the src contains a signed negative value, than the following memset is incorrect*/
     uint8_t byte_length = (srclen + 7) / 8;
 
     if (dst_fd.bitoffset == 0 && dst_fd.bytewidth * 8 == dst_fd.bitwidth) {

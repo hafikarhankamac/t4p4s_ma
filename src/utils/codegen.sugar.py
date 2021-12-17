@@ -940,13 +940,7 @@ def gen_fmt_ComplexOp(e, left, right, op, format_as_value=True, expand_parameter
     if e.type.node_type == 'Type_InfInt':
         #= op_expr
     elif e.type.node_type == 'Type_Bits':
-        if not e.type.isSigned:
-            #[ ${masking(e.type, op_expr)}
-        elif e.type.size in {8,16,32,MAX_BIT_SIZE}:
-            #[ ((${format_type(e.type)})${op_expr})
-        else:
-            addError('formatting an expression', f'Expression of type {e.node_type} is not supported on int<{e.type.size}>. (Only int<8>, int<16> and int<32> are supported.)')
-            #[ ERROR
+        #[ ${masking(e.type, op_expr)}
 
 def get_select_conds(select_expr, case):
     cases_tmp = case.keyset.components if case.keyset.node_type == 'ListExpression' else [case.keyset]

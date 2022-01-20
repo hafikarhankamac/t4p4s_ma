@@ -268,12 +268,7 @@ def gen_format_statement_fieldref_short(dst, src, dst_width, dst_is_vw, dst_byte
         refbase = "local_vars->" if is_control_local_var(src.decl_ref.name) else 'parameters->'
 
         #[ uint${bitlen}_t ${varname};
-        if refbase == "local_vars->":
-            #[ memcpy(&$varname, $indirection($refbase${var_name}), $dst_bytewidth);
-            if bitlen > 8:
-                #[ $varname = t4p4s2net_${bytelen}(${varname});
-        else:
-            #[ memcpy(&$varname, $indirection($refbase${var_name}), $dst_bytewidth);
+        #[ memcpy(&$varname, $indirection($refbase${var_name}), $dst_bytewidth);
     else:
         #[ uint${bitlen}_t $varname = ${format_expr(src)};
 

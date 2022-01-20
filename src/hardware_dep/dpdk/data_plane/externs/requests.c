@@ -77,7 +77,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint16_t 
     req->request.payload = req + sizeof(request_to_store_t);
     req->request.payload->req = req_cmd;
     req->request.payload->args = args;
-    hash_request(&req->request, dig);
+    hash_request(req->request.payload, dig);
     rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
     uint64_t snlv = get_sn_lv_key(sn, lv);
     rte_hash_add_key_data(rs->snlv, &snlv, (void*) (uint64_t) *dig);

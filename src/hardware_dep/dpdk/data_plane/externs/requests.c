@@ -105,11 +105,12 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
     for (uint32_t i = rs->min_not_executed; i <= max; i++) {
         uint64_t snlv = get_sn_lv_key(i, lv);
         rte_hash_lookup_data(rs->snlv, &snlv, &dig);
-        rte_hash_lookup_with_hash_data(rs->table, dig, dig, &r);
-        if (req->request.processed) {
+        rte_hash_lookup_with_hash_data(rs->table, &dig, dig, &r);
+        if (r->request.processed) {
             rs->min_not_executed = r->sn;
         } else {
-            raise_event(PROCESS_REQUEST, digest);
+	    uint8_t e_id = PROCESS_REQUEST;
+            raise_event(&e_id, &i);
             r->request.processed = true;
         }
     }

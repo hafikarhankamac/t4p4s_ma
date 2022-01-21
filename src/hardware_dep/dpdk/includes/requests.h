@@ -12,7 +12,10 @@ typedef uint32_t digest_t;
 typedef uint32_t cp_digest_t;
 typedef uint16_t cp_id;
 
-#define PROCESS_REQUEST 1
+#define CREATE_CHECKPOINT 1
+#define PROCESS_REQUEST 2
+#define OLD_REQUEST_AFTER_WATERMARK_ADVANCE 3
+#define REQUEST_TIMEOUT 4
 
 struct request_store {
 

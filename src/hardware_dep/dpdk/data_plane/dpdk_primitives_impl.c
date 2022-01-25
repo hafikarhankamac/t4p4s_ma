@@ -81,8 +81,13 @@ void EXTRACT_BYTEBUF(bitfield_handle_t fd, uint8_t* dst) {
             memcpy(dst - (fd.bytecount - fd.bytewidth) + i, &current_byte, 1);
         }
 
+        if (!bits_in_last_byte) {
+            current_byte = (*(fd.byte_addr) >> remaining_bits) & ((1 << fd.bitoffset) - 1);
+            memcpy(dst, &current_byte, 1);
+        }
+
         // If the current offset is lower than the next offset we need to put the rest in the first byte
-        if (!bits_in_last_byte || bits_in_last_byte > fd.bitoffset) {
+        else if (bits_in_last_byte > fd.bitoffset) {
             current_byte = (*(fd.byte_addr) >> remaining_bits) & ((1 << (bits_in_last_byte - fd.bitoffset)) - 1);
             memcpy(dst, &current_byte, 1);
         }

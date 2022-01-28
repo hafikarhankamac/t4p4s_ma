@@ -31,14 +31,16 @@ uint32_t hash_naive(uint8_t *key, uint8_t length) {
     return rte_hash_crc(key, length, 0xffffffff);
 }
 
+/*
 void hash_request(request_payload_t *req, uint8_t **hsh) {
    uint8_t key[5];
    key[0] = req->req;
    key[1] = req->args;
    *hsh = hash_naive(key, 5);
 }
+*/
 
-uint32_t hash_req(request_t *req) {
+uint32_t hash_request(request_t *req) {
     return hash_naive(req, sizeof(request_t));
 }
 
@@ -49,12 +51,17 @@ void extern_request_store_isDelivered(uint32_t declarg, bool *del, digest_t dige
    *del = req->delivered;
 }
 
-void extern_request_store_getByDigest(uint32_t declarg, request_payload_t *reqpl, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getByDigest(uint32_t declarg, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
-   request_t *req;
+   request_t *r;
    rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req);
-   memcpy(reqpl, req->payload, sizeof(request_payload_t));
-   reqpl = &(req->payload);
+   //memcpy(reqpl, req->payload, sizeof(request_payload_t));
+   *req = r->req;
+   *args = r->args;
+   *timestamp = r->timestamp;
+   *clientId = r->clientId;
+   *delivered = r->delivered;
+   *processed = r->processed;
 }
 
 void extern_request_store_createCheckpoint(uint32_t declarg, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS)
@@ -68,16 +75,18 @@ void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint
     //void extern_request_store_add_request(uint32_t declarg, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
 
-void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint16_t clientId, uint32_t sn, uint32_t lv, uint8_t req_cmd, uint32_t args, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_to_store_t *req = rte_malloc("request_to_store_t", sizeof(request_to_store_t) + sizeof(request_t), 0);
-    req->sn = sn; 
-    req->lv = lv;
-    req->request.clientId = clientId;
-    req->request.payload = req + sizeof(request_to_store_t);
-    req->request.payload->req = req_cmd;
-    req->request.payload->args = args;
-    hash_request(req->request.payload, dig);
+    request_to_store_t *r = rte_malloc("request_to_store_t", sizeof(request_to_store_t) + sizeof(request_t), 0);
+    r->sn = sn; 
+    r->lv = lv;
+	r->request.req = req;
+	r->request.args = args;
+	r->request.timestamp = timestamp;
+	r->request.clientId = clientId;
+	r->request.delivered = false;
+	r->request.processed = false;
+    *dig = hash_request(&r->request);
     rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
     uint64_t snlv = get_sn_lv_key(sn, lv);
     rte_hash_add_key_data(rs->snlv, &snlv, (void*) (uint64_t) *dig);
@@ -116,10 +125,17 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
     }
 }
 
-void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_payload_t request = {.req = req, .args = args};
-    hash_request(&request, dig);
+     request_t request = {
+	.req = req,
+	.args = args,
+	.timestamp = timestamp,
+	.clientId = clientId,
+	.delivered = false,
+	.processed = false
+    };
+    *dig = hash_request(&request);
 }
 
 //    void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {

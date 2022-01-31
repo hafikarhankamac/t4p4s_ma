@@ -54,7 +54,7 @@ void extern_request_store_isDelivered(uint32_t declarg, bool *del, digest_t dige
 void extern_request_store_getByDigest(uint32_t declarg, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
    request_t *r;
-   rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req);
+   rte_hash_lookup_with_hash_data(rs->table, &digest, digest, r);
    //memcpy(reqpl, req->payload, sizeof(request_payload_t));
    *req = r->req;
    *args = r->args;
@@ -77,7 +77,7 @@ void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint
 
 void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_to_store_t *r = rte_malloc("request_to_store_t", sizeof(request_to_store_t) + sizeof(request_t), 0);
+    request_to_store_t *r = rte_malloc("request_to_store_t", sizeof(request_to_store_t), 0);
     r->sn = sn; 
     r->lv = lv;
 	r->request.req = req;
@@ -87,7 +87,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
 	r->request.delivered = false;
 	r->request.processed = false;
     *dig = hash_request(&r->request);
-    rte_hash_add_key_with_hash_data(rs->table, dig, *dig, req);
+    rte_hash_add_key_with_hash_data(rs->table, dig, *dig, r);
     uint64_t snlv = get_sn_lv_key(sn, lv);
     rte_hash_add_key_data(rs->snlv, &snlv, (void*) (uint64_t) *dig);
 
@@ -110,7 +110,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
     uint32_t max = rs->max_not_executed > req->sn ? rs->max_not_executed : req->sn;
 
     request_to_store_t *r;
-    digest_t *dig;
+    digest_t dig;
     for (uint32_t i = rs->min_not_executed; i <= max; i++) {
         uint64_t snlv = get_sn_lv_key(i, lv);
         rte_hash_lookup_data(rs->snlv, &snlv, &dig);
@@ -119,7 +119,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
             rs->min_not_executed = r->sn;
         } else {
 	    uint8_t e_id = PROCESS_REQUEST;
-            raise_event(&e_id, &i);
+            raise_event(&e_id, &dig);
             r->request.processed = true;
         }
     }

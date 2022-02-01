@@ -46,15 +46,16 @@ uint32_t hash_request(request_t *req) {
 
 void extern_request_store_isDelivered(uint32_t declarg, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
-   request_t *req;
+   request_to_store_t *req;
    rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req);
-   *del = req->delivered;
+   *del = req->request.delivered;
 }
 
 void extern_request_store_getByDigest(uint32_t declarg, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
-   request_t *r;
-   rte_hash_lookup_with_hash_data(rs->table, &digest, digest, r);
+   request_to_store_t *rts;
+   rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &rts);
+   request_t* r = &rts->request;
    //memcpy(reqpl, req->payload, sizeof(request_payload_t));
    *req = r->req;
    *args = r->args;
@@ -111,17 +112,23 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
 
     request_to_store_t *r;
     digest_t dig;
-    for (uint32_t i = rs->min_not_executed; i <= max; i++) {
-        uint64_t snlv = get_sn_lv_key(i, lv);
-        rte_hash_lookup_data(rs->snlv, &snlv, &dig);
-        rte_hash_lookup_with_hash_data(rs->table, &dig, dig, &r);
-        if (r->request.processed) {
-            rs->min_not_executed = r->sn;
-        } else {
-	    uint8_t e_id = PROCESS_REQUEST;
-            raise_event(&e_id, &dig);
-            r->request.processed = true;
-        }
+    if (req->sn <= rs->min_not_executed) {
+	    for (uint32_t i = rs->min_not_executed; i <= max; i++) {
+		uint64_t snlv = get_sn_lv_key(i, lv);
+		rte_hash_lookup_data(rs->snlv, &snlv, &dig);
+		rte_hash_lookup_with_hash_data(rs->table, &dig, dig, &r);
+		if (r->request.processed) {
+		    rs->min_not_executed = r->sn + 1;
+		} else if (r->request.delivered) {
+		    uint8_t e_id = PROCESS_REQUEST;
+		    raise_event(&e_id, &dig);
+		    r->request.processed = true;
+		    rs->min_not_executed = r->sn+1;
+		} else { //undelivered request -> break
+		   rs->min_not_executed = r->sn;
+		   break;
+		}
+	    }
     }
 }
 
@@ -143,7 +150,7 @@ void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req
 
 void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS)
 {
-   request_t *req;
+   request_to_store_t *req;
    *ret = rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req) >= 0;
 }
 

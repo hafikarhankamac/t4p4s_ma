@@ -5,11 +5,13 @@
 #include "util_packet.h"
 
 
-void set_event_metadata(packet_descriptor_t* pd, event_e event, uint64_t args)
+void set_event_metadata(packet_descriptor_t* pd, event_s event)
 {
     int32_t res32; // needed for the macro
-    MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EVENT_META_FLD, event);
-    MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EVENT_ARG_META_FLD, args);
+    event_e event_event =  event.event;
+    uint64_t args_shift =  event.args;
+    MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EVENT_META_FLD, event_event);
+    MODIFY_INT32_INT32_BITS_PACKET(pd, HDR(all_metadatas), EVENT_ARG_META_FLD, args_shift);
 }
 
 void enque_event(struct rte_ring *event_queue, event_e event, uint64_t args)

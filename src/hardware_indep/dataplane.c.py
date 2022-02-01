@@ -279,7 +279,7 @@ pkt_name_indent = " " * longest_hdr_name_len
 #[
 #[     reset_headers(SHORT_STDPARAMS_IN);
 #[     set_handle_packet_metadata(pd, EVENT_PORT);
-#[     set_event_metadata(pd, event.event, event.args);
+#[     set_event_metadata(pd, event);
 #[
 #[     dbg_bytes(pd->data, packet_length(pd), "Handling packet (port " T4LIT(%d,port) ", $${}{%02d} bytes)  : ", extract_ingress_port(pd), packet_length(pd));
 #[

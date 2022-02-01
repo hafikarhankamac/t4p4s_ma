@@ -28,6 +28,6 @@ typedef union {
 	void* as_ptr;
 } event_t;
 
-void set_event_metadata(packet_descriptor_t* pd, event_e event, uint64_t args);
+void set_event_metadata(packet_descriptor_t* pd, event_s event);
 void enque_event(struct rte_ring *event_queue, event_e event, uint64_t args);
 void fill_event_queue(struct rte_ring *event_queue, event_e event, uint64_t args, uint16_t count);

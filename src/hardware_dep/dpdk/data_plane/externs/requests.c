@@ -134,7 +134,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
 
 void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_t request = {
+    volatile request_t request = {
         .req = req,
         .args = args,
         .timestamp = timestamp,

@@ -202,14 +202,14 @@ void* create_checkpoint(void *p) {
 	return NULL;
 }
 
-void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest, uint32_t sn,uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS)
 {
     checkpoint_t *cp;
     rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &cp);
     if (cp->sn == sn && cp->lv == lv) {
-        if (bitmask & 1 << ID == 0) {
+        if (bitmask & 1 << id == 0) {
             cp->count++;
-            bitmask |= 1 << ID;
+            bitmask |= 1 << id;
         }
 
         if (count >= rs->f) {

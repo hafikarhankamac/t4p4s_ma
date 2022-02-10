@@ -158,7 +158,7 @@ void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint
     //void extern_request_store_add_request(uint32_t declarg, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
 void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS);
 
     //TODO delivered=true
 void extern_request_store_commit(uint32_t declarg, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);

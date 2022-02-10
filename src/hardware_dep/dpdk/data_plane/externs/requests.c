@@ -45,6 +45,14 @@ uint32_t hash_naive(uint8_t *key, uint8_t length) {
 	return rte_hash_crc(key, length, 0xffffffff);
 }
 
+request_pack_t* getPack(uint32_t sn, uint32_t lv) {
+    return &(rs->packs[lv % 4][(sn / 128) % 16]);
+}
+
+request_to_store_t* getRequestFromPacks(uint32_t sn, uint32_lv) {
+    return &(getPack(sn, lv)->requests[sn % 128]);
+}
+
 /*
    void hash_request(request_payload_t *req, uint8_t **hsh) {
    uint8_t key[5];
@@ -97,7 +105,7 @@ void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint
 
 void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
-    request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
+    request_pack_t *pack = getPack(sn, lv);
     if (!pack->committed) {
         //error
     } else {
@@ -112,6 +120,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
 	    r->request.delivered = false;
 	    r->request.processed = false;
 	    *dig = hash_request(&r->request);
+	    r->digest = *dig;
 	    rte_hash_add_key_with_hash_data(rs->table, dig, *dig, r);
 
 	    rs->max_not_executed = rs->max_not_executed > sn ? rs->max_not_executed : sn;
@@ -135,7 +144,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
 		for (uint32_t i = rs->min_not_executed; i <= max; i++) {
 			uint64_t snlv = get_sn_lv_key(i, lv);
 			rte_hash_lookup_with_hash_data(rs->table, &dig, dig, &r);
-			request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
+			request_pack_t *pack = getPack(sn, lv);
 			r = &(pack->requests[sn % 128]);
 			if (r->request.processed) {
 				rs->min_not_executed = r->sn + 1;
@@ -206,7 +215,7 @@ void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest,
         if (count >= rs->f) {
             uint32_t lv = cp->lv;
             uint32_t sn = cp->sn;
-            request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
+            request_pack_t *pack = getPack(sn, lv);
             FILE *f = fopen(rs->filename, "wb+");
             fwrite(pack->requests, sizeof(request_to_store_t), 128, f);
             fclose(f);
@@ -234,25 +243,16 @@ void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req
 //    void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {
 //    }
 
-void extern_request_store_contains(uint32_t declarg, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS)
-{
-	request_to_store_t *req;
-	*ret = rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req) >= 0;
-}
 
 void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
 {
-	digest_t *dig;
-	uint64_t snlv = get_sn_lv_key(sn, lv);
-	*ret = rte_hash_lookup_data(rs->snlv, &snlv, &dig) >= 0;
+	request_to_store_t *r = getRequestFromPacks(sn, lv);
+	*ret = r->sn == sn && r->lv == lv;
 }
 
 void extern_request_store_getDigestBySn(uint32_t declarg, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
-	uint64_t snlv = get_sn_lv_key(sn, lv);
-	rte_hash_lookup_data(rs->snlv, &snlv, dig);
-        request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
-	r = &(pack->requests[sn % 128]);
-	*dig = r->TODO
+	request_to_store_t *r = getRequestFromPacks(sn, lv);
+	*dig = r->digest;
 }
 
 void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)

@@ -99,6 +99,7 @@ struct request_to_store {
     request_t request;
     uint32_t sn;
     uint32_t lv;
+    digest_t digest;
 };
 
 typedef struct request_store request_store_t;

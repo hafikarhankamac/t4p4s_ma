@@ -134,7 +134,6 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
 	if (req->sn <= rs->min_not_executed) {
 		for (uint32_t i = rs->min_not_executed; i <= max; i++) {
 			uint64_t snlv = get_sn_lv_key(i, lv);
-			rte_hash_lookup_data(rs->snlv, &snlv, &dig);
 			rte_hash_lookup_with_hash_data(rs->table, &dig, dig, &r);
 			request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
 			r = &(pack->requests[sn % 128]);
@@ -251,6 +250,9 @@ void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, u
 void extern_request_store_getDigestBySn(uint32_t declarg, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
 	uint64_t snlv = get_sn_lv_key(sn, lv);
 	rte_hash_lookup_data(rs->snlv, &snlv, dig);
+        request_pack_t *pack = &(rs->packs[lv % 4][(sn / 128) % 16]);
+	r = &(pack->requests[sn % 128]);
+	*dig = r->TODO
 }
 
 void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)

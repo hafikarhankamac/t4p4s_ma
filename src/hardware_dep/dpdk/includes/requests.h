@@ -30,7 +30,7 @@ struct request_s {
 
 typedef struct request_s request_t;
 */
-
+/*
 struct vector {
     uint16_t size;
     uint16_t elem_size;
@@ -93,11 +93,22 @@ void add_element(vector_t *vec, void* elem) {
         vec->increase_bound = (uint32_t) (vec->size * dec_rate / 100);
     }
 }
+*/
+
+struct request_to_store {
+    request_t request;
+    uint32_t sn;
+    uint32_t lv;
+};
+
+typedef struct request_store request_store_t;
+typedef struct request_to_store request_to_store_t;
+
 
 struct request_pack {
     bool committed;
     request_to_store_t requests[128];
-}
+};
 
 typedef struct request_pack request_pack_t;
 
@@ -108,7 +119,7 @@ struct checkpoint {
     uint32_t sn;
     uint32_t lv;
     uint64_t bitmask;
-}
+};
 
 typedef struct checkpoint checkpoint_t;
 
@@ -124,7 +135,7 @@ struct request_store {
     cp_digest_t digest_last_stable;
 
     uint8_t unstable_checkpoints;
-    uint32_t checkpoints;
+    uint32_t checkpoints_count;
 
     request_pack_t* packs[4][16];
 
@@ -135,16 +146,6 @@ struct request_store {
 
     bool multithreaded;
 };
-
-struct request_to_store {
-    request_t request;
-    uint32_t sn;
-    uint32_t lv;
-};
-
-typedef struct request_store request_store_t;
-typedef struct request_to_store request_to_store_t;
-
 
 request_store_t* request_store(uint32_t size, uint8_t nodes, bool multithreaded, SHORT_STDPARAMS);
 

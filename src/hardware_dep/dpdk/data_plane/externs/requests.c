@@ -70,14 +70,14 @@ uint32_t hash_pack(request_t *req) {
     return hash_naive(req, sizeof(request_t)*128);
 }
 
-void extern_request_store_isDelivered(uint32_t declarg, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_isDelivered(uint32_t declarg, uint32_t declarg2, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
 	request_to_store_t *req;
 	rte_hash_lookup_with_hash_data(rs->table, digest, digest, &req);
 	*del = req->request.delivered;
 }
 
-void extern_request_store_getByDigest(uint32_t declarg, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getByDigest(uint32_t declarg, uint32_t declarg2, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
 	request_to_store_t *rts;
 	rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &rts);
@@ -91,19 +91,19 @@ void extern_request_store_getByDigest(uint32_t declarg, uint8_t *req, uint32_t *
 	*processed = r->processed;
 }
 
-void extern_request_store_createCheckpoint(uint32_t declarg, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_createCheckpoint(uint32_t declarg, uint32_t declarg2, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS)
 {
 
 }
 
-void extern_request_store_add(uint32_t declarg, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_add(uint32_t declarg, uint32_t declarg2, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS)
 {
 }
 
-//void extern_request_store_add_request(uint32_t declarg, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
+//void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
 //}
 
-void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
     request_pack_t *pack = getPack(sn, lv);
     if (!pack->committed) {
@@ -129,7 +129,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t *dig, uint32_t 
 
 
 //TODO delivered=true
-void extern_request_store_commit(uint32_t declarg, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
 {
 	request_to_store_t *req;
 	rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &req);
@@ -171,7 +171,7 @@ void extern_request_store_commit(uint32_t declarg, digest_t digest, request_stor
 	}
 }
 
-void extern_request_store_getCheckpointByDigest(uint32_t declarg, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp) {
+void extern_request_store_getCheckpointByDigest(uint32_t declarg, uint32_t declarg2, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp) {
     checkpoint_t *cp;
     rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &cp);
 
@@ -202,7 +202,7 @@ void* create_checkpoint(void *p) {
 	return NULL;
 }
 
-void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t declarg2, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS)
 {
     checkpoint_t *cp;
     rte_hash_lookup_with_hash_data(rs->table, &digest, digest, &cp);
@@ -227,7 +227,7 @@ void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t cp_digest,
     }
 }
 
-void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getDigest(uint32_t declarg, uint32_t declarg2, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
 	volatile request_t request = {
 		.req = req,
@@ -240,22 +240,22 @@ void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, uint8_t req
 	*dig = hash_request(&request);
 }
 
-//    void extern_request_store_getDigest(uint32_t declarg, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {
+//    void extern_request_store_getDigest(uint32_t declarg, uint32_t declarg2, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {
 //    }
 
 
-void extern_request_store_containsSn(uint32_t declarg, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_containsSn(uint32_t declarg, uint32_t declarg2, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS)
 {
 	request_to_store_t *r = getRequestFromPacks(sn, lv);
 	*ret = r->sn == sn && r->lv == lv;
 }
 
-void extern_request_store_getDigestBySn(uint32_t declarg, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
+void extern_request_store_getDigestBySn(uint32_t declarg, uint32_t declarg2, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS) {
 	request_to_store_t *r = getRequestFromPacks(sn, lv);
 	*dig = r->digest;
 }
 
-void extern_request_store_print(uint32_t declarg, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_print(uint32_t declarg, uint32_t declarg2, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS)
 {
 	printf("%i", arg);
 }

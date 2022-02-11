@@ -148,27 +148,34 @@ struct request_store {
     bool multithreaded;
 };
 
+struct cp_params {
+        request_pack_t* pack;
+        request_store_t* rs;
+};
+
+typedef struct cp_params cp_params_t;
+
 request_store_t* request_store(uint32_t size, uint8_t nodes, bool multithreaded, SHORT_STDPARAMS);
 
-void extern_request_store_isDelivered(uint32_t, uint32_t, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_getByDigest(uint32_t, uint32_t, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_createCheckpoint(uint32_t, uint32_t, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_getCheckpointByDigest(uint32_t, uint32_t, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp);
-void extern_request_store_add(uint32_t, uint32_t, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);
-    //void extern_request_store_add_request(uint32_t, uint32_t, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
+void extern_request_store_isDelivered(uint32_t, uint32_t, uint32_t, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_getByDigest(uint32_t, uint32_t, uint32_t, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_createCheckpoint(uint32_t, uint32_t, uint32_t, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_getCheckpointByDigest(uint32_t, uint32_t, uint32_t, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_add(uint32_t, uint32_t, uint32_t, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);
+    //void extern_request_store_add_request(uint32_t, uint32_t, uint32_t, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
-void extern_request_store_add_request(uint32_t, uint32_t, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_updateCheckpoint(uint32_t, uint32_t, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_add_request(uint32_t, uint32_t, uint32_t, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_updateCheckpoint(uint32_t, uint32_t, uint32_t, uint32_t cp_digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS);
 
     //TODO delivered=true
-void extern_request_store_commit(uint32_t, uint32_t, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_getDigest(uint32_t, uint32_t, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_commit(uint32_t, uint32_t, uint32_t, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_getDigest(uint32_t, uint32_t, uint32_t, digest_t *dig, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);
 
-//    void extern_request_store_getDigest(uint32_t, uint32_t, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {
+//    void extern_request_store_getDigest(uint32_t, uint32_t, uint32_t, digest_t *dig, request_payload_t request,  request_store_t *rs, SHORT_STDPARAMS) {
 //    }
 
-void extern_request_store_contains(uint32_t, uint32_t, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_containsSn(uint32_t, uint32_t, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_getDigestBySn(uint32_t, uint32_t, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_contains(uint32_t, uint32_t, uint32_t, bool *ret, digest_t digest,  request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_containsSn(uint32_t, uint32_t, uint32_t, bool *ret, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_getDigestBySn(uint32_t, uint32_t, uint32_t, digest_t *dig, uint32_t sn, uint32_t lv, request_store_t *rs, SHORT_STDPARAMS);
 
-void extern_request_store_print(uint32_t, uint32_t, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_print(uint32_t, uint32_t, uint32_t, uint64_t arg, request_store_t *rs, SHORT_STDPARAMS);

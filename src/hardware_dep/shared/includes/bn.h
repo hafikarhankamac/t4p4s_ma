@@ -33,8 +33,8 @@ There may well be room for performance-optimizations and improvements.
 #define GET_SIGN(arr, first_bits) (arr[0] >> (first_bits - 1))
 
 /* Types */
-#define SIGNED_TYPE int
-#define UNSIGNED_TYPE uint32_t
+#define SIGNED_TYPE int64_t
+#define UNSIGNED_TYPE uint64_t
 
 /* Tokens returned by bignum_cmp() for value comparison */
 enum { SMALLER = -1, EQUAL = 0, LARGER = 1 };

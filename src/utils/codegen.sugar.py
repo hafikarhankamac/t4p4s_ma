@@ -1404,6 +1404,8 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
             elif nt == 'Shr' and e.type.node_type == 'Type_Bits' and e.type.isSigned:
                 #Right shift on signed values is performed with a shift width check
                 #[ ((${right}>${size}) ? 0 : (${left} >> ${right}))
+            elif nt == 'Shl' and e.type.node_type == 'Type_Bits' and e.type.isSigned:
+                #[ (${left} << ${right})
             else:
                 #These formatting rules MUST follow the previous special cases
                 #= gen_fmt_ComplexOp(e, left, right, complex_binary_ops[nt], format_as_value, expand_parameters)

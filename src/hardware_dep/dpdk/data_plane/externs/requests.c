@@ -32,6 +32,9 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, bool multithreaded,
 	for (uint8_t i = 0; i <= 4; i++) {
 		for (uint8_t u = 0; u <= 16; u++) {
 			rs->packs[i][u] = malloc(sizeof(request_pack_t));
+			for (uint8_t y = 0; y < 128; y++) {
+				rs->packs[i][u]->committed = true;
+			}
 		}
 	}
 
@@ -52,7 +55,7 @@ uint32_t hash_naive(void *key, uint32_t length) {
 }
 
 request_pack_t* getPack(request_store_t *rs, uint32_t sn, uint32_t lv) {
-    return &(rs->packs[lv % 4][(sn / 128) % 16]);
+    return (rs->packs[lv % 4][(sn / 128) % 16]);
 }
 
 request_to_store_t* getRequestFromPacks(request_store_t *rs, uint32_t sn, uint32_t lv) {
@@ -112,7 +115,7 @@ void extern_request_store_add(uint32_t declarg, uint32_t declarg2, uint32_t decl
 void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
     request_pack_t *pack = getPack(rs, sn, lv);
-    if (!pack->committed) {
+    if (sn % 128 == 0 && !pack->committed) {
         //error
     } else {
         pack->committed = false;
@@ -155,7 +158,7 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 				rs->min_not_executed = r->sn + 1;
 			} else if (r->request.delivered) {
 				uint8_t e_id = PROCESS_REQUEST;
-				raise_event(&e_id, &dig);
+				raise_event(&e_id, &r->digest);
 				r->request.processed = true;
 				rs->min_not_executed = r->sn+1;
 				if (r->sn % 128 == 128-1) {

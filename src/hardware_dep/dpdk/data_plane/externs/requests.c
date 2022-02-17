@@ -128,6 +128,7 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint3
 	    r->request.clientId = clientId;
 	    r->request.delivered = false;
 	    r->request.processed = false;
+	    memset(&r->request.c, 0, 16);
 	    *dig = hash_request(&r->request);
 	    r->digest = *dig;
 	    rte_hash_add_key_with_hash_data(rs->table, dig, *dig, r);
@@ -251,7 +252,8 @@ void extern_request_store_getDigest(uint32_t declarg, uint32_t declarg2, uint32_
 		.timestamp = timestamp,
 		.clientId = clientId,
 		.delivered = false,
-		.processed = false
+		.processed = false,
+		.c = { 0, 0, 0, 0, 0, 0, 0, 0},
 	};
 	*dig = hash_request(&request);
 }

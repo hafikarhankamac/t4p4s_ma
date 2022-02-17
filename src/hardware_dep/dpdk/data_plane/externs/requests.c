@@ -32,8 +32,9 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, bool multithreaded,
 	for (uint8_t i = 0; i <= 4; i++) {
 		for (uint8_t u = 0; u <= 16; u++) {
 			rs->packs[i][u] = malloc(sizeof(request_pack_t));
+			rs->packs[i][u]->committed = true;
 			for (uint8_t y = 0; y < 128; y++) {
-				rs->packs[i][u]->committed = true;
+				rs->packs[i][u]->requests[y].lv = i+1; // so they wont match during contains check
 			}
 		}
 	}

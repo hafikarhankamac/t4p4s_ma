@@ -175,7 +175,7 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 				        pthread_t thread_id;
 				        pthread_create(&thread_id, NULL, create_checkpoint, (void*) par);
 				    } else {
-				        create_checkpoint((void*) &par);
+				        create_checkpoint((void*) par);
 				    }
 
 				}

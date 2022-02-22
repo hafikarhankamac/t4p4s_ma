@@ -106,9 +106,9 @@ void extern_request_store_createCheckpoint(uint32_t declarg, uint32_t declarg2, 
 
 }
 
-void extern_request_store_add(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS)
-{
-}
+//void extern_request_store_add(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS)
+//{
+//}
 
 //void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
 //}

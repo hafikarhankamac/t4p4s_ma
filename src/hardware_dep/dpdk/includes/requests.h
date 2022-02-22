@@ -20,10 +20,10 @@ typedef uint16_t cp_id;
 
 /*
 struct request_s {
-	uint8_t req;
 	uint32_t args;
 	uint32_t timestamp;
 	uint16_t clientId;
+	uint8_t req;
 	bool delivered;
 	bool processed;
 } ;
@@ -32,15 +32,15 @@ typedef struct request_s request_t;
 */
 /*
 struct vector {
-    uint16_t size;
-    uint16_t elem_size;
+    void *ptr;
     uint32_t increase_bound;
     uint32_t decrease_bound;
+    uint16_t size;
+    uint16_t elem_size;
 
     uint8_t increase_rate;
     uint8_t decrease_rate;
 
-    void *ptr;
 };
 
 typedef struct vector vector_t;
@@ -96,30 +96,30 @@ void add_element(vector_t *vec, void* elem) {
 */
 
 struct request_to_store {
-    request_t request;
     uint32_t sn;
     uint32_t lv;
     digest_t digest;
-};
+    request_t request;
+} __attribute__((__packed__)); 
 
 typedef struct request_store request_store_t;
 typedef struct request_to_store request_to_store_t;
 
 
 struct request_pack {
-    bool committed;
     request_to_store_t requests[128];
+    bool committed;
 };
 
 typedef struct request_pack request_pack_t;
 
 struct checkpoint {
-    cp_digest_t digest;
-    bool stable;
-    uint8_t count;
+    uint64_t bitmask;
     uint32_t sn;
     uint32_t lv;
-    uint64_t bitmask;
+    cp_digest_t digest;
+    uint8_t count;
+    bool stable;
 };
 
 typedef struct checkpoint checkpoint_t;
@@ -161,7 +161,7 @@ void extern_request_store_isDelivered(uint32_t, uint32_t, uint32_t, bool *del, d
 void extern_request_store_getByDigest(uint32_t, uint32_t, uint32_t, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
 void extern_request_store_createCheckpoint(uint32_t, uint32_t, uint32_t, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS);
 void extern_request_store_getCheckpointByDigest(uint32_t, uint32_t, uint32_t, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_add(uint32_t, uint32_t, uint32_t, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);
+//void extern_request_store_add(uint32_t, uint32_t, uint32_t, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);
     //void extern_request_store_add_request(uint32_t, uint32_t, uint32_t, digest_t *dig, request_t r,  request_store_t *rs, SHORT_STDPARAMS) {
     //}
 void extern_request_store_add_request(uint32_t, uint32_t, uint32_t, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS);

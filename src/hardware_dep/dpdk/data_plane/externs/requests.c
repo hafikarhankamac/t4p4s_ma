@@ -16,13 +16,15 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, bool multithreaded,
 
 	struct rte_hash* h = hash_create(0, "rs-table", sizeof(uint32_t), rte_hash_crc, 1000000, false);
 	rs->table = h;
-	struct rte_hash* i = hash_create(0, "snlv-table", sizeof(uint64_t), rte_hash_crc, 1000000, false);
+	struct rte_hash* i = hash_create(0, "checkpoint-table", sizeof(uint32_t), rte_hash_crc, 1000000, false);
+	rs->checkpoints = h;
+
 	rs->max_not_executed = 0;
 	rs->min_not_executed = 0;
 
 	rs->digest_last_stable = 0;
 	rs-> unstable_checkpoints = 0;
-	rs->checkpoints = 0;
+	rs->checkpoints_count = 0;
 
 	rs->nodes = nodes;
 	rs->f = (uint8_t) (nodes - 1 / 3);
@@ -208,15 +210,17 @@ void* create_checkpoint(void *p) {
     cp->stable = false;
     cp->sn = pack->requests[128-1].sn;
     cp->lv = pack->requests[128-1].lv;
+    rs->checkpoints_count++;
+    rs->unstable_checkpoints++;
 
     rte_hash_add_key_with_hash_data(rs->checkpoints, &dig, dig, cp);
 
 
     uint8_t e_id = CREATE_CHECKPOINT;
-	raise_event(&e_id, &dig);
+    raise_event(&e_id, &dig);
 
     free(p);
-	return NULL;
+    return NULL;
 }
 
 void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t digest, uint32_t sn, uint32_t lv, uint16_t id, request_store_t *rs, SHORT_STDPARAMS)
@@ -239,8 +243,9 @@ void extern_request_store_updateCheckpoint(uint32_t declarg, uint32_t declarg2, 
             cp->stable = true;
             pack->committed = true;
 	    rs->digest_last_stable = cp->digest;
+	    rs->unstable_checkpoints--;
             uint8_t e_id = ADVANCE_WATERMARK;
-	        raise_event(&e_id, &sn);
+            raise_event(&e_id, &sn);
         }
     }
 }

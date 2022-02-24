@@ -10,7 +10,7 @@ void* create_checkpoint(void*);
 
 request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool multithreaded, SHORT_STDPARAMS)
 {
-	request_store_t *rs = (request_store_t*) rte_malloc("request_store_t", size * sizeof(uint8_t), 0);
+	request_store_t *rs = (request_store_t*) rte_malloc("request_store_t", sizeof(request_store_t), 0);
 
 	//TODO socket id, max_size
 
@@ -33,14 +33,14 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool mu
 	rs->last_stable = fake_cp;
 
 	rs->nodes = nodes;
-	rs->f = (uint8_t) (nodes - 1 / 3);
+	rs->f = (uint8_t) ((nodes - 1) / 3);
 
 	rs->id = id;
 
 	strcpy(rs->filename, "message_log.bin");
 
-	for (uint8_t i = 0; i <= 4; i++) {
-		for (uint8_t u = 0; u <= 16; u++) {
+	for (uint8_t i = 0; i < 4; i++) {
+		for (uint8_t u = 0; u < 16; u++) {
 			rs->packs[i][u] = malloc(sizeof(request_pack_t));
 			rs->packs[i][u]->committed = true;
 			for (uint8_t y = 0; y < 128; y++) {

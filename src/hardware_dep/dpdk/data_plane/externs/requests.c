@@ -263,6 +263,7 @@ void commit_checkpoint(request_store_t *rs, checkpoint_t *cp) {
     	rs->unstable_checkpoints--;
         rs->last_stable = cp;
         uint8_t e_id = ADVANCE_WATERMARK;
+	sn++;
         raise_event(&e_id, &sn);
     }
 }

@@ -209,7 +209,7 @@ void* create_checkpoint(void *p) {
     checkpoint_t *cp;
     int ret = rte_hash_lookup_with_hash_data(rs->checkpoints, &dig, dig, &cp);
 
-    if (rte < 0) {
+    if (ret < 0) {
         cp = (checkpoint_t*) rte_malloc("checkpoint_t", sizeof(checkpoint_t), 0);
         cp->digest = dig;
         cp->stable = false;

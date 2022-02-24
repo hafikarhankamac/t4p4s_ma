@@ -243,9 +243,9 @@ void* create_checkpoint(void *p) {
 }
 
 void update_bitmask_cp(checkpoint_t *cp, uint16_t id) {
-    if (cp->bitmask & 1 << id == 0) {
+    if ((cp->bitmask & 1 << id) == 0) {
         cp->count++;
-        cp->bitmask |= 1 << id;
+        cp->bitmask |= (1 << id);
     }
 }
 

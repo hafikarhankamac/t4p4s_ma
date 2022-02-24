@@ -22,9 +22,15 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool mu
 	rs->max_not_executed = 0;
 	rs->min_not_executed = 0;
 
-	rs->last_stable = NULL;
 	rs-> unstable_checkpoints = 0;
 	rs->checkpoints_count = 0;
+
+	// fake_checkpoint
+	checkpoint_t *fake_cp = rte_malloc("fake-cp", sizeof(checkpoint_t), 0);
+	fake_cp->lv = 0;
+	fake_cp->sn = 0;
+
+	rs->last_stable = fake_cp;
 
 	rs->nodes = nodes;
 	rs->f = (uint8_t) (nodes - 1 / 3);

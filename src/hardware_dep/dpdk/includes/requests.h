@@ -107,8 +107,8 @@ typedef struct request_to_store request_to_store_t;
 
 
 struct request_pack {
-    request_to_store_t requests[128];
     bool committed;
+    request_to_store_t requests[];
 };
 
 typedef struct request_pack request_pack_t;

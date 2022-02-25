@@ -35,15 +35,17 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool mu
 	rs->nodes = nodes;
 	rs->f = (uint8_t) ((nodes - 1) / 3);
 
+	rs->size = size;
+
 	rs->id = id;
 
 	strcpy(rs->filename, "message_log.bin");
 
 	for (uint8_t i = 0; i < 4; i++) {
 		for (uint8_t u = 0; u < 16; u++) {
-			rs->packs[i][u] = malloc(sizeof(request_pack_t));
+			rs->packs[i][u] = malloc(sizeof(bool) + sizeof(request_store_t)* size);
 			rs->packs[i][u]->committed = true;
-			for (uint8_t y = 0; y < 128; y++) {
+			for (uint8_t y = 0; y < size; y++) {
 				rs->packs[i][u]->requests[y].lv = i+1; // so they wont match during contains check
 			}
 		}
@@ -66,11 +68,11 @@ uint32_t hash_naive(void *key, uint32_t length) {
 }
 
 request_pack_t* getPack(request_store_t *rs, uint32_t sn, uint32_t lv) {
-    return (rs->packs[lv % 4][(sn / 128) % 16]);
+    return (rs->packs[lv % 4][(sn / rs->size) % 16]);
 }
 
 request_to_store_t* getRequestFromPacks(request_store_t *rs, uint32_t sn, uint32_t lv) {
-    return &(getPack(rs, sn, lv)->requests[sn % 128]);
+    return &(getPack(rs, sn, lv)->requests[sn % rs->size]);
 }
 
 /*
@@ -87,7 +89,7 @@ uint32_t hash_request(request_t *req) {
 }
 
 uint32_t hash_pack(request_to_store_t *req) {
-    return hash_naive((void*) req, sizeof(request_to_store_t)*128);
+    return hash_naive((void*) req, sizeof(request_to_store_t)*(rs->size));
 }
 
 void extern_request_store_isDelivered(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
@@ -126,11 +128,11 @@ void extern_request_store_createCheckpoint(uint32_t declarg, uint32_t declarg2, 
 void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, uint32_t *dig, uint32_t sn, uint32_t lv, uint8_t req, uint32_t args, uint32_t timestamp, uint16_t clientId, request_store_t *rs, SHORT_STDPARAMS)
 {
     request_pack_t *pack = getPack(rs, sn, lv);
-    if (sn % 128 == 0 && !pack->committed) {
+    if (sn % rs->size == 0 && !pack->committed) {
         //error
     } else {
         pack->committed = false;
-        request_to_store_t *r = &(pack->requests[sn % 128]);
+        request_to_store_t *r = &(pack->requests[sn % rs->size]);
 	    r->sn = sn;
 	    r->lv = lv;
 	    r->request.req = req;
@@ -165,7 +167,7 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 		for (uint32_t i = rs->min_not_executed; i <= max; i++) {
 			rte_hash_lookup_with_hash_data(rs->table, &dig, dig, (void**) &r);
 			request_pack_t *pack = getPack(rs, i, lv);
-			r = &(pack->requests[i % 128]);
+			r = &(pack->requests[i % rs->size]);
 			if (r->request.processed) {
 				rs->min_not_executed = r->sn + 1;
 			} else if (r->request.delivered) {
@@ -173,7 +175,7 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 				raise_event(&e_id, &r->digest);
 				r->request.processed = true;
 				rs->min_not_executed = r->sn+1;
-				if (r->sn % 128 == 128-1) {
+				if (r->sn % rs->size == rs->size-1) {
 				    // create checkpoint
 				    cp_params_t *par = malloc(sizeof(cp_params_t));
 				    par->pack = pack;
@@ -219,8 +221,8 @@ void* create_checkpoint(void *p) {
         cp = (checkpoint_t*) rte_malloc("checkpoint_t", sizeof(checkpoint_t), 0);
         cp->digest = dig;
         cp->stable = false;
-        cp->sn = pack->requests[128-1].sn;
-        cp->lv = pack->requests[128-1].lv;
+        cp->sn = pack->requests[rs->size-1].sn;
+        cp->lv = pack->requests[rs->size-1].lv;
         rs->checkpoints_count++;
         rs->unstable_checkpoints++;
 
@@ -256,7 +258,7 @@ void commit_checkpoint(request_store_t *rs, checkpoint_t *cp) {
         uint32_t sn = cp->sn;
         request_pack_t *pack = getPack(rs, sn, lv);
         FILE *f = fopen(rs->filename, "wb+");
-        fwrite(pack->requests, sizeof(request_to_store_t), 128, f);
+        fwrite(pack->requests, sizeof(request_to_store_t), rs->size, f);
         fclose(f);
         cp->stable = true;
         pack->committed = true;

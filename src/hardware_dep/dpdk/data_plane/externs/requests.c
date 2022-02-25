@@ -89,7 +89,7 @@ uint32_t hash_request(request_t *req) {
 }
 
 uint32_t hash_pack(request_to_store_t *req, uint16_t pack_size) {
-    return hash_naive((void*) req, sizeof(request_to_store_t)*(rs->size));
+    return hash_naive((void*) req, sizeof(request_to_store_t)*(pack_size));
 }
 
 void extern_request_store_isDelivered(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)

@@ -140,12 +140,16 @@ struct request_store {
 
     request_pack_t* packs[4][16];
 
+    uint16_t size;
+
     char filename[50];
 
     uint8_t nodes;
     uint8_t f;
 
     uint8_t id;
+
+
 
     bool multithreaded;
 

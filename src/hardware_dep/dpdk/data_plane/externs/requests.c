@@ -88,7 +88,7 @@ uint32_t hash_request(request_t *req) {
 	return hash_naive((void*) req, sizeof(request_t));
 }
 
-uint32_t hash_pack(request_to_store_t *req) {
+uint32_t hash_pack(request_to_store_t *req, uint16_t pack_size) {
     return hash_naive((void*) req, sizeof(request_to_store_t)*(rs->size));
 }
 
@@ -211,7 +211,7 @@ void* create_checkpoint(void *p) {
     request_pack_t* pack = par->pack;
     request_store_t* rs = par->rs;
 
-    cp_digest_t dig = hash_pack(pack->requests);
+    cp_digest_t dig = hash_pack(pack->requests, rs->size);
     pack->committed = false;
 
     checkpoint_t *cp;

@@ -264,59 +264,6 @@ void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
   free(row);
 }
 
-void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
-{
-  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
-
-  if (bignum_cmp(a, b, bytes) == -1) {
-    memset(c, 0, bytes);
-    return;
-  }
-
-  uint8_t* current = malloc(bytes * sizeof(uint8_t));
-  uint8_t* denom = malloc(bytes * sizeof(uint8_t));
-  uint8_t* tmp = malloc(bytes * sizeof(uint8_t));
-
-  bignum_from_int_signed(current, 1, bytes);               // int current = 1;
-  bignum_assign(denom, b, bytes);                   // denom = b
-  bignum_assign(tmp, a, bytes);                     // tmp   = a
-
-  const UNSIGNED_TYPE half_max = 1 + (UNSIGNED_TYPE)(0xff / 2);
-  bool overflow = false;
-  while (bignum_cmp(denom, a, bytes) != LARGER)     // while (denom <= a) {
-  {
-    if (denom[0] >= half_max)
-    {
-      overflow = true;  
-      break;
-    }
-    _lshift_one_bit(current, bytes);                //   current <<= 1;
-    _lshift_one_bit(denom, bytes);                  //   denom <<= 1;
-  }
-  if (!overflow)
-  {
-    _rshift_one_bit(denom, bytes);                  // denom >>= 1;
-    _rshift_one_bit(current, bytes);                // current >>= 1;
-  }
-  // bignum_init(c);                             // int answer = 0;
-
-  while (!bignum_is_zero(current, bytes))           // while (current != 0)
-  {
-    if (bignum_cmp(tmp, denom, bytes) != SMALLER)  //   if (dividend >= denom)
-    {
-      bignum_sub(tmp, denom, tmp, length_in_bits);         //     dividend -= denom;
-      bignum_or(c, current, c, length_in_bits);              //     answer |= current;
-    }
-    _rshift_one_bit(current, bytes);                //   current >>= 1;
-    _rshift_one_bit(denom, bytes);                  //   denom >>= 1;
-  }                                         // return answer;
-
-  bignum_truncate(c, BITS_IN_FIRST_BYTE(bytes, length_in_bits));
-  free(tmp);
-  free(denom);
-  free(current);
-}
-
 void bignum_lshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 {
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);

@@ -23,9 +23,6 @@ There may well be room for performance-optimizations and improvements.
 #include <stdint.h>
 #include <assert.h>
 
-/* Custom assert macro - easy to disable */
-#define REQUIRE(p, msg) assert(p && msg)
-
 /* Helper macros */
 #define BITS_TO_BYTES(bits) ((bits + 7) / 8)
 #define BITS_IN_FIRST_BYTE(bytes, bits) (8 - (bytes * 8 - bits))
@@ -84,18 +81,12 @@ UNSIGNED_TYPE bignum_slice_int(uint8_t* a, uint8_t length_in_bits, uint8_t from,
 void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a + b */
 void bignum_sub(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a - b */
 void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a * b */
-void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a / b */
-void bignum_mod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits); /* c = a % b */
-void bignum_divmod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* d, uint8_t length_in_bits); /* c = a/b, d = a%b */
 
 void bignum_add_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);
 void bignum_sub_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);
 void bignum_mul_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);
-void bignum_div_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);
-void bignum_mod_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits);
 
 void bignum_make_positive(uint8_t* a, uint8_t* b, uint8_t length);
-/* Change sign of number */
 void bignum_make_negative(uint8_t* a, uint8_t* b, uint8_t length);
 void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 
@@ -112,16 +103,9 @@ void bignum_lshift_signed(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_b
 void bignum_rshift_signed(uint8_t* a, uint8_t* b, int nbits, uint8_t length); /* b = a >> nbits */
 
 /* Comparison */
-int bignum_cmp(uint8_t* a, uint8_t* b, uint8_t length);             /* Compare: returns LARGER, EQUAL or SMALLER */
 int bignum_cmp_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
-int bignum_gr_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
-int bignum_ge_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
-int bignum_ls_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
-int bignum_le_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits);
 
 int  bignum_is_zero(uint8_t* n, uint8_t length);                         /* For comparison with zero */
-// void bignum_pow(struct bn* a, struct bn* b, struct bn* c); /* Calculate a^b -- e.g. 2^10 => 1024 */
-// void bignum_isqrt(struct bn* a, struct bn* b);             /* Integer square root -- e.g. isqrt(5) => 2*/
 void bignum_assign(uint8_t* dst, uint8_t* src, uint8_t length);        /* Copy src into dst -- dst := src */
 
 

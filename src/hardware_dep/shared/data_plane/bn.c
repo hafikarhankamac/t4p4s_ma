@@ -13,19 +13,14 @@ void _rshift_word(uint8_t* a, int nwords, uint8_t length);
 
 void bignum_make_positive(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
-  uint8_t* tmp1 = malloc(bytes * sizeof(uint8_t));
-  uint8_t* tmp2 = malloc(bytes * sizeof(uint8_t));
-  memset(tmp1, 0, bytes * sizeof(uint8_t));
+  uint8_t* tmp = malloc(bytes * sizeof(uint8_t));
+  bignum_from_int_signed(tmp, 1, bytes);
 
-  bignum_from_int_signed(tmp2, 1, bytes);
-
-  bignum_sub(a, tmp2, tmp1, length_in_bits);
-
-  bignum_not(tmp1, b, length_in_bits);
+  bignum_sub(a, tmp, b, length_in_bits);
+  bignum_not(b, b, length_in_bits);
 
   bignum_truncate(b, BITS_IN_FIRST_BYTE(bytes, length_in_bits));
-  free(tmp2);
-  free(tmp1);
+  free(tmp);
 }
 
 void bignum_make_negative(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
@@ -105,44 +100,7 @@ void bignum_mul_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bit
     free(tmp1);
 }
 
-void bignum_div_signed(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits) {
-  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
-  uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
-
-  uint8_t isANeg = GET_SIGN(a, first_bits);;
-  uint8_t isBNeg = GET_SIGN(b, first_bits);;
-
-  uint8_t *tmp1, *tmp2;
-
-  if (isANeg) {
-    tmp1 = malloc(bytes * sizeof(uint8_t));
-    bignum_make_positive(a, tmp1, length_in_bits);
-  }
-  else
-    tmp1 = a;
-
-  if (isBNeg) {
-    tmp2 = malloc(bytes * sizeof(uint8_t));
-    bignum_make_positive(b, tmp2, length_in_bits);
-  }
-  else
-    tmp2 = b;
-
-  bignum_div(tmp1, tmp2, c, length_in_bits);
-
-  if (isANeg != isBNeg)
-    bignum_make_negative(c, c, length_in_bits);
-
-  if (isBNeg)
-    free(tmp2);
-
-  if (isANeg)
-    free(tmp1);
-}
-
 void bignum_from_int_unsigned(uint8_t* n, UNSIGNED_TYPE i, uint8_t length_in_bytes) {
-  REQUIRE(n, "n is null");
-  memset(n, 0, length_in_bytes);
   int max_length = MIN(length_in_bytes, sizeof(UNSIGNED_TYPE)); // 4
 
   for (int j = length_in_bytes - 1; j >= length_in_bytes - max_length; j--) {
@@ -154,8 +112,6 @@ void bignum_from_int_unsigned(uint8_t* n, UNSIGNED_TYPE i, uint8_t length_in_byt
 
 void bignum_from_int_signed(uint8_t* n, SIGNED_TYPE i, uint8_t length_in_bytes)
 {
-  REQUIRE(n, "n is null");
-  memset(n, 0, length_in_bytes);
   int max_length = MIN(length_in_bytes, sizeof(SIGNED_TYPE));
 
   for (int j = length_in_bytes - 1; j >= length_in_bytes - max_length; j--) {
@@ -242,10 +198,6 @@ void bignum_cast_signed(uint8_t* a, uint8_t length_a_in_bits, uint8_t* b, uint8_
 
 void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
-
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t bits_in_first_byte = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
 
@@ -263,9 +215,6 @@ void bignum_add(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_sub(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
   UNSIGNED_TYPE res, tmp1, tmp2;
@@ -284,9 +233,6 @@ void bignum_sub(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
   uint8_t* row = malloc(bytes * sizeof(uint8_t));
@@ -320,9 +266,6 @@ void bignum_mul(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
 
   if (bignum_cmp(a, b, bytes) == -1) {
@@ -376,10 +319,6 @@ void bignum_div(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_lshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(nbits >= 0, "no negative shifts");
-
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
 
@@ -406,10 +345,6 @@ void bignum_lshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 
 void bignum_rshift(uint8_t* a, uint8_t* b, int nbits, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(nbits >= 0, "no negative shifts");
-
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
   
@@ -520,52 +455,8 @@ void _rshift_word_signed(uint8_t* a, int nwords, uint8_t length_in_bits) {
   a[0] = first_byte_mask;
 }
 
-void bignum_mod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length)
-{
-  /*
-    Take divmod and throw away div part
-  */
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
-
-  uint8_t* tmp = malloc(length * sizeof(uint8_t));
-
-  bignum_divmod(a,b,tmp,c, length);
-}
-
-void bignum_divmod(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* d, uint8_t length)
-{
-  /*
-    Puts a%b in d
-    and a/b in c
-
-    mod(a,b) = a - ((a / b) * b)
-
-    example:
-      mod(8, 3) = 8 - ((8 / 3) * 3) = 2
-  */
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
-
-  uint8_t* tmp = malloc(length * sizeof(uint8_t));
-
-  /* c = (a / b) */
-  bignum_div(a, b, c, length);
-
-  /* tmp = (c * b) */
-  bignum_mul(c, b, tmp, length);
-
-  /* c = a - tmp */
-  bignum_sub(a, tmp, d, length);
-}
-
 void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
@@ -574,9 +465,6 @@ void bignum_and(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
@@ -585,58 +473,12 @@ void bignum_or(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 
 void bignum_xor(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t length_in_bits)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-  REQUIRE(c, "c is null");
   uint8_t length_in_bytes = BITS_TO_BYTES(length_in_bits);
 
   for (int i = 0; i < length_in_bytes; ++i)
     c[i] = a[i] ^ b[i];
 }
 
-int bignum_cmp(uint8_t* a, uint8_t* b, uint8_t length)
-{
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-
-  int i = -1;
-  do
-  {
-    i += 1; /* Decrement first, to start with last array element */
-    if (a[i] > b[i])
-      return LARGER;
-      
-    else if (a[i] < b[i])
-      return SMALLER;
-          
-  }
-  while (i != length - 1);
-
-  return EQUAL;
-}
-
-int bignum_gr_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  int r = bignum_cmp_signed(a, b, length_in_bits);
-  return r > 0;
-}
-
-int bignum_ge_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  int r = bignum_cmp_signed(a, b, length_in_bits);
-  return r >= 0;
-}
-
-int bignum_ls_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  int r = bignum_cmp_signed(a, b, length_in_bits);
-  return r < 0;
-}
-
-int bignum_le_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  int r = bignum_cmp_signed(a, b, length_in_bits);
-  return r <= 0;
-}
-
-// a > b => 1;
-// b > a => -1;
 int bignum_cmp_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
@@ -652,8 +494,6 @@ int bignum_cmp_signed(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
 
 int bignum_is_zero(uint8_t* n, uint8_t length)
 {
-  REQUIRE(n, "n is null");
-
   for (int i = 0; i < length; ++i)
     if (n[i])
       return 0;
@@ -662,9 +502,6 @@ int bignum_is_zero(uint8_t* n, uint8_t length)
 }
 
 void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
-  REQUIRE(a, "a is null");
-  REQUIRE(b, "b is null");
-
   uint8_t bytes = BITS_TO_BYTES(length_in_bits);
   uint8_t first_bits = BITS_IN_FIRST_BYTE(bytes, length_in_bits);
   uint8_t sign = GET_SIGN(a, first_bits);
@@ -675,85 +512,8 @@ void bignum_negate(uint8_t* a, uint8_t* b, uint8_t length_in_bits) {
     bignum_make_negative(a, b, length_in_bits);
 }
 
-// void bignum_pow(struct bn* a, struct bn* b, struct bn* c)
-// {
-//   require(a, "a is null");
-//   require(b, "b is null");
-//   require(c, "c is null");
-
-//   struct bn tmp;
-
-//   bignum_init(c);
-
-//   if (bignum_cmp(b, c) == EQUAL)
-//   {
-//     /* Return 1 when exponent is 0 -- n^0 = 1 */
-//     bignum_inc(c);
-//   }
-//   else
-//   {
-//     struct bn bcopy;
-//     bignum_assign(&bcopy, b);
-
-//     /* Copy a -> tmp */
-//     bignum_assign(&tmp, a);
-
-//     bignum_dec(&bcopy);
- 
-//     /* Begin summing products: */
-//     while (!bignum_is_zero(&bcopy))
-//     {
-
-//       /* c = tmp * tmp */
-//       bignum_mul(&tmp, a, c);
-//       /* Decrement b by one */
-//       bignum_dec(&bcopy);
-
-//       bignum_assign(&tmp, c);
-//     }
-
-//     /* c = tmp */
-//     bignum_assign(c, &tmp);
-//   }
-// }
-
-// void bignum_isqrt(struct bn *a, struct bn* b)
-// {
-//   require(a, "a is null");
-//   require(b, "b is null");
-
-//   struct bn low, high, mid, tmp;
-
-//   bignum_init(&low);
-//   bignum_assign(&high, a);
-//   bignum_rshift(&high, &mid, 1);
-//   bignum_inc(&mid);
-
-//   while (bignum_cmp(&high, &low) > 0) 
-//   {
-//     bignum_mul(&mid, &mid, &tmp);
-//     if (bignum_cmp(&tmp, a) > 0) 
-//     {
-//       bignum_assign(&high, &mid);
-//       bignum_dec(&high);
-//     }
-//     else 
-//     {
-//       bignum_assign(&low, &mid);
-//     }
-//     bignum_sub(&high,&low,&mid);
-//     _rshift_one_bit(&mid);
-//     bignum_add(&low,&mid,&mid);
-//     bignum_inc(&mid);
-//   }
-//   bignum_assign(b,&low);
-// }
-
 void bignum_assign(uint8_t* dst, uint8_t* src, uint8_t length_in_bytes)
 {
-  REQUIRE(dst, "dst is null");
-  REQUIRE(src, "src is null");
-
   for (int i = 0; i < length_in_bytes; ++i)
     dst[i] = src[i];
 }
@@ -860,10 +620,6 @@ void bignum_truncate(uint8_t* a, uint8_t remaining_bits) {
 // /* Private / Static functions. */
 void _rshift_word(uint8_t* a, int nwords, uint8_t length)
 {
-  /* Naive method: */
-  REQUIRE(a, "a is null");
-  REQUIRE(nwords >= 0, "no negative shifts");
-
   int i;
   if (nwords >= length)
   {
@@ -882,9 +638,6 @@ void _rshift_word(uint8_t* a, int nwords, uint8_t length)
 
 void _lshift_word(uint8_t* a, int nwords, uint8_t length)
 {
-  REQUIRE(a, "a is null");
-  REQUIRE(nwords >= 0, "no negative shifts");
-
   int i;
   /* Shift whole words */
   for (i = (length - 1); i >= nwords; --i)
@@ -900,8 +653,6 @@ void _lshift_word(uint8_t* a, int nwords, uint8_t length)
 
 void _lshift_one_bit(uint8_t* a, uint8_t length)
 {
-  REQUIRE(a, "a is null");
-
   for (int i = 0; i < length - 1; ++i)
     a[i] = (a[i] << 1) | (a[i + 1] >> 7);
     
@@ -910,8 +661,6 @@ void _lshift_one_bit(uint8_t* a, uint8_t length)
 
 void _rshift_one_bit(uint8_t* a, uint8_t length)
 {
-  REQUIRE(a, "a is null");
-
   for (int i = length - 1; i >= 1; --i)
     a[i] = (a[i] >> 1) | (a[i - 1] << 7);
     

@@ -8,7 +8,7 @@ type_env = {}
 
 ################################################################################
 
-MAX_BIT_SIZE = 32
+MAX_BIT_SIZE = 32 # Above this size we need to use arrays
 file_indent_str = "    "
 file_indentation_level = 0
 

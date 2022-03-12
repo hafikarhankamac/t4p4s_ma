@@ -26,12 +26,12 @@ BINARY_COMPLEX_OPS_ARR_BITS = {
 }
 
 BINARY_SIMPLE_OPS_ARR = { 
-    'Equ': ['(0 == memcmp({}, {}, {}))', 'bignum_cmp_signed({}, {}, {})'],
-    'Neq': ['(0 != memcmp({}, {}, {}))', '(0 != bignum_cmp_signed({}, {}, {}))'],
-    'Grt': ['(0 > memcmp({}, {}, {}))', '(0 < bignum_cmp_signed({}, {}, {}))'],
-    'Geq': ['(0 >= memcmp({}, {}, {}))', '(0 <= bignum_cmp_signed({}, {}, {}))'],
-    'Lss': ['(0 < memcmp({}, {}, {}))', '(0 > bignum_cmp_signed({}, {}, {}))'],
-    'Leq': ['(0 <= memcmp({}, {}, {}))', '(0 >= bignum_cmp_signed({}, {}, {}))']
+    'Equ': ['(0 == memcmp({0}, {1}, {2}))', 'bignum_cmp_signed({0}, {1}, {2})'],
+    'Neq': ['(0 != memcmp({0}, {1}, {2}))', '(0 != bignum_cmp_signed({0}, {1}, {2}))'],
+    'Grt': ['(0 > memcmp({1}, {0}, {2}))', '(0 < bignum_cmp_signed({1}, {0}, {2}))'],
+    'Geq': ['(0 >= memcmp({1}, {0}, {2}))', '(0 <= bignum_cmp_signed({1}, {0}, {2}))'],
+    'Lss': ['(0 < memcmp({1}, {0}, {2}))', '(0 > bignum_cmp_signed({1}, {0}, {2}))'],
+    'Leq': ['(0 <= memcmp({1}, {0}, {2}))', '(0 >= bignum_cmp_signed({1}, {0}, {2}))']
 }
 
 # note: some functions with well-known names in C have to be renamed

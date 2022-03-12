@@ -11,13 +11,10 @@ from itertools import takewhile
 
 ################################################################################
 
-BINARY_COMPLEX_OPS_ARR_BITS = {
+COMPLEX_OPS_ARR = {
     'Add': ['bignum_add({0}, {1}, {2}, {3})', 'bignum_add_signed({0}, {1}, {2}, {3})'],
     'Sub': ['bignum_sub({0}, {1}, {2}, {3})', 'bignum_sub_signed({0}, {1}, {2}, {3})'],
     'Mul': ['bignum_mul({0}, {1}, {2}, {3})', 'bignum_mul_signed({0}, {1}, {2}, {3})'],
-    'Div': ['bignum_div({0}, {1}, {2}, {3})', 'bignum_div_signed({0}, {1}, {2}, {3})'],
-    'Mod': ['bignum_mod({0}, {1}, {2}, {3})', 'bignum_mod_signed({0}, {1}, {2}, {3})'],
-    'Div': ['bignum_div({0}, {1}, {2}, {3})', 'bignum_div_signed({0}, {1}, {2}, {3})'],
     'BAnd': ['bignum_and({0}, {1}, {2}, {3})', 'bignum_and_signed({0}, {1}, {2}, {3})'],
     'BOr': ['bignum_or({0}, {1}, {2}, {3})', 'bignum_or_signed({0}, {1}, {2}, {3})'],
     'BXor': ['bignum_xor({0}, {1}, {2}, {3})', 'bignum_xor_signed({0}, {1}, {2}, {3})'],
@@ -25,7 +22,7 @@ BINARY_COMPLEX_OPS_ARR_BITS = {
     'Shr': ['bignum_rshift({0}, {2}, {1}, {3})', 'bignum_rshift_signed({0}, {2}, {1}, {3})']
 }
 
-BINARY_SIMPLE_OPS_ARR = { 
+COMPARISON_OPS_ARR = { 
     'Equ': ['(0 == memcmp({0}, {1}, {2}))', 'bignum_cmp_signed({0}, {1}, {2})'],
     'Neq': ['(0 != memcmp({0}, {1}, {2}))', '(0 != bignum_cmp_signed({0}, {1}, {2}))'],
     'Grt': ['(0 > memcmp({1}, {0}, {2}))', '(0 < bignum_cmp_signed({1}, {0}, {2}))'],
@@ -1408,11 +1405,11 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                 #These formatting rules MUST follow the previous special cases
                 #= gen_fmt_ComplexOp(e, left, right, complex_binary_ops[nt], format_as_value, expand_parameters)
         else:
-            if nt in BINARY_SIMPLE_OPS_ARR:
+            if nt in COMPARISON_OPS_ARR:
                 if e.left.type.isSigned:
-                    return BINARY_SIMPLE_OPS_ARR[nt][1].format(left, right, e.left.type.size)
+                    return COMPARISON_OPS_ARR[nt][1].format(left, right, e.left.type.size)
                 else:
-                    return BINARY_SIMPLE_OPS_ARR[nt][1].format(left, right, e.left.type.size)
+                    return COMPARISON_OPS_ARR[nt][1].format(left, right, e.left.type.size)
             elif nt in ['Shr', 'Shl']:
                 name = generate_var_name('value', str(e.id))
                 byte_width = bits_to_bytes(e.type.size)
@@ -1423,16 +1420,16 @@ def gen_fmt_Operator(e, nt, format_as_value=True, expand_parameters=False):
                     right = 'bignum_to_int({}, {})'.format(right, bits_to_bytes(e.right.type.size))
 
                 #pre[ ${gen_array(name, byte_width)}
-                #pre[ ${BINARY_COMPLEX_OPS_ARR_BITS[e.node_type][is_signed].format(left, right, name, e.type.size)};
+                #pre[ ${COMPLEX_OPS_ARR[e.node_type][is_signed].format(left, right, name, e.type.size)};
 
                 return name
-            elif nt in BINARY_COMPLEX_OPS_ARR_BITS:
+            elif nt in COMPLEX_OPS_ARR:
                 name = generate_var_name('value', str(e.id))
                 byte_width = bits_to_bytes(e.type.size)
                 is_signed = 1 if e.type.isSigned else 0
 
                 #pre[ ${gen_array(name, byte_width)}
-                #pre[ ${BINARY_COMPLEX_OPS_ARR_BITS[e.node_type][is_signed].format(left, right, name, e.type.size)};
+                #pre[ ${COMPLEX_OPS_ARR[e.node_type][is_signed].format(left, right, name, e.type.size)};
 
                 return name
 

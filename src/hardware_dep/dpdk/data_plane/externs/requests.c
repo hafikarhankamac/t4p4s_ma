@@ -38,6 +38,7 @@ request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool mu
 	rs->size = size;
 
 	rs->id = id;
+    rs->backoff = X;
 
 	strcpy(rs->filename, "message_log.bin");
 
@@ -150,6 +151,28 @@ void extern_request_store_add_request(uint32_t declarg, uint32_t declarg2, uint3
     }
 }
 
+void* request_missing(void *p) {
+    missing_params_t *par = (missing_params_t*) p;
+    request_store_t* rs = par->rs;
+    uint32_t sn = par->sn;
+    uint32_t lv = par->lv;
+
+    request_pack_t *pack = getPack(rs, sn, lv);
+
+    uint16_t start = sn / rs->size;
+    for(uint16_t i = start; i < start + rs->size; i++) {
+        request_to_store_t *r = &(pack->requests[i % rs->size]);
+        if (r->sn != i || r->lv != lv) { //no request there
+            uint8_t e_id = REQUEST_MISSING;
+            uint64_t lvsn = (((uint64_t) lv) << 32) | i;
+            raise_event(&e_id, &lvsn);
+        }
+    }
+
+    free(p);
+    return NULL;
+}
+
 
 //TODO delivered=true
 void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
@@ -193,6 +216,21 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 				break;
 			}
 		}
+		rs->backoff = X;
+	} else if (req->sn >= rs->min_not_executed + rs->backoff) {
+	    missing_params_t *pars = malloc(sizeof(missing_params_t));
+	    par->rs = rs;
+	    par->sn = rs->min_not_executed;
+	    par->lv = req->lv;
+
+	    if(rs->multithreaded) {
+	        pthread_t thread_id;
+	        pthread_create(&thread_id, NULL, request_missing, (void*) par);
+	    } else {
+	        request_missing((void*) par);
+	    }
+
+        rs->backoff += rs->backoff/2;
 	}
 }
 
@@ -211,8 +249,9 @@ void* create_checkpoint(void *p) {
     request_pack_t* pack = par->pack;
     request_store_t* rs = par->rs;
 
+
     cp_digest_t dig = hash_pack(pack->requests, rs->size);
-    pack->committed = false;
+    pack->committed = true;
 
     checkpoint_t *cp;
     int ret = rte_hash_lookup_with_hash_data(rs->checkpoints, &dig, dig, &cp);
@@ -225,6 +264,7 @@ void* create_checkpoint(void *p) {
         cp->lv = pack->requests[rs->size-1].lv;
         rs->checkpoints_count++;
         rs->unstable_checkpoints++;
+        rs->last_unstable = cp;
 
         rte_hash_add_key_with_hash_data(rs->checkpoints, &dig, dig, cp);
     } else {
@@ -236,6 +276,8 @@ void* create_checkpoint(void *p) {
             }
         }
     }
+
+    pack->cp = cp;
 
     uint8_t e_id = CREATE_CHECKPOINT;
     raise_event(&e_id, &dig);
@@ -265,7 +307,7 @@ void commit_checkpoint(request_store_t *rs, checkpoint_t *cp) {
     	rs->unstable_checkpoints--;
         rs->last_stable = cp;
         uint8_t e_id = ADVANCE_WATERMARK;
-	sn++;
+	    sn++;
         raise_event(&e_id, &sn);
     }
 }

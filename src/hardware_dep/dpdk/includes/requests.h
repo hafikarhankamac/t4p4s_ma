@@ -17,6 +17,9 @@ typedef uint16_t cp_id;
 #define OLD_REQUEST_AFTER_WATERMARK_ADVANCE 3
 #define REQUEST_TIMEOUT 4
 #define ADVANCE_WATERMARK 5
+#define REQUEST_MISSING 6
+
+#define X 128 // enforce commit after
 
 /*
 struct request_s {
@@ -108,6 +111,7 @@ typedef struct request_to_store request_to_store_t;
 
 struct request_pack {
     bool committed;
+    checkpoint_t *cp;
     request_to_store_t requests[];
 };
 
@@ -133,10 +137,15 @@ struct request_store {
     uint32_t max_not_executed;
     uint32_t min_not_executed;
 
+    uint32_t last_checkpoint;
+
     checkpoint_t *last_stable;
+    checkpoint_t *last_unstable;
 
     uint8_t unstable_checkpoints;
     uint32_t checkpoints_count;
+
+    uint16_t backoff;
 
     request_pack_t* packs[4][16];
 
@@ -149,11 +158,7 @@ struct request_store {
 
     uint8_t id;
 
-
-
     bool multithreaded;
-
-
 };
 
 struct cp_params {
@@ -161,7 +166,14 @@ struct cp_params {
         request_store_t* rs;
 };
 
+struct missing_params {
+    request_store_t* rs;
+    uint32_t sn;
+    uint32_t lv;
+};
+
 typedef struct cp_params cp_params_t;
+typedef struct missing_params missing_params_t;
 
 request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool multithreaded, SHORT_STDPARAMS);
 

@@ -7,6 +7,9 @@ struct rte_hash* hash_create(int socketid, const char* name, uint32_t keylen, rt
 
 
 void* create_checkpoint(void*);
+void* request_missing(void*);
+void update_bitmask_cp(checkpoint_t *cp, uint16_t id); 
+void commit_checkpoint(request_store_t *rs, checkpoint_t *cp);
 
 request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool multithreaded, SHORT_STDPARAMS)
 {
@@ -219,15 +222,15 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 		rs->backoff = X;
 	} else if (req->sn >= rs->min_not_executed + rs->backoff) {
 	    missing_params_t *pars = malloc(sizeof(missing_params_t));
-	    par->rs = rs;
-	    par->sn = rs->min_not_executed;
-	    par->lv = req->lv;
+	    pars->rs = rs;
+	    pars->sn = rs->min_not_executed;
+	    pars->lv = req->lv;
 
 	    if(rs->multithreaded) {
 	        pthread_t thread_id;
-	        pthread_create(&thread_id, NULL, request_missing, (void*) par);
+	        pthread_create(&thread_id, NULL, request_missing, (void*) pars);
 	    } else {
-	        request_missing((void*) par);
+	        request_missing((void*) pars);
 	    }
 
         rs->backoff += rs->backoff/2;
@@ -254,7 +257,7 @@ void* create_checkpoint(void *p) {
     pack->committed = true;
 
     checkpoint_t *cp;
-    int ret = rte_hash_lookup_with_hash_data(rs->checkpoints, &dig, dig, &cp);
+    int ret = rte_hash_lookup_with_hash_data(rs->checkpoints, &dig, dig, (void**) &cp);
 
     if (ret < 0) {
         cp = (checkpoint_t*) rte_malloc("checkpoint_t", sizeof(checkpoint_t), 0);

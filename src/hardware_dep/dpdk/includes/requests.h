@@ -108,15 +108,6 @@ struct request_to_store {
 typedef struct request_store request_store_t;
 typedef struct request_to_store request_to_store_t;
 
-
-struct request_pack {
-    bool committed;
-    checkpoint_t *cp;
-    request_to_store_t requests[];
-};
-
-typedef struct request_pack request_pack_t;
-
 struct checkpoint {
     uint64_t bitmask;
     uint32_t sn;
@@ -127,6 +118,15 @@ struct checkpoint {
 } __attribute__((__packed__));
 
 typedef struct checkpoint checkpoint_t;
+
+struct request_pack {
+    bool committed;
+    checkpoint_t *cp;
+    request_to_store_t requests[];
+};
+
+typedef struct request_pack request_pack_t;
+
 
 struct request_store {
 

@@ -165,7 +165,7 @@ void* request_missing(void *p) {
     uint16_t start = sn / rs->size;
     for(uint16_t i = start; i < start + rs->size; i++) {
         request_to_store_t *r = &(pack->requests[i % rs->size]);
-        if (r->sn != i || r->lv != lv) { //no request there
+        if (!r->request.delivered || r->sn != i || r->lv != lv) { //no request there or not delivered
             uint8_t e_id = REQUEST_MISSING;
             uint64_t lvsn = (((uint64_t) lv) << 32) | i;
             raise_event(&e_id, &lvsn);

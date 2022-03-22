@@ -7,6 +7,9 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 
+#ifdef POS
+#include <stdlib.h>
+#endif
 
 volatile int packet_counter = 0;
 volatile int packet_with_error_counter = 0;
@@ -262,6 +265,10 @@ int launch_dpdk()
         }
     #else
         rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);
+
+        #ifdef POS
+            system('pos_sync -t tapas_start -d 1');
+        #endif
 
         unsigned lcore_id;
         RTE_LCORE_FOREACH_SLAVE(lcore_id) {

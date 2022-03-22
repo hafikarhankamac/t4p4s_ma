@@ -7,6 +7,9 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 
+#ifdef POS
+#include <stdlib.h>
+#endif
 
 volatile int packet_counter = 0;
 volatile int packet_with_error_counter = 0;
@@ -504,6 +507,10 @@ int launch_dpdk()
     } else {
 	    return -1;
     }
+
+    #ifdef POS
+        system('pos_sync -t tapas_start')
+    #endif
 
     #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
         RTE_LCORE_FOREACH_WORKER(lcore_id) {

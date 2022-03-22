@@ -509,7 +509,7 @@ int launch_dpdk()
     }
 
     #ifdef POS
-        system('pos_sync -t tapas_start')
+        system('pos_sync -t tapas_start -d 1');
     #endif
 
     #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)

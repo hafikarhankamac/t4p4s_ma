@@ -494,6 +494,12 @@ int launch_dpdk()
 	    }
     }
 
+    #ifdef POS
+    	char command[100];
+	sleep(15);
+	strcpy(command, "/bin/sh src/hardware_dep/dpdk/pos.sh &"); 
+        system(command);
+    #endif
     if (master_defined) {
 	    if (master_recv_pkts && master_handle_evts) {
 		    launch_one_lcore_rx_evt();
@@ -508,9 +514,6 @@ int launch_dpdk()
 	    return -1;
     }
 
-    #ifdef POS
-        system('pos_sync -t tapas_start -d 1');
-    #endif
 
     #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
         RTE_LCORE_FOREACH_WORKER(lcore_id) {

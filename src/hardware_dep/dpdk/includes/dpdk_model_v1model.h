@@ -181,5 +181,5 @@ void timer_burst(uint32_t id, SHORT_STDPARAMS);
 //                     packet_descriptor_t* pd, lookup_table_t** tables);
 
 #ifdef EVENT_MODULE
-void raise_event(uint8_t *event_id, uint32_t *arg, SHORT_STDPARAMS);
+void raise_event(uint8_t *event_id, uint64_t *arg, SHORT_STDPARAMS);
 #endif

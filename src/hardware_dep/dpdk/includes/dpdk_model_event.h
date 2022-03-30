@@ -10,6 +10,7 @@
 
 #define EVENT_META_FLD      FLD(all_metadatas,event)
 #define EVENT_ARG_META_FLD  FLD(all_metadatas,event_arg)
+#define EVENT_ARG_META2_FLD  FLD(all_metadatas,event_arg2)
 
 #define NONE 0
 #define TIMER 1

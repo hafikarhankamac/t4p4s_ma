@@ -68,7 +68,7 @@ uint64_t get_sn_lv_key(uint32_t sn, uint32_t lv) {
 
 
 uint32_t hash_naive(void *key, uint32_t length) {
-	return rte_hash_crc(key, length, 0xffffffff);
+	return rte_hash_crc(key, length, 0x1);
 }
 
 request_pack_t* getPack(request_store_t *rs, uint32_t sn, uint32_t lv) {
@@ -232,8 +232,7 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 	    } else {
 	        request_missing((void*) pars);
 	    }
-
-        rs->backoff += rs->backoff/2;
+		rs->backoff = (rs->backoff >> 1) | X;
 	}
 }
 

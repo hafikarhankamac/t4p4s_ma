@@ -70,7 +70,7 @@ struct lcore_params {
     uint8_t lcore_id;
 } __rte_cache_aligned;
 
-#define EVENT_QUEUE_SIZE 32
+#define EVENT_QUEUE_SIZE 512
 #define EVENT_PORT UINT32_MAX
 
 struct lcore_state {

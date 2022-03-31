@@ -103,18 +103,21 @@ void extern_request_store_isDelivered(uint32_t declarg, uint32_t declarg2, uint3
 	*del = req->request.delivered;
 }
 
-void extern_request_store_getByDigest(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS)
+void extern_request_store_getByDigest(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, bool *found, request_store_t *rs, SHORT_STDPARAMS)
 {
 	request_to_store_t *rts;
-	rte_hash_lookup_with_hash_data(rs->table, &digest, digest, (void**) &rts);
-	request_t* r = &rts->request;
-	//memcpy(reqpl, req->payload, sizeof(request_payload_t));
-	*req = r->req;
-	*args = r->args;
-	*timestamp = r->timestamp;
-	*clientId = r->clientId;
-	*delivered = r->delivered;
-	*processed = r->processed;
+	int32_t ret = rte_hash_lookup_with_hash_data(rs->table, &digest, digest, (void**) &rts);
+	*found = ret >= 0;
+	if (*found) {
+		request_t* r = &rts->request;
+		//memcpy(reqpl, req->payload, sizeof(request_payload_t));
+		*req = r->req;
+		*args = r->args;
+		*timestamp = r->timestamp;
+		*clientId = r->clientId;
+		*delivered = r->delivered;
+		*processed = r->processed;
+	}
 }
 
 void extern_request_store_createCheckpoint(uint32_t declarg, uint32_t declarg2, uint32_t declarg3, uint32_t declarg4, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS)

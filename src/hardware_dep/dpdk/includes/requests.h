@@ -178,7 +178,7 @@ typedef struct missing_params missing_params_t;
 request_store_t* request_store(uint32_t size, uint8_t nodes, uint8_t id, bool multithreaded, SHORT_STDPARAMS);
 
 void extern_request_store_isDelivered(uint32_t, uint32_t, uint32_t, uint32_t, bool *del, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
-void extern_request_store_getByDigest(uint32_t, uint32_t, uint32_t, uint32_t, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, request_store_t *rs, SHORT_STDPARAMS);
+void extern_request_store_getByDigest(uint32_t, uint32_t, uint32_t, uint32_t, uint8_t *req, uint32_t *args, uint32_t *timestamp, uint16_t *clientId, bool *delivered, bool *processed, digest_t digest, bool *found, request_store_t *rs, SHORT_STDPARAMS);
 void extern_request_store_createCheckpoint(uint32_t, uint32_t, uint32_t, uint32_t, cp_digest_t *cp, uint32_t lv, uint32_t sn, uint16_t ID,  request_store_t *rs, SHORT_STDPARAMS);
 void extern_request_store_getCheckpointByDigest(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t *sn, uint32_t *lv, bool *stable, cp_digest_t cp, request_store_t *rs, SHORT_STDPARAMS);
 //void extern_request_store_add(uint32_t, uint32_t, uint32_t, uint32_t, digest_t *dig, uint16_t ID, uint32_t timestamp, request_payload_t *request, request_store_t *rs, SHORT_STDPARAMS);

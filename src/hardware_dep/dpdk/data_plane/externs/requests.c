@@ -201,7 +201,8 @@ void extern_request_store_commit(uint32_t declarg, uint32_t declarg2, uint32_t d
 				rs->min_not_executed = r->sn + 1;
 			} else if (r->request.delivered) {
 				uint8_t e_id = PROCESS_REQUEST;
-				raise_event(&e_id, &r->digest);
+	 			uint64_t args = (((uint64_t) r->request.args) << 32) | r->digest;
+				raise_event(&e_id, &args);
 				r->request.processed = true;
 				rs->min_not_executed = r->sn+1;
 				if (r->sn % rs->size == rs->size-1) {

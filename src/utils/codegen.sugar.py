@@ -1590,10 +1590,10 @@ def gen_format_expr(e, format_as_value=True, expand_parameters=False, needs_vari
 
             if e.type.size > MAX_BIT_SIZE:
                 #pre[ ${gen_array(name, new_width)}
-                #pre[ bignum_slice($evaluated_expr, ${e.e0.type.size}, $name, $l, $m);
+                #pre[ bignum_slice($evaluated_expr, ${e.e0.type.size}, $name, $m, $l);
                 return name
             else:
-                return 'bignum_slice_int({}, {}, {}, {})'.format(evaluated_expr, e.e0.type.size, l, m)
+                return 'bignum_slice_int({}, {}, {}, {})'.format(evaluated_expr, e.e0.type.size, m, l)
 
         #= gen_format_slice(e)
     elif nt == 'Concat':

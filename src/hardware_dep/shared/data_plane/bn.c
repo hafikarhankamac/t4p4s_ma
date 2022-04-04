@@ -497,31 +497,43 @@ void bignum_concat_int_arr(UNSIGNED_TYPE left, uint8_t legnth_left_in_bits, uint
   free(tmp);
 }
 
-void bignum_slice(uint8_t* src, uint8_t length, uint8_t* dst, uint8_t from, uint8_t to) {
+void bignum_slice(uint8_t* src, uint8_t length_in_bits, uint8_t* dst, uint8_t m, uint8_t l) {
+  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
+  uint8_t from = 8 * bytes - m - 1;
+  uint8_t to = 8 * bytes - l - 1;
+
   uint8_t from_byte = from / 8;
   uint8_t to_byte = BITS_TO_BYTES(to);
-  uint8_t new_length = to_byte - from_byte;
+  uint8_t tmp_length = to_byte - from_byte;
+  uint8_t *tmp = malloc(tmp_length * sizeof(uint8_t));
+  uint8_t new_length = (m - l + 1 + 7) / 8;
 
-  for (int i = 0; i < new_length; i++)
-    dst[i] = src[from_byte + i];
+  for (int i = 0; i < tmp_length; i++)
+    tmp[i] = src[from_byte + i];
 
   uint8_t r_shift_value = to_byte * 8 - to - 1;
-  bignum_rshift(dst, dst, r_shift_value, to - from + 1);
+  bignum_rshift(tmp, tmp, r_shift_value, to - from + 1);
   uint8_t rest = (to_byte * 8 - to - 1) + (from - from_byte * 8);
 
-  if (rest != 0) {
-    uint8_t mask = BIT_MASK(8 - rest);
-    dst[0] &= mask;
+  if (rest > 8) {
+    uint8_t mask = BIT_MASK(8 - (rest - 8));
+    tmp[1] &= mask;
   }
+  else if (rest > 0) {
+    uint8_t mask = BIT_MASK(8 - rest);
+    tmp[0] &= mask;
+  }
+
+  for (int i = 0; i < new_length; i++)
+    dst[i] = tmp[tmp_length - new_length + i];
 }
 
-UNSIGNED_TYPE bignum_slice_int(uint8_t* src, uint8_t length, uint8_t from, uint8_t to) {
-  uint8_t from_byte = from / 8;
-  uint8_t to_byte = to / 8 + 1;
-  uint8_t new_length = to_byte - from_byte;
+UNSIGNED_TYPE bignum_slice_int(uint8_t* src, uint8_t length_in_bits, uint8_t m, uint8_t l) {
+  uint8_t bytes = BITS_TO_BYTES(length_in_bits);
+  uint8_t new_length = (m - l + 1 + 7) / 8;
 
   uint8_t *tmp = malloc(new_length * sizeof(uint8_t));
-  bignum_slice(src, length, tmp, from, to);
+  bignum_slice(src, length_in_bits, tmp, m, l);
 
   UNSIGNED_TYPE r = bignum_to_int(tmp, new_length);
 

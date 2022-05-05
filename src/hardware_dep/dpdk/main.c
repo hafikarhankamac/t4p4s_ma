@@ -255,20 +255,22 @@ launch_one_lcore(__attribute__((unused)) void *dummy)
 
 int launch_dpdk()
 {
+    #ifdef POS
+	    system("sleep 5 && pos_sync -t tapas_start -d 1 &");
+	    RTE_LOG(INFO, P4_FWD, "pos sync\n");
+    #endif
     #if RTE_VERSION >= RTE_VERSION_NUM(20,11,0,0)
         rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MAIN);
 
         unsigned lcore_id;
-        RTE_LCORE_FOREACH_WORKER(lcore_id) {
+        
+	RTE_LCORE_FOREACH_WORKER(lcore_id) {
             if (rte_eal_wait_lcore(lcore_id) < 0)
                 return -1;
         }
     #else
         rte_eal_mp_remote_launch(launch_one_lcore, NULL, CALL_MASTER);
 
-        #ifdef POS
-            system('pos_sync -t tapas_start -d 1');
-        #endif
 
         unsigned lcore_id;
         RTE_LCORE_FOREACH_SLAVE(lcore_id) {

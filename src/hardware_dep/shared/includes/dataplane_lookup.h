@@ -55,4 +55,7 @@ typedef struct {
     int init_entry_count;
     const char* short_name;
 #endif
+#ifdef T4P4S_PALMTRIE
+    u_int8_t palmtrie_type;
+#endif
 } lookup_table_t;

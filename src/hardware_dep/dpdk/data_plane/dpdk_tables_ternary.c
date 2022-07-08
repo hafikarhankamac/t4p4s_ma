@@ -21,6 +21,10 @@
 #endif
 
 #ifdef T4P4S_PALMTRIE
+    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value)
+    {
+        (void)palmtrie_tpt_add(t->table, key, mask, priority, (void *)value); //default PALMTRIE_BASIC implemented
+    }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
     {
@@ -32,6 +36,10 @@
 #endif
 
 #ifdef T4P4S_PALMTRIE
+    uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
+    {
+        (u64)palmtrie_tpt_lookup(t->table, key);
+    }
 #else
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
     {

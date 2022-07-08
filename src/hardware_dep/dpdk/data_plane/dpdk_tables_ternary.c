@@ -38,7 +38,7 @@
 #ifdef T4P4S_PALMTRIE
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
     {
-        (u64)palmtrie_tpt_lookup(t->table, key);
+        (u64)palmtrie_tpt_lookup(t->table, key); //default PALMTRIE_BASIC implemented
     }
 #else
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)

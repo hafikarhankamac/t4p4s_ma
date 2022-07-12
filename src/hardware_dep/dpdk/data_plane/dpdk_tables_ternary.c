@@ -23,7 +23,7 @@
 #ifdef T4P4S_PALMTRIE
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value)
     {
-        (void)palmtrie_tpt_add(t->table, key, mask, priority, (void *)value); //default PALMTRIE_BASIC implemented
+        (void)palmtrie_tpt_add(t->table, (addr_t)key, (addr_t)mask, priority, (void *)value); //default PALMTRIE_BASIC implemented
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)

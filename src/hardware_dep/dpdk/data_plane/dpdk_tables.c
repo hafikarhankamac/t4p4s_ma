@@ -19,7 +19,12 @@
 
 #include <rte_lpm.h>        // LPM (32 bit key)
 #include <rte_lpm6.h>       // LPM (128 bit key)
+
+#ifdef T4P4S_PALMTRIE
+#include "palmtrie.h"
+#else
 #include "ternary_naive.h"  // TERNARY
+#endif
 
 #include <rte_malloc.h>     // extended tables
 #include <rte_errno.h>

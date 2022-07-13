@@ -206,7 +206,7 @@ _add_internal(struct palmtrie_tpt_node **node, addr_t addr, addr_t mask,
 /*
  * Add an entry to the trie
  */
-static int
+/*static*/ int
 _add(struct palmtrie_tpt_node **node, addr_t addr, addr_t mask, int priority,
      void *data, int cbit)
 {

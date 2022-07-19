@@ -300,10 +300,10 @@ struct palmtrie {
 
 /* Prototype declarations */
 struct palmtrie * palmtrie_init(struct palmtrie *, enum palmtrie_type);
-//int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, u64);
-void palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, u64);
-//u64 palmtrie_lookup(struct palmtrie *, addr_t);
-uint8_t* palmtrie_lookup(struct palmtrie *, addr_t);
+int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
+//void palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
+u64 palmtrie_lookup(struct palmtrie *, addr_t);
+//uint8_t* palmtrie_lookup(struct palmtrie *, addr_t);
 int palmtrie_commit(struct palmtrie *);
 
 /* in palmtrie_sl.c */

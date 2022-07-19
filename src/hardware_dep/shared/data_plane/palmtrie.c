@@ -102,10 +102,10 @@ palmtrie_release(struct palmtrie *palmtrie)
  * palmtrie_add_data -- add an entry with data for a specified address to the
  * trie
  */
-//int
-void
+int
+//void
 palmtrie_add_data(struct palmtrie *palmtrie, addr_t addr, addr_t mask,
-                  int priority, u64 data)
+                  int priority, /*u64 data*/uint8_t* data)
 {
     switch ( palmtrie->type ) {
     case PALMTRIE_SORTED_LIST:
@@ -128,23 +128,23 @@ palmtrie_add_data(struct palmtrie *palmtrie, addr_t addr, addr_t mask,
  * palmtrie_lookup -- lookup an entry corresponding to the specified address
  * from the trie
  */
-//u64
-uint8_t*
+u64
+//uint8_t*
 palmtrie_lookup(struct palmtrie *palmtrie, addr_t addr)
 {
     switch ( palmtrie->type ) {
     case PALMTRIE_SORTED_LIST:
-        //return (u64)palmtrie_sl_lookup(palmtrie, addr);
-        return (uint8_t*)palmtrie_sl_lookup(palmtrie, addr);
+        return (u64)palmtrie_sl_lookup(palmtrie, addr);
+        //return (uint8_t*)palmtrie_sl_lookup(palmtrie, addr);
     case PALMTRIE_BASIC:
-        //return (u64)palmtrie_tpt_lookup(palmtrie, addr);
-        return (uint8_t*)palmtrie_sl_lookup(palmtrie, addr);
+        return (u64)palmtrie_tpt_lookup(palmtrie, addr);
+        //return (uint8_t*)palmtrie_tpt_lookup(palmtrie, addr);
     case PALMTRIE_DEFAULT:
-        //return (u64)palmtrie_mtpt_lookup(palmtrie, addr);
-        return (uint8_t*)palmtrie_sl_lookup(palmtrie, addr);
+        return (u64)palmtrie_mtpt_lookup(palmtrie, addr);
+        //return (uint8_t*)palmtrie_mtpt_lookup(palmtrie, addr);
     case PALMTRIE_PLUS:
-        //return (u64)palmtrie_popmtpt_lookup(&palmtrie->u.popmtpt, addr);
-        return (uint8_t*)palmtrie_sl_lookup(palmtrie, addr);
+        return (u64)palmtrie_popmtpt_lookup(&palmtrie->u.popmtpt, addr);
+        //return (uint8_t*)palmtrie_popmtpt_lookup(palmtrie, addr);
     default:
         //return 0;
         return NULL;

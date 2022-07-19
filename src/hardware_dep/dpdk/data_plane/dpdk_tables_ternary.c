@@ -44,8 +44,9 @@
         if (t->entry.key_size == 0) return t->default_val;
 
         //uint64_t ret = palmtrie_lookup(t->table, key);
-        uint64_t ret = palmtrie_lookup(t->table, (addr_t)key);
-        return ret == NULL ? t->default_val : (uint8_t*)ret;
+        //uint64_t ret = palmtrie_lookup(t->table, (addr_t)key);
+        u64 ret = palmtrie_lookup(t->table, (addr_t)key);
+        return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)

@@ -300,26 +300,28 @@ struct palmtrie {
 
 /* Prototype declarations */
 struct palmtrie * palmtrie_init(struct palmtrie *, enum palmtrie_type);
-int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, u64);
-u64 palmtrie_lookup(struct palmtrie *, addr_t);
+//int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, u64);
+void palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, u64);
+//u64 palmtrie_lookup(struct palmtrie *, addr_t);
+uint8_t* palmtrie_lookup(struct palmtrie *, addr_t);
 int palmtrie_commit(struct palmtrie *);
 
-/* in sl.c */
+/* in palmtrie_sl.c */
 int palmtrie_sl_add(struct palmtrie *, addr_t, addr_t, int, void *);
 void * palmtrie_sl_lookup(struct palmtrie *, addr_t);
 int palmtrie_sl_release(struct palmtrie *);
 
-/* in tpt.c */
+/* in palmtrie_tpt.c */
 int palmtrie_tpt_add(struct palmtrie *, addr_t, addr_t, int, void *);
 void * palmtrie_tpt_lookup(struct palmtrie *, addr_t);
 int palmtrie_tpt_release(struct palmtrie *);
 
-/* in mtpt.c */
+/* in palmtrie_mtpt.c */
 int palmtrie_mtpt_add(struct palmtrie_mtpt *, addr_t, addr_t, int, void *);
 void * palmtrie_mtpt_lookup(struct palmtrie *, addr_t);
 int palmtrie_mtpt_release(struct palmtrie *);
 
-/* in popmtpt.c */
+/* in palmtrie_popmtpt.c */
 void * palmtrie_popmtpt_lookup(struct palmtrie_popmtpt *, addr_t);
 int
 palmtrie_popmtpt_add(struct palmtrie_popmtpt *, addr_t, addr_t, int, void *);

@@ -9,9 +9,8 @@
     {
         struct palmtrie palmtrie;
 
-        palmtrie_init(&palmtrie, PALMTRIE_BASIC);
-
-        t->table = &palmtrie;
+        //t->table = palmtrie_init(&palmtrie, t->palmtrie_type);
+        t->table = palmtrie_init(&palmtrie, PALMTRIE_BASIC); //default PALMTRIE_BASIC implemented
     }
 #else
     void ternary_create(lookup_table_t* t, int socketid)
@@ -23,8 +22,10 @@
 #ifdef T4P4S_PALMTRIE
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value)
     {
-        //(void)palmtrie_tpt_add(t->table, (addr_t)key, (addr_t)mask, priority, (void *)value); //default PALMTRIE_BASIC implemented
-        palmtrie_tpt_add(t->table, (addr_t)key, (addr_t)mask, priority, (void *)value); //default PALMTRIE_BASIC implemented
+        if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+
+        uint8_t* entry = make_table_entry_on_socket(t, value);
+        palmtrie_add_data(t->table, (addr_t)key, (addr_t)mask, priority, entry);
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
@@ -39,7 +40,10 @@
 #ifdef T4P4S_PALMTRIE
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
     {
-        palmtrie_tpt_lookup(t->table, (addr_t)key); //default PALMTRIE_BASIC implemented
+        if (t->entry.key_size == 0) return t->default_val;
+
+        uint8_t* ret = palmtrie_lookup(t->table, (addr_t)key);
+        return ret == NULL ? t->default_val : ret;
     }
 #else
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
@@ -52,6 +56,12 @@
 #endif
 
 #ifdef T4P4S_PALMTRIE
+    void ternary_flush(lookup_table_t* t)
+    {
+        if (t->entry.key_size == 0) return; // nothing must have been added
+
+        palmtrie_release(t->table);
+    }
 #else
     void ternary_flush(lookup_table_t* t)
     {

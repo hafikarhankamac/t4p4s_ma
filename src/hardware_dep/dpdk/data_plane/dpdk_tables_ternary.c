@@ -25,8 +25,8 @@
         if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
-        //int ret = palmtrie_add_data(t->table, (addr_t)key, (addr_t)mask, priority, entry);
-        int ret = palmtrie_add_data(t->table, key, mask, priority, entry);
+        //int ret = palmtrie_add_data(t->table, key, mask, priority, entry);
+        int ret = palmtrie_add_data(t->table, (addr_t)key, (addr_t)mask, priority, entry);
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
@@ -43,8 +43,8 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        //uint64_t ret = palmtrie_lookup(t->table, (addr_t)key);
-        uint64_t ret = palmtrie_lookup(t->table, key);
+        //uint64_t ret = palmtrie_lookup(t->table, key);
+        uint64_t ret = palmtrie_lookup(t->table, (addr_t)key);
         return ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

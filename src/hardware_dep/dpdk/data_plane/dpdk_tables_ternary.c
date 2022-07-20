@@ -35,8 +35,8 @@
         addr_t addr_t_mask;
         u64 d;
 
-        reverse(&tcam_addr[0]);
-        reverse(&tcam_mask[0]);
+        palmtrie_reverse(&tcam_addr[0]);
+        palmtrie_reverse(&tcam_mask[0]);
 
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));

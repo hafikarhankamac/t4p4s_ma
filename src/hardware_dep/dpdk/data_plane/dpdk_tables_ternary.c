@@ -49,7 +49,10 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        u64 ret = palmtrie_lookup(t->table, (addr_t)key);
+        addr_t* addr_t_key;
+        addr_t_key = (addr_t*)key;
+
+        u64 ret = palmtrie_lookup(t->table, *addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

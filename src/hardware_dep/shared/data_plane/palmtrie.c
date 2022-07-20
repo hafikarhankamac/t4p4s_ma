@@ -187,8 +187,8 @@ palmtrie_reverse(char *s)
     strcpy(s, t);
 }
 
-static __inline__ int
-hex2bin(char c)
+int
+palmtrie_hex2bin(char c)
 {
     if ( c >= '0' && c <= '9' ) {
         return c - '0';

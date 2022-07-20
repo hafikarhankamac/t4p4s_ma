@@ -41,9 +41,9 @@
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
         for ( int i = 0; i < (ssize_t)strlen(16); i++ ) {
-            d = hex2bin(tcam_addr[i]);
+            d = palmtrie_hex2bin(tcam_addr[i]);
             addr_t_key.a[i >> 4] |= d << ((i & 0xf) << 2);
-            d = hex2bin(tcam_mask[i]);
+            d = palmtrie_hex2bin(tcam_mask[i]);
             addr_t_mask.a[i >> 4] |= d << ((i & 0xf) << 2);
         }
 

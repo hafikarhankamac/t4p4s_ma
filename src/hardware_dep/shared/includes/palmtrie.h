@@ -322,7 +322,7 @@ u64 palmtrie_lookup(struct palmtrie *, addr_t);
 int palmtrie_commit(struct palmtrie *);
 
 void palmtrie_reverse(char *);
-static __inline__ int hex2bin(char);
+int palmtrie_hex2bin(char);
 
 /* in palmtrie_sl.c */
 int palmtrie_sl_add(struct palmtrie *, addr_t, addr_t, int, void *);

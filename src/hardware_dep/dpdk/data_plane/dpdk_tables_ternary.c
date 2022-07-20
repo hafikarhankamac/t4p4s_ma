@@ -26,12 +26,13 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
         
-        addr_t* addr_t_key, addr_t_mask;
+        addr_t* addr_t_key;
+        addr_t* addr_t_mask;
 
         addr_t_key = (addr_t*)key;
         addr_t_mask = (addr_t*)mask;
 
-        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
+        palmtrie_add_data(t->table, *addr_t_key, *addr_t_mask, priority, entry);
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)

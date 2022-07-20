@@ -25,7 +25,19 @@
         if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
-        
+
+        acl_tcam_entry_t tcam_e;
+        acl_ipv4_entry_t *ipv4_addr;
+        acl_ipv4_entry_t *ipv4_mask;
+
+        memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
+        ipv4_addr = (acl_ipv4_entry_t *)tcam_e.data;
+        ipv4_mask = (acl_ipv4_entry_t *)tcam_e.mask;
+        memset(ipv4_mask, 0xff, 16);
+
+        ipv4_addr->saddr = htonl(*key);
+        ipv4_mask->saddr = htonl(*mask);
+
         addr_t* addr_t_key;
         addr_t* addr_t_mask;
 
@@ -48,6 +60,15 @@
     uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
     {
         if (t->entry.key_size == 0) return t->default_val;
+
+        acl_tcam_entry_t tcam_e;
+        acl_ipv4_entry_t *ipv4_addr;
+        acl_ipv4_entry_t *ipv4_mask;
+
+        memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
+        ipv4_addr = (acl_ipv4_entry_t *)tcam_e.data;
+        ipv4_mask = (acl_ipv4_entry_t *)tcam_e.mask;
+        memset(ipv4_mask, 0xff, 16);
 
         addr_t* addr_t_key;
         addr_t_key = (addr_t*)key;

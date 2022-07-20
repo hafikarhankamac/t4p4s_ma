@@ -39,6 +39,21 @@ typedef struct { u32 g; u64 a[2]; } __attribute__ ((packed)) addr_t;
 #else
 
 typedef struct { u32 g; u64 a[8]; } __attribute__ ((packed)) addr_t;
+
+typedef struct {
+    uint8_t data[16];
+    uint8_t mask[16];
+} acl_tcam_entry_t;
+
+typedef struct {
+    uint8_t proto;
+    uint32_t saddr;
+    uint32_t daddr;
+    uint16_t sport;
+    uint16_t dport;
+    uint16_t flags;
+} __attribute__ ((packed)) acl_ipv4_entry_t;
+
 #define PALMTRIE_ADDR_BITS     480
 #define PALMTRIE_ADDR_ZERO     {0, {0, 0, 0, 0, 0, 0, 0, 0}}
 

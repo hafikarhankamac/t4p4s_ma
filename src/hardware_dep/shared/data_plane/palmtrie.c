@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <alloca.h>
+
 /*
  * Initialize an instance
  */
@@ -165,6 +167,38 @@ palmtrie_commit(struct palmtrie *palmtrie)
     }
 
     return 0;
+}
+
+void
+palmtrie_reverse(char *s)
+{
+    char *t;
+    int l;
+    int i;
+
+    l = strlen(s);
+    t = alloca(l + 1);
+    
+    for ( i = 0; i < l; i++ ) {
+        t[i] = s[l - i - 1];
+    }
+    t[l] = 0;
+
+    strcpy(s, t);
+}
+
+static __inline__ int
+hex2bin(char c)
+{
+    if ( c >= '0' && c <= '9' ) {
+        return c - '0';
+    } else if ( c >= 'a' && c <= 'f' ) {
+        return c - 'a' + 10;
+    } else if ( c >= 'A' && c <= 'F' ) {
+        return c - 'A' + 10;
+    } else {
+        return 0;
+    }
 }
 
 /*

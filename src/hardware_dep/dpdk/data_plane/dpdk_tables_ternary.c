@@ -3,7 +3,6 @@
 
 // This file is included directly from `dpdk_tables.c`.
 
-
 #ifdef T4P4S_PALMTRIE
     void ternary_create(lookup_table_t* t, int socketid)
     {
@@ -26,28 +25,37 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
-        acl_tcam_entry_t tcam_e;
-        acl_ipv4_entry_t *ipv4_addr;
-        acl_ipv4_entry_t *ipv4_mask;
+        uint8_t tcam_addr[32];
+        uint8_t tcam_mask[32];
 
-        memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
-        ipv4_addr = (acl_ipv4_entry_t *)tcam_e.data;
-        ipv4_mask = (acl_ipv4_entry_t *)tcam_e.mask;
-        memset(ipv4_mask, 0xff, 16);
+        (void)memcpy(&tcam_addr[0], key, 32);
+        (void)memcpy(&tcam_mask[0], mask, 32);
 
-        ipv4_addr->saddr = htonl(*key);
-        ipv4_mask->saddr = htonl(*mask);
+        addr_t addr_t_key;
+        addr_t addr_t_mask;
+        u64 d;
 
-        //addr_t addr_t_key;
-        //addr_t addr_t_mask;
+        reverse(&tcam_addr[0]);
+        reverse(&tcam_mask[0]);
 
-        addr_t* addr_t_key;
-        addr_t* addr_t_mask;
+        memset(&addr_t_key, 0, sizeof(addr_t));
+        memset(&addr_t_mask, 0, sizeof(addr_t));
+        for ( int i = 0; i < (ssize_t)strlen(16); i++ ) {
+            d = hex2bin(tcam_addr[i]);
+            addr_t_key.a[i >> 4] |= d << ((i & 0xf) << 2);
+            d = hex2bin(tcam_mask[i]);
+            addr_t_mask.a[i >> 4] |= d << ((i & 0xf) << 2);
+        }
 
-        addr_t_key = (addr_t*)key;
-        addr_t_mask = (addr_t*)mask;
+        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
 
-        palmtrie_add_data(t->table, *addr_t_key, *addr_t_mask, priority, entry);
+        //addr_t* addr_t_key;
+        //addr_t* addr_t_mask;
+
+        //addr_t_key = (addr_t*)key;
+        //addr_t_mask = (addr_t*)mask;
+
+        //palmtrie_add_data(t->table, *addr_t_key, *addr_t_mask, priority, entry);
 
         palmtrie_commit(t->table);
     }
@@ -66,16 +74,8 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        acl_tcam_entry_t tcam_e;
-        acl_ipv4_entry_t *ipv4_addr;
-        acl_ipv4_entry_t *ipv4_mask;
-
-        memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
-        ipv4_addr = (acl_ipv4_entry_t *)tcam_e.data;
-        ipv4_mask = (acl_ipv4_entry_t *)tcam_e.mask;
-        memset(ipv4_mask, 0xff, 16);
-
         addr_t* addr_t_key;
+
         addr_t_key = (addr_t*)key;
 
         u64 ret = palmtrie_lookup(t->table, *addr_t_key);

@@ -38,6 +38,9 @@
         ipv4_addr->saddr = htonl(*key);
         ipv4_mask->saddr = htonl(*mask);
 
+        //addr_t addr_t_key;
+        //addr_t addr_t_mask;
+
         addr_t* addr_t_key;
         addr_t* addr_t_mask;
 
@@ -45,6 +48,8 @@
         addr_t_mask = (addr_t*)mask;
 
         palmtrie_add_data(t->table, *addr_t_key, *addr_t_mask, priority, entry);
+
+        palmtrie_commit(t->table);
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)

@@ -42,7 +42,7 @@ int process_ternary(const char* line) {
     //printf("IP: %hhd.%hhd.%hhd.%hhd Mask: %02hhx%02hhx%02hhx%02hhx Priority: %d\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
     if (10 != matches) return -1;
 
-    send_ternary_entry(ip, mask, priority, table_name, "ipv4.srcAddr", "allow");
+    send_ternary_entry(ip, mask, priority, table_name, "ipv4.srcAddr", "ingress.allow");
 }
 
 typedef int (*config_line_processor_t)(const char* line);

@@ -83,11 +83,12 @@ void exact_add_promote(table_name_t tableid, uint8_t* key, uint8_t* value, bool 
 void lpm_add_promote(table_name_t tableid, uint8_t* key, uint8_t depth, uint8_t* value, bool is_const_entry, bool should_print) {
     FORALLNUMANODES("Add", "/" T4LIT(LPM), CHANGE_TABLE(lpm_add, key, depth, value), is_const_entry, should_print)
 }
-/*
+#ifdef T4P4S_PALMTRIE
+#else
 void ternary_add_promote(table_name_t tableid, uint8_t* key, uint8_t* mask, uint8_t* value, bool is_const_entry, bool should_print) {
     FORALLNUMANODES("Add", "/" T4LIT(ternary), CHANGE_TABLE(ternary_add, key, mask, value), is_const_entry, should_print)
 }
-*/
+#endif
 void table_setdefault_promote(table_name_t tableid, actions_t* action, bool show_info) {
     FORALLNUMANODES_NOKEY("Set default action on", CHANGE_TABLE(table_set_default_action, action), show_info)
 }

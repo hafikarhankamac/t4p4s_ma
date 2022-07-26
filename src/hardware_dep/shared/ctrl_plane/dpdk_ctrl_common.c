@@ -97,7 +97,34 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
     netconv_p4_action_parameter(ap3);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< EXACT %s %d %s.%s %hhx.%hhx.%hhx.%hhx\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
+    printf("<<<< LPM %s %d %s.%s %hhx.%hhx.%hhx.%hhx\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
+    return 0;
+}
+
+
+int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
+{
+    struct p4_header* h = create_p4_header(buffer, 0, 2048);
+    struct p4_add_table_entry* te = create_p4_add_table_entry(buffer,0,2048);
+    strcpy(te->table_name, table_name);
+
+    struct p4_field_match_ternary* ternary = add_p4_field_match_ternary(te, 2048);
+    strcpy(ternary->header.name, translate(header_name));
+    memcpy(ternary->bitmap, ip, 4);
+    memcpy(ternary->mask, mask, 4);
+    ternary->length = 4*8+0;
+    ternary->priority = priority;
+
+    struct p4_action* a = add_p4_action(h, 2048);
+    strcpy(a->description.name, translate(action_name));
+
+    netconv_p4_header(h);
+    netconv_p4_add_table_entry(te);
+    netconv_p4_field_match_ternary(ternary);
+    netconv_p4_action(a);
+
+    send_p4_msg(c, buffer, 2048);
+    printf("<<<< TERNARY %s %d %s.%s %hhx.%hhx.%hhx.%hhx %02x%02x%02x%02x\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], &mask[0], &mask[1], &mask[2], &mask[3]);
     return 0;
 }
 

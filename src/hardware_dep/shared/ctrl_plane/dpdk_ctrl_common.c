@@ -124,7 +124,7 @@ int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const c
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %d %s.%s %hhx.%hhx.%hhx.%hhx %02x%02x%02x%02x\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], &mask[0], &mask[1], &mask[2], &mask[3]);
+    printf("<<<< TERNARY %s %d %s.%s %d.%d.%d.%d %hhX%hhX%hhX%hhX\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], &mask[0], &mask[1], &mask[2], &mask[3]);
     return 0;
 }
 

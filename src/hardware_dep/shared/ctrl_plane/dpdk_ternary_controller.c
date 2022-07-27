@@ -43,6 +43,9 @@ int process_ternary(const char* line) {
  
     //printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
  
+    palmtrie_reverse(&ip[0]);
+    palmtrie_reverse(&mask[0]);
+
     send_ternary_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
 }
 

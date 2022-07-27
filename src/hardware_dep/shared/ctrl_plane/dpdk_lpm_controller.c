@@ -37,7 +37,7 @@ int process_lpm(const char* line) {
     uint8_t ip[4];
     uint16_t prefix;
 
-    int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &prefix);
+    int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %d", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &prefix);
     //printf("IP: %hhd.%hhd.%hhd.%hhd Prefix: %d\n", ip[0], ip[1], ip[2], ip[3], prefix);
     if (6 != matches) return -1;
 

@@ -54,9 +54,11 @@ int send_exact_entry(uint8_t port, uint8_t mac[6], const char* table_name, const
     netconv_p4_add_table_entry(te);
     netconv_p4_field_match_exact(exact);
     netconv_p4_action(a);
+
     if (par1 != 0) {
         netconv_p4_action_parameter(ap1);
     }
+
     if (par2 != 0) {
         netconv_p4_action_parameter(ap2);
     }
@@ -69,8 +71,12 @@ int send_exact_entry(uint8_t port, uint8_t mac[6], const char* table_name, const
 
 int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name, const char* header_name, const char* action_name, int i1, int i2, int i3)
 {
+    struct p4_action_parameter* ap1;
+    struct p4_action_parameter* ap2;
+    struct p4_action_parameter* ap3;
+
     struct p4_header* h = create_p4_header(buffer, 0, 2048);
-    struct p4_add_table_entry* te = create_p4_add_table_entry(buffer,0,2048);
+    struct p4_add_table_entry* te = create_p4_add_table_entry(buffer, 0, 2048);
     strcpy(te->table_name, table_name);
 
     struct p4_field_match_lpm* lpm = add_p4_field_match_lpm(te, 2048);
@@ -81,20 +87,37 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
     struct p4_action* a = add_p4_action(h, 2048);
     strcpy(a->description.name, translate(action_name));
 
-    struct p4_action_parameter* ap1 = add_p4_action_parameter(h, a, 2048);
-    memcpy(ap1->bitmap, &i1, 4);
-    struct p4_action_parameter* ap2 = add_p4_action_parameter(h, a, 2048);
-    memcpy(ap2->bitmap, &i2, 4);
-    struct p4_action_parameter* ap3 = add_p4_action_parameter(h, a, 2048);
-    memcpy(ap3->bitmap, &i3, 4);
+    if (i1 != (-1)) {
+        ap1 = add_p4_action_parameter(h, a, 2048);
+        memcpy(ap1->bitmap, &i1, 4);
+    }
+
+    if (i2 != (-1)) {
+        ap2 = add_p4_action_parameter(h, a, 2048);
+        memcpy(ap2->bitmap, &i2, 4);
+    }
+
+    if (i3 != (-1)) {
+        ap3 = add_p4_action_parameter(h, a, 2048);
+        memcpy(ap3->bitmap, &i3, 4);
+    }
 
     netconv_p4_header(h);
     netconv_p4_add_table_entry(te);
     netconv_p4_field_match_lpm(lpm);
     netconv_p4_action(a);
-    netconv_p4_action_parameter(ap1);
-    netconv_p4_action_parameter(ap2);
-    netconv_p4_action_parameter(ap3);
+
+    if (i1 != (-1)) {
+        netconv_p4_action_parameter(ap1);
+    }
+
+    if (i2 != (-1)) {
+        netconv_p4_action_parameter(ap2);
+    }
+    
+    if (i3 != (-1)) {
+        netconv_p4_action_parameter(ap3);
+    }
 
     send_p4_msg(c, buffer, 2048);
     printf("<<<< LPM %s %d %s.%s %hhd.%hhd.%hhd.%hhd\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);

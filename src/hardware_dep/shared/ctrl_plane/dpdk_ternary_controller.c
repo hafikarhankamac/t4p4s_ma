@@ -6,6 +6,8 @@
 #include "dpdk_controller_dictionary.h"
 #include "dpdk_ctrl_common.h"
 
+#include "palmtrie.h"
+
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>

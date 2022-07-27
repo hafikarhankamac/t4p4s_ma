@@ -38,7 +38,7 @@ int process_lpm(const char* line) {
     uint16_t prefix;
 
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &prefix);
-    //printf("IP: %hhd.%hhd.%hhd.%hhd Mask: Prefix: %d\n", ip[0], ip[1], ip[2], ip[3], prefix);
+    //printf("IP: %hhd.%hhd.%hhd.%hhd Prefix: %d\n", ip[0], ip[1], ip[2], ip[3], prefix);
     if (6 != matches) return -1;
 
     send_lpm_entry(ip, prefix, table_name, "ipv4.srcAddr", "ingress.allow", 0, 0, 0);

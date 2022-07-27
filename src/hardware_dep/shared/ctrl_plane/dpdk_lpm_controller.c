@@ -42,7 +42,7 @@ int process_lpm(const char* line) {
 
     //printf("Process LPM - IP: %hhd.%hhd.%hhd.%hhd Prefix: %hd\n", ip[0], ip[1], ip[2], ip[3], prefix);
 
-    send_lpm_entry(ip, prefix, table_name, "ipv4.srcAddr", "ingress.allow", (-1), (-1), (-1));
+    send_lpm_entry(ip, prefix, table_name, "ipv4.dstAddr", "ingress.allow", (-1), (-1), (-1));
 }
 
 typedef int (*config_line_processor_t)(const char* line);

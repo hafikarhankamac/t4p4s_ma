@@ -120,7 +120,7 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
     }
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< LPM %s %d %s.%s %hhd.%hhd.%hhd.%hhd\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
+    printf("<<<< LPM %s %hd %s.%s %hhd.%hhd.%hhd.%hhd\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
     return 0;
 }
 
@@ -149,7 +149,7 @@ int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const c
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %d %s.%s %hhd.%hhd.%hhd.%hhd %02hhx%02hhx%02hhx%02hhx\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3]);
+    printf("<<<< TERNARY %s %hhd %s.%s %hhd.%hhd.%hhd.%hhd %hhx%hhx%hhx%hhx\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3]);
     return 0;
 }
 

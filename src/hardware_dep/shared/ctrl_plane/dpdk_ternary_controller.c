@@ -39,9 +39,10 @@ int process_ternary(const char* line) {
     uint8_t priority;
 
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %02hhx%02hhx%02hhx%02hhx %d", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask[0], &mask[1], &mask[2], &mask[3], &priority);
-    //printf("IP: %hhd.%hhd.%hhd.%hhd Mask: %02hhx%02hhx%02hhx%02hhx Priority: %d\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
     if (10 != matches) return -1;
-
+ 
+   //printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %02hhx%02hhx%02hhx%02hhx Priority: %d\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+ 
     send_ternary_entry(ip, mask, priority, table_name, "ipv4.srcAddr", "ingress.allow");
 }
 

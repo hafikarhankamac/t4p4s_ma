@@ -279,11 +279,11 @@ int t4p4s_normal_exit() {
 }
 
 void t4p4s_pre_launch(int idx) {
-    
+    debug(T4LIT(Prelaunch.,success) "\n");
 }
 
 void t4p4s_post_launch(int idx) {
-
+    debug(T4LIT(Postlaunch.,success) "\n");
 }
 
 extern uint32_t enabled_port_mask;

@@ -50,7 +50,7 @@ void change_replica(int socketid, int tid, int replica) {
         int action_id = get_entry_action_id(value); \
         char params_str[1024]; \
         show_params_by_action_id(params_str, tcfg.id, action_id, value + 4); \
-        dbg_bytes(key, entry_info.key_size, " " T4LIT(ctl>,incoming) " " txt1 " " T4LIT(%s,table) txt2 ": " T4LIT(%s,action) "%s <- ", tcfg.short_name, get_entry_action_name(value), params_str); \
+        dbg_bytes(key, entry_info.key_size, " " T4LIT(HAKctl>,incoming) " " txt1 " " T4LIT(%s,table) txt2 ": " T4LIT(%s,action) "%s <- ", tcfg.short_name, get_entry_action_name(value), params_str); \
     }
 #else
 #define FORALL_PRINTOUT(txt1, txt2, b, is_const_entry, should_print)

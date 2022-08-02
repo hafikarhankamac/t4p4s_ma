@@ -364,7 +364,7 @@ for table, smem in hlir.all_counters:
 #{         for (int i = 0; i < NB_TABLES; i++) {
 #[             lookup_table_t t = table_config[i];
 #[             if (state[main_socket].tables[t.id][0]->init_entry_count > 0)
-#[                 debug("  HAK  " T4LIT(:,incoming) " Table " T4LIT(%s,table) " got " T4LIT(%d) " entries from the control plane\n", state[main_socket].tables[t.id][0]->short_name, state[main_socket].tables[t.id][0]->init_entry_count);
+#[                 debug("    " T4LIT(:,incoming) " Table " T4LIT(%s,table) " got " T4LIT(%d) " entries from the control plane\n", state[main_socket].tables[t.id][0]->short_name, state[main_socket].tables[t.id][0]->init_entry_count);
 #}             }
 #}         #endif
 #}     }

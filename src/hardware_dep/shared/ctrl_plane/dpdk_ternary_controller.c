@@ -6,8 +6,6 @@
 #include "dpdk_controller_dictionary.h"
 #include "dpdk_ctrl_common.h"
 
-#include "../t4p4s/src/hardware_dep/shared/includes/palmtrie.h"
-
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,11 +41,8 @@ int process_ternary(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hhx:%hhx:%hhx:%hhx %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask[0], &mask[1], &mask[2], &mask[3], &priority);
     if (10 != matches) return -1;
  
-    //printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+    printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
  
-    palmtrie_reverse(&ip[0]);
-    palmtrie_reverse(&mask[0]);
-
     send_ternary_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
 }
 

@@ -6,7 +6,7 @@
 #include "dpdk_controller_dictionary.h"
 #include "dpdk_ctrl_common.h"
 
-#include "palmtrie.h"
+#include "../t4p4s/src/hardware_dep/shared/includes/palmtrie.h"
 
 #include <unistd.h>
 #include <stdio.h>

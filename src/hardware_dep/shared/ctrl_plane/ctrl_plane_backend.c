@@ -109,7 +109,7 @@ void backend_processor(void* bg)
 void input_processor(void *bg)
 {
     backend_t* bgt = (backend_t*)bg;
-        mem_cell_t* mem_cell;
+    mem_cell_t* mem_cell;
     int rval;
 
     while ( 1 )
@@ -122,11 +122,11 @@ void input_processor(void *bg)
 
         rval = handle_p4_msg( mem_cell->data, mem_cell->length, bgt->cb );
 #ifdef T4P4S_DEBUG
+        printf("ctrl_plane_backend.c input_processor\n");
         if (rval != 0) {
             printf("[CTRL]  :::: rval = %d\n", rval);
         }
 #endif
-
         detouch_mem_cell( bgt, mem_cell );
     }
 }
@@ -143,11 +143,12 @@ void output_processor(void *bg)
 
         if (bgt->shutdown==1) break;
         if (mem_cell==0) continue;
-
+#ifdef T4P4S_DEBUG
+        printf("ctrl_plane_backend.c output_processor\n");
+#endif
 #ifdef T4P4S_P4RT
         dev_mgr_send_digest(dev_mgr_ptr, (struct p4_digest*)(mem_cell->data), 1);
 #endif
-
 #ifndef T4P4S_P4RT
         write_p4_msg(bgt->controller_sock, mem_cell->data, mem_cell->length);
 #endif

@@ -27,7 +27,6 @@ project_source_files = [
     hdep / 'dpdk/main.c',
     hdep / 'dpdk/main_async.c',
 
-    hdep / 'shared/ctrl_plane/controller.c',
     hdep / 'shared/ctrl_plane/ctrl_plane_backend.c',
     hdep / 'shared/ctrl_plane/fifo.c',
     hdep / 'shared/ctrl_plane/handlers.c',

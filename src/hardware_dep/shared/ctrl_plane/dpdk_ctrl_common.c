@@ -135,7 +135,7 @@ int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const c
     strcpy(ternary->header.name, translate(header_name));
     memcpy(ternary->bitmap, ip, 4);
     memcpy(ternary->mask, mask, 4);
-    ternary->length = 2*4*8+0;
+    ternary->length = 2*4*8+2;
     ternary->priority = priority;
 
     struct p4_action* a = add_p4_action(h, 2048);

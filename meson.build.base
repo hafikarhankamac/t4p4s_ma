@@ -45,6 +45,7 @@ project_source_files = [
     hdep / 'shared/data_plane/palmtrie_popmtpt.c',
     hdep / 'shared/data_plane/palmtrie_sl.c',
     hdep / 'shared/data_plane/palmtrie_tpt.c',
+    hdep / 'shared/data_plane/acltotcam.c',
 
     hdep / 'shared/util_debug.c',
     hdep / 'shared/backend.c',

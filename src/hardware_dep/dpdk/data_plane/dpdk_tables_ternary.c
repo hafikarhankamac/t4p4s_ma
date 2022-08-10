@@ -19,35 +19,39 @@
 #endif
 
 #ifdef T4P4S_PALMTRIE
-    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value)
+    //void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value)
+    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
     {
         if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
-        uint8_t tcam_addr[32];
-        uint8_t tcam_mask[32];
+        char strline[256], *strlineptr;
+        acl_tcam_entry_t tcam_e;
 
-        (void)memcpy(&tcam_addr[0], key, 32);
-        (void)memcpy(&tcam_mask[0], mask, 32);
+        //"permit ip 0.0.0.0/0 20.0.1.0/24"
+        strlineptr = &strline[0];
+        sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask);
+        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
 
         addr_t addr_t_key;
         addr_t addr_t_mask;
         u64 d;
 
-        palmtrie_reverse(&tcam_addr[0]);
-        palmtrie_reverse(&tcam_mask[0]);
+        //palmtrie_reverse(&tcam_addr[0]);
+        //palmtrie_reverse(&tcam_mask[0]);
 
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
         for ( int i = 0; i < (ssize_t)strlen(16); i++ ) {
-            d = palmtrie_hex2bin(tcam_addr[i]);
+            //d = palmtrie_hex2bin(tcam_addr[i]);
             addr_t_key.a[i >> 4] |= d << ((i & 0xf) << 2);
-            d = palmtrie_hex2bin(tcam_mask[i]);
+            //d = palmtrie_hex2bin(tcam_mask[i]);
             addr_t_mask.a[i >> 4] |= d << ((i & 0xf) << 2);
         }
 
-        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
+        //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
+        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
 
         //addr_t* addr_t_key;
         //addr_t* addr_t_mask;

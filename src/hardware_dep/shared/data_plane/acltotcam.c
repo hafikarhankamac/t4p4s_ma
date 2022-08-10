@@ -384,7 +384,7 @@ parse_acl_line(acl_t *acl, char *buf, int lineno)
  * Parse the specified ACL
  */
 int
-parse_acl(char *strline)
+parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
 {
     char buf[1024];
     acl_t acl;
@@ -394,7 +394,6 @@ parse_acl(char *strline)
     int i;
     int j;
     int k;
-    acl_tcam_entry_t e;
     acl_ipv4_entry_t *data;
     acl_ipv4_entry_t *mask;
     int flagc;
@@ -447,8 +446,8 @@ parse_acl(char *strline)
         for ( j = 0; j < dports.count; j++ ) {
             for ( k = 0; k < flagc; k++ ) {
                 memset(&e, 0x0, sizeof(acl_tcam_entry_t));
-                data = (acl_ipv4_entry_t *)e.data;
-                mask = (acl_ipv4_entry_t *)e.mask;
+                data = (acl_ipv4_entry_t *)tcam_e->data;
+                mask = (acl_ipv4_entry_t *)tcam_e->mask;
                 memset(mask, 0xff, 16);
                 switch ( acl.proto ) {
                 case ACL_IP:

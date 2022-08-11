@@ -174,7 +174,7 @@ int send_ternary_palmtrie_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, 
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %hhd %s.%s %hhd.%hhd.%hhd.%hhd %hhd\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask);
+    printf("<<<< PALMTRIE %s %hhd %s.%s %hhd.%hhd.%hhd.%hhd %hhd\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask);
     return 0;
 }
 

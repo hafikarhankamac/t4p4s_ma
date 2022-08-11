@@ -209,8 +209,8 @@ for table in hlir.tables:
     #[     if (unlikely(!success))    return;
     #[
 
-    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': ''}
-    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': []}
+    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': 'int priority ='}
+    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['priority']}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);

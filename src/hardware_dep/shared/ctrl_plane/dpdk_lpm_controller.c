@@ -29,6 +29,7 @@ int process_set_default(const char* line) {
     if (2 != matches) return -1;
 
     set_table_default_action(table_name, table_name, default_action_name);
+
     return 0;
 }
 
@@ -40,9 +41,11 @@ int process_lpm(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &prefix);
     if (6 != matches) return -1;
 
-    //printf("Process LPM - IP: %hhd.%hhd.%hhd.%hhd Prefix: %hd\n", ip[0], ip[1], ip[2], ip[3], prefix);
+    printf("Process LPM - IP: %hhd.%hhd.%hhd.%hhd Prefix: %hd\n", ip[0], ip[1], ip[2], ip[3], prefix);
 
     send_lpm_entry(ip, prefix, table_name, "ipv4.dstAddr", ".reflect", (-1), (-1), (-1));
+
+    return 0;
 }
 
 typedef int (*config_line_processor_t)(const char* line);
@@ -95,6 +98,7 @@ int process_config_file(FILE *f) {
     }
 
     fclose(f);
+    
     return 0;
 }
 

@@ -29,6 +29,7 @@ int process_set_default(const char* line) {
     if (2 != matches) return -1;
 
     set_table_default_action(table_name, table_name, default_action_name);
+
     return 0;
 }
 
@@ -40,11 +41,13 @@ int process_ternary(const char* line) {
     uint8_t priority;
 
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd/%hhd %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask, &priority);
-    if (6 != matches) return -1;
+    if (7 != matches) return -1;
  
-    printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
+    printf("Process PALMTRIE - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
  
     send_ternary_palmtrie_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+
+    return 0;
 }
 
 typedef int (*config_line_processor_t)(const char* line);
@@ -97,6 +100,7 @@ int process_config_file(FILE *f) {
     }
 
     fclose(f);
+
     return 0;
 }
 

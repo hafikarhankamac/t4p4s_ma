@@ -28,38 +28,42 @@
 
         char strline[256], *strlineptr;
         acl_tcam_entry_t tcam_e;
+        char edata[256], *edataptr;
+        char emask[256], *emaskptr;
 
-        //"permit ip 0.0.0.0/0 20.0.1.0/24"
         strlineptr = &strline[0];
-        sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask);
-        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
+        sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
+
+        if (parse_acl(strline, &tcam_e) == (-1)) return;
+
+        edataptr = &edata[0];
+        emaskptr = &emask[0];
+
+        sprintf(edataptr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                           tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
+                           tcam_e.data[8], tcam_e.data[9], tcam_e.data[10], tcam_e.data[11], tcam_e.data[12], tcam_e.data[13], tcam_e.data[14], tcam_e.data[15]);
+        sprintf(emaskptr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                           tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
+                           tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
 
         addr_t addr_t_key;
         addr_t addr_t_mask;
-        u64 d;
+        u64 t;
 
-        //palmtrie_reverse(&tcam_addr[0]);
-        //palmtrie_reverse(&tcam_mask[0]);
+        palmtrie_reverse(edata);
+        palmtrie_reverse(emask);
 
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
-        for ( int i = 0; i < (ssize_t)strlen(16); i++ ) {
-            //d = palmtrie_hex2bin(tcam_addr[i]);
-            addr_t_key.a[i >> 4] |= d << ((i & 0xf) << 2);
-            //d = palmtrie_hex2bin(tcam_mask[i]);
-            addr_t_mask.a[i >> 4] |= d << ((i & 0xf) << 2);
+        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
+            t = palmtrie_hex2bin(edata[i]);
+            addr_t_key.a[i >> 4] |= t << ((i & 0xf) << 2);
+            t = palmtrie_hex2bin(emask[i]);
+            addr_t_mask.a[i >> 4] |= t << ((i & 0xf) << 2);
         }
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
-
-        //addr_t* addr_t_key;
-        //addr_t* addr_t_mask;
-
-        //addr_t_key = (addr_t*)key;
-        //addr_t_mask = (addr_t*)mask;
-
-        //palmtrie_add_data(t->table, *addr_t_key, *addr_t_mask, priority, entry);
 
         palmtrie_commit(t->table);
     }

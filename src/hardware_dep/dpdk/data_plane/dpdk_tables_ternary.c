@@ -83,11 +83,13 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        addr_t* addr_t_key;
+        //addr_t* addr_t_key;
+        //addr_t_key = (addr_t*)key;
 
-        addr_t_key = (addr_t*)key;
+        addr_t addr_t_key;
+        addr_t_key.a[0] = (*key << 24) | (*(key++) << 16) | (*(key++) << 8) | (*(key++)); 
 
-        u64 ret = palmtrie_lookup(t->table, *addr_t_key);
+        u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

@@ -48,19 +48,19 @@
 
         addr_t addr_t_key;
         addr_t addr_t_mask;
-        u64 t;
+        u64 temp;
 
         palmtrie_reverse(edata);
         palmtrie_reverse(emask);
 
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
-        
+
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
-            t = palmtrie_hex2bin(edata[i]);
-            addr_t_key.a[i >> 4] |= t << ((i & 0xf) << 2);
-            t = palmtrie_hex2bin(emask[i]);
-            addr_t_mask.a[i >> 4] |= t << ((i & 0xf) << 2);
+            temp = palmtrie_hex2bin(edata[i]);
+            addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
+            temp = palmtrie_hex2bin(emask[i]);
+            addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);

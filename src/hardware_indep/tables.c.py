@@ -21,7 +21,8 @@ table_short_names_sorted = '", "'.join(sorted(f'T4LIT({table.short_name},table)'
 
 #[ lookup_table_t table_config[NB_TABLES] = {
 for table in hlir.tables:
-    tmt = table.matchType.name
+    #tmt = table.matchType.name
+    tmt = table.matchType.path.name
     ks  = table.key_length_bytes
     #[ {
     #[  .name           = "${table.name}",

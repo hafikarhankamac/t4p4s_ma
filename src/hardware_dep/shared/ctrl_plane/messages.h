@@ -198,9 +198,9 @@ typedef struct p4_field_match_range {
 typedef struct p4_field_match_ternary {
 	struct p4_field_match_header header;
     uint16_t length;
+	uint8_t priority;
     char bitmap[MAX_FIELD_LENGTH];
 	char mask[MAX_FIELD_LENGTH];
-	uint8_t priority;
 } p4_field_match_ternary_t;
 
 typedef struct p4_field_match_valid {

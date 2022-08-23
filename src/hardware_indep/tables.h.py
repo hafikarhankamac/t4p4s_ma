@@ -8,13 +8,6 @@
 
 #[ typedef bool entry_validity_t;
 
-#{ typedef struct {
-#[     uint16_t length;
-#[     uint8_t priority;
-#[     uint8_t mask[4];
-#} } ternary_table_return_s;
-#[
-
 for table in hlir.tables:
     #{ typedef struct {
     #[     ${table.name}_action_t  action;

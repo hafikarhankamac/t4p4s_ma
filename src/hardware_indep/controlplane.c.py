@@ -20,6 +20,12 @@ import os
 #[     extern device_mgr_t *dev_mgr_ptr;
 #} #endif
 
+#{ typedef struct {
+#[     uint16_t length;
+#[     uint8_t priority;
+#[     uint8_t mask[4];
+#} } ternary_table_return_s;
+#[
 
 for table in hlir.tables:
     #[ extern void table_${table.name}_key(packet_descriptor_t* pd, uint8_t* key); // defined in dataplane.c

@@ -65,6 +65,7 @@ for table in hlir.tables:
         #[     ${format_type(k.expression.type, varname)};
     #} } table_key_${table.name}_t;
     #[
+    #[ uint8_t tt_mask[${table.key_length_bytes}]; // ternary table mask
 
 
 # TODO move to hlir_attrib
@@ -125,6 +126,8 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt, all_width):
         #[     // TODO fill Slice component properly (call gen_fill_key_component_slice)
     else:
         #[     memcpy(&key[ $all_width ], field_matches[$idx]->bitmap, $byte_width);
+        if tmt == "ternary":
+        #[     memcpy(&tt_mask[ $all_width ], field_matches[$idx]->mask, $byte_width);
         if tmt == "lpm":
             if kmt == "exact":
                 #[     prefix_length += ${get_key_byte_width(k)};
@@ -209,7 +212,7 @@ for table in hlir.tables:
     #[
 
     table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': 'int priority = '}
-    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['priority']}
+    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['tt_mask']}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);

@@ -213,7 +213,7 @@ for table in hlir.tables:
     #[
 
     table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': 'ternary_table_return_s ttrs = '}
-    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': [ttrs.mask]}
+    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['ttrs.mask']}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);

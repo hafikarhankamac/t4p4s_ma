@@ -20,13 +20,6 @@ import os
 #[     extern device_mgr_t *dev_mgr_ptr;
 #} #endif
 
-#{ typedef struct {
-#[     uint16_t length;
-#[     uint8_t priority;
-#[     uint8_t mask[4];
-#} } ternary_table_return_s;
-#[
-
 for table in hlir.tables:
     #[ extern void table_${table.name}_key(packet_descriptor_t* pd, uint8_t* key); // defined in dataplane.c
 
@@ -133,7 +126,7 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt, all_width):
     else:
         #[     memcpy(&key[ $all_width ], field_matches[$idx]->bitmap, $byte_width);
         if tmt == "ternary":
-        #[     memcpy(mask_ptr, field_matches[$idx]->mask, $byte_width); 
+        #[     memcpy(r_mask_ptr, field_matches[$idx]->mask, $byte_width); 
         if tmt == "lpm":
             if kmt == "exact":
                 #[     prefix_length += ${get_key_byte_width(k)};
@@ -145,8 +138,8 @@ for table in hlir.tables:
     tmt = table.matchType.name
 
     return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'uint8_t*'}
-    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': 'uint8_t* mask_ptr;'}
-    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': 'return mask_ptr;'}
+    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': 'uint8_t* r_mask_ptr;'}
+    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': 'return r_mask_ptr;'}
 
     #[ // note: ${table.name}, $tmt, ${table.key_length_bytes}
     #{ ${return_t[tmt]} ${table.name}_setup_key(p4_field_match_${tmt}_t** field_matches, uint8_t key[]) {
@@ -159,10 +152,8 @@ for table in hlir.tables:
         if kmt == "lpm":
             #[     prefix_length += field_matches[$i]->prefix_length;
         if kmt == "ternary":
-            #[     uint16_t length = field_matches[$i]->length;
-            #[     uint8_t priority = field_matches[$i]->priority;
-            #[     uint8_t mask[${table.key_length_bytes}];
-            #[     mask_ptr = &mask[0];
+            #[     uint8_t r_mask[${table.key_length_bytes}];
+            #[     r_mask_ptr = &mask[0];
 
     all_width = 0
     for idx, k in enumerate(sorted(table.key.keyElements, key = lambda k: k.match_order)):

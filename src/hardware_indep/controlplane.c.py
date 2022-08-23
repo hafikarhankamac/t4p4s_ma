@@ -126,8 +126,6 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt, all_width):
         #[     // TODO fill Slice component properly (call gen_fill_key_component_slice)
     else:
         #[     memcpy(&key[ $all_width ], field_matches[$idx]->bitmap, $byte_width);
-        if tmt == "ternary":
-        #[     memcpy(&tt_mask[ $all_width ], field_matches[$idx]->mask, $byte_width);
         if tmt == "lpm":
             if kmt == "exact":
                 #[     prefix_length += ${get_key_byte_width(k)};

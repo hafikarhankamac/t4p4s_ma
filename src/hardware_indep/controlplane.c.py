@@ -125,8 +125,6 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt, all_width):
         #[     // TODO fill Slice component properly (call gen_fill_key_component_slice)
     else:
         #[     memcpy(&key[ $all_width ], field_matches[$idx]->bitmap, $byte_width);
-        if tmt == "ternary":
-        #[     memcpy(r_mask_ptr, field_matches[$idx]->mask, $byte_width); 
         if tmt == "lpm":
             if kmt == "exact":
                 #[     prefix_length += ${get_key_byte_width(k)};
@@ -137,9 +135,9 @@ def gen_fill_key_component(k, idx, byte_width, tmt, kmt, all_width):
 for table in hlir.tables:
     tmt = table.matchType.name
 
-    return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'uint8_t*'}
-    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': 'uint8_t* r_mask_ptr;'}
-    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': 'return r_mask_ptr;'}
+    return_t     = {'exact': 'void', 'lpm': 'uint8_t', 'ternary': 'uint8_t'}
+    extra_init   = {'exact': '', 'lpm': 'uint8_t prefix_length = 0;', 'ternary': 'uint8_t priority = 0;'}
+    extra_return = {'exact': '', 'lpm': 'return prefix_length;', 'ternary': 'return priority;'}
 
     #[ // note: ${table.name}, $tmt, ${table.key_length_bytes}
     #{ ${return_t[tmt]} ${table.name}_setup_key(p4_field_match_${tmt}_t** field_matches, uint8_t key[]) {
@@ -152,8 +150,7 @@ for table in hlir.tables:
         if kmt == "lpm":
             #[     prefix_length += field_matches[$i]->prefix_length;
         if kmt == "ternary":
-            #[     uint8_t r_mask[${table.key_length_bytes}];
-            #[     r_mask_ptr = &mask[0];
+            #[     priority = field_matches[$i]-> priority;
 
     all_width = 0
     for idx, k in enumerate(sorted(table.key.keyElements, key = lambda k: k.match_order)):
@@ -211,8 +208,8 @@ for table in hlir.tables:
     #[     if (unlikely(!success))    return;
     #[
 
-    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': 'uint8_t* mask_ptr = '}
-    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['mask_ptr']}
+    table_extra_t = {'exact': '', 'lpm': 'int prefix_length = ', 'ternary': 'int priority = '}
+    extra_names = {'exact': [], 'lpm': ['prefix_length'], 'ternary': ['priority']}
 
     #[     table_key_${table.name}_t key;
     #[     ${table_extra_t[tmt]}${table.name}_setup_key((p4_field_match_${tmt}_t**)ctrl_m->field_matches, &key);

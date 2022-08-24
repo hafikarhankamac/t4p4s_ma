@@ -25,7 +25,7 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
-        
+        /*
         char strline[256], *strlineptr;
         acl_tcam_entry_t tcam_e;
         char edata[256], *edataptr;
@@ -34,7 +34,6 @@
         strlineptr = &strline[0];
         sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
 
-        /*
         if (parse_acl(strline, &tcam_e) == (-1)) return;
 
         edataptr = &edata[0];
@@ -47,7 +46,6 @@
                            tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
         */
-
         addr_t addr_t_key;
         addr_t addr_t_mask;
         u64 temp;

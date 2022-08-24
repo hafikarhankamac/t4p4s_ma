@@ -53,18 +53,16 @@
         palmtrie_reverse(edata);
         palmtrie_reverse(emask);
 
-        /*
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
-        */
 
         addr_t_key.a[0] = 0x0000000000000000;
         addr_t_mask.a[0] = 0xFFFFFFFFFFFFFFFF;
-        addr_t_key.a[1] = 0x0000000000140001;
+        addr_t_key.a[1] = 0x00000000000A0000;
         addr_t_mask.a[1] = 0xFFFFFFFFFF000000;
         addr_t_key.a[2] = 0x0000000000000000;
         addr_t_mask.a[2] = 0x0000000000000000;

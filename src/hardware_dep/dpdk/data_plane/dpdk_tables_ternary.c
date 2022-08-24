@@ -30,11 +30,11 @@
         char edata[256];
         char emask[256];
 
-        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
         memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
 
-        //if (parse_acl(strline, &tcam_e) == (-1)) return;
+        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
@@ -50,8 +50,8 @@
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
 
-        palmtrie_reverse(edata);
-        palmtrie_reverse(emask);
+        palmtrie_reverse(&edata[0]);
+        palmtrie_reverse(&emask[0]);
 
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
@@ -60,6 +60,7 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
+        /*
         addr_t_key.a[0] = 0x0000000000000000;
         addr_t_mask.a[0] = 0xFFFFFFFFFFFFFFFF;
         addr_t_key.a[1] = 0x00000000000A0000;
@@ -76,6 +77,7 @@
         addr_t_mask.a[6] = 0x0000000000000000;
         addr_t_key.a[7] = 0x0000000000000000;
         addr_t_mask.a[7] = 0x0000000000000000;
+        */
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);

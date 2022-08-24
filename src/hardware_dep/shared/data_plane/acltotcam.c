@@ -256,11 +256,6 @@ parse_acl_line(acl_t *acl, char *buf, int lineno)
     const char *sep = " \t";
     int ret;
 
-    /* Trim the tail CR/LF */
-    while ( '\r' == buf[strlen(buf) - 1] || '\n' == buf[strlen(buf) - 1]) {
-        buf[strlen(buf) - 1] = '\0';
-    }
-
     acl->priority = (1 << 20) - lineno;
 
     /* Action */
@@ -396,16 +391,17 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
     int k;
     acl_ipv4_entry_t *data;
     acl_ipv4_entry_t *mask;
-    int flagc;
+    int flagc = 1;
     tcp_flag flagd[2];
     tcp_flag flagm[2];
 
-    strcpy(buf, strline);
+    strcpy(&buf[0], strline);
 
-    ret = parse_acl_line(&acl, buf, 1);
+    ret = parse_acl_line(&acl, &buf[0], 1);
     if ( ret < 0 ) {
         return -1;
     }
+
     /* Source and destination ports */
     ret = range2mask(&sports, acl.sport);
     if ( ret < 0 ) {
@@ -415,6 +411,7 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
     if ( ret < 0 ) {
         return -1;
     }
+
     /* Flags */
     memset(&flagd[0], 0, sizeof(tcp_flag));
     memset(&flagm[0], 0xff, sizeof(tcp_flag));
@@ -429,16 +426,12 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
         flagm[1].rst = 0;
     } else if ( ACL_ACK & acl.flags ) {
         /* Ack */
-        flagc = 1;
         flagd[0].ack = 1;
         flagm[0].ack = 0;
     } else if ( ACL_NOSYN & acl.flags ) {
         /* No-syn */
-        flagc = 1;
         flagd[0].syn = 0;
         flagm[0].syn = 0;
-    } else {
-        flagc = 1;
     }
 
     /* Build TCAM */
@@ -523,12 +516,12 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
                 mask->saddr = htonl(acl.saddr.ip4.mask);
                 data->daddr = htonl(acl.daddr.ip4.prefix);
                 mask->daddr = htonl(acl.daddr.ip4.mask);
-                data->sport = htons(sports.data[i]);
-                mask->sport = htons(sports.mask[i]);
-                data->dport = htons(dports.data[j]);
-                mask->dport = htons(dports.mask[j]);
-                data->flags = *(uint16_t *)&flagd[k];
-                mask->flags = *(uint16_t *)&flagm[k];
+                //data->sport = htons(sports.data[i]);
+                //mask->sport = htons(sports.mask[i]);
+                //data->dport = htons(dports.data[j]);
+                //mask->dport = htons(dports.mask[j]);
+                //data->flags = *(uint16_t *)&flagd[k];
+                //mask->flags = *(uint16_t *)&flagm[k];
             }
         }
     }

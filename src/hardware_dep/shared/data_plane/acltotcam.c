@@ -438,7 +438,7 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
     for ( i = 0; i < sports.count; i++ ) {
         for ( j = 0; j < dports.count; j++ ) {
             for ( k = 0; k < flagc; k++ ) {
-                memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
+                //memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
                 data = (acl_ipv4_entry_t *)tcam_e->data;
                 mask = (acl_ipv4_entry_t *)tcam_e->mask;
                 memset(mask, 0xff, 16);

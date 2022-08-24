@@ -66,7 +66,24 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
         */
-       
+
+        addr_t_key[0] = 0x0000000000000000;
+        addr_t_mask[0] = 0xFFFFFFFFFFFFFFFF;
+        addr_t_key[1] = 0x0000000000140001;
+        addr_t_mask[1] = 0xFFFFFFFFFF000000;
+        addr_t_key[2] = 0x0000000000000000;
+        addr_t_mask[2] = 0x0000000000000000;
+        addr_t_key[3] = 0x0000000000000000; 
+        addr_t_mask[3] = 0x0000000000000000;
+        addr_t_key[4] = 0x0000000000000000; 
+        addr_t_mask[4] = 0x0000000000000000;
+        addr_t_key[5] = 0x0000000000000000;
+        addr_t_mask[5] = 0x0000000000000000;
+        addr_t_key[6] = 0x0000000000000000;
+        addr_t_mask[6] = 0x0000000000000000;
+        addr_t_key[7] = 0x0000000000000000;
+        addr_t_mask[7] = 0x0000000000000000;
+
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
 

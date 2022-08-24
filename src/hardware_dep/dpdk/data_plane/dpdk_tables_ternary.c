@@ -25,6 +25,7 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
+        
         char strline[256], *strlineptr;
         acl_tcam_entry_t tcam_e;
         char edata[256], *edataptr;
@@ -33,6 +34,7 @@
         strlineptr = &strline[0];
         sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
 
+        /*
         if (parse_acl(strline, &tcam_e) == (-1)) return;
 
         edataptr = &edata[0];
@@ -44,11 +46,13 @@
         sprintf(emaskptr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
+        */
 
         addr_t addr_t_key;
         addr_t addr_t_mask;
         u64 temp;
 
+        /*
         palmtrie_reverse(edata);
         palmtrie_reverse(emask);
 
@@ -61,12 +65,12 @@
             temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
-
+        */
+       
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
-        //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
-        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, value);
+        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
 
-        //palmtrie_commit(t->table); // PALMTRIE_PLUS implemented
+        palmtrie_commit(t->table); // PALMTRIE_PLUS implemented
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)

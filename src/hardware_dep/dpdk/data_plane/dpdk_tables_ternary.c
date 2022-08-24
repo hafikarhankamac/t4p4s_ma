@@ -25,27 +25,24 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
-        /*
-        char strline[256], *strlineptr;
+        char strline[256];
         acl_tcam_entry_t tcam_e;
-        char edata[256], *edataptr;
-        char emask[256], *emaskptr;
+        char edata[256];
+        char emask[256];
 
-        strlineptr = &strline[0];
-        sprintf(strlineptr, "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 20.0.1.0/24"
 
-        if (parse_acl(strline, &tcam_e) == (-1)) return;
+        memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
 
-        edataptr = &edata[0];
-        emaskptr = &emask[0];
+        //if (parse_acl(strline, &tcam_e) == (-1)) return;
 
-        sprintf(edataptr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
                            tcam_e.data[8], tcam_e.data[9], tcam_e.data[10], tcam_e.data[11], tcam_e.data[12], tcam_e.data[13], tcam_e.data[14], tcam_e.data[15]);
-        sprintf(emaskptr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        sprintf(&emask[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
-        */
+
         addr_t addr_t_key;
         addr_t addr_t_mask;
         u64 temp;
@@ -53,10 +50,10 @@
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
 
-        /*
         palmtrie_reverse(edata);
         palmtrie_reverse(emask);
 
+        /*
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
@@ -102,10 +99,9 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        //addr_t* addr_t_key;
-        //addr_t_key = (addr_t*)key;
-
         addr_t addr_t_key;
+
+        memset(&addr_t_key, 0, sizeof(addr_t));
         addr_t_key.a[0] = (*key << 24) | (*(key++) << 16) | (*(key++) << 8) | (*(key++)); 
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);

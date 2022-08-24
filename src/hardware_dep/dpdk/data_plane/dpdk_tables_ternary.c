@@ -50,12 +50,12 @@
         addr_t addr_t_mask;
         u64 temp;
 
+        memset(&addr_t_key, 0, sizeof(addr_t));
+        memset(&addr_t_mask, 0, sizeof(addr_t));
+
         /*
         palmtrie_reverse(edata);
         palmtrie_reverse(emask);
-
-        memset(&addr_t_key, 0, sizeof(addr_t));
-        memset(&addr_t_mask, 0, sizeof(addr_t));
 
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
@@ -65,22 +65,22 @@
         }
         */
 
-        addr_t_key[0] = 0x0000000000000000;
-        addr_t_mask[0] = 0xFFFFFFFFFFFFFFFF;
-        addr_t_key[1] = 0x0000000000140001;
-        addr_t_mask[1] = 0xFFFFFFFFFF000000;
-        addr_t_key[2] = 0x0000000000000000;
-        addr_t_mask[2] = 0x0000000000000000;
-        addr_t_key[3] = 0x0000000000000000; 
-        addr_t_mask[3] = 0x0000000000000000;
-        addr_t_key[4] = 0x0000000000000000; 
-        addr_t_mask[4] = 0x0000000000000000;
-        addr_t_key[5] = 0x0000000000000000;
-        addr_t_mask[5] = 0x0000000000000000;
-        addr_t_key[6] = 0x0000000000000000;
-        addr_t_mask[6] = 0x0000000000000000;
-        addr_t_key[7] = 0x0000000000000000;
-        addr_t_mask[7] = 0x0000000000000000;
+        addr_t_key.a[0] = 0x0000000000000000;
+        addr_t_mask.a[0] = 0xFFFFFFFFFFFFFFFF;
+        addr_t_key.a[1] = 0x0000000000140001;
+        addr_t_mask.a[1] = 0xFFFFFFFFFF000000;
+        addr_t_key.a[2] = 0x0000000000000000;
+        addr_t_mask.a[2] = 0x0000000000000000;
+        addr_t_key.a[3] = 0x0000000000000000; 
+        addr_t_mask.a[3] = 0x0000000000000000;
+        addr_t_key.a[4] = 0x0000000000000000; 
+        addr_t_mask.a[4] = 0x0000000000000000;
+        addr_t_key.a[5] = 0x0000000000000000;
+        addr_t_mask.a[5] = 0x0000000000000000;
+        addr_t_key.a[6] = 0x0000000000000000;
+        addr_t_mask.a[6] = 0x0000000000000000;
+        addr_t_key.a[7] = 0x0000000000000000;
+        addr_t_mask.a[7] = 0x0000000000000000;
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);

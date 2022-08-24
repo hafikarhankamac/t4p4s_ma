@@ -69,12 +69,7 @@ void           exact_add (lookup_table_t* t, uint8_t* key,                uint8_
 
 
 void             lpm_add (lookup_table_t* t, uint8_t* key, uint8_t depth, uint8_t* value);
-#ifdef T4P4S_PALMTRIE
-//void         ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, int priority, uint8_t* value);
 void         ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value);
-#else
-void         ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value);
-#endif
 
 uint8_t*    exact_lookup (lookup_table_t* t, uint8_t* key){
         my_odp_flow_entry_t      *flow, *head;

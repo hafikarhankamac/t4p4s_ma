@@ -76,7 +76,7 @@ for table in hlir.tables:
 #{     void apply_show_hit_with_key_msg(uint8_t** key, bool hit, int key_size, int key_length_bytes, const char* matchtype_name, const char* action_short_name, const char* params_txt, const char* table_info, STDPARAMS) {
 #[         dbg_bytes(key, key_size,
 #[                   " %s Lookup on " T4LIT(%s,table) "/" T4LIT(%s) "/" T4LIT(%dB) ": $$[action]{}{%s}%s%s <- %s ",
-#[                   hit ? T4LIT(++++,success) : T4LIT(HAK-XXXX,status),
+#[                   hit ? T4LIT(++++,success) : T4LIT(XXXX,status),
 #[                   table_info,
 #[                   matchtype_name,
 #[                   key_length_bytes,

@@ -8,7 +8,6 @@
     {
         struct palmtrie palmtrie;
 
-        //t->table = palmtrie_init(&palmtrie, t->palmtrie_type);
         t->table = palmtrie_init(&palmtrie, PALMTRIE_BASIC); //default PALMTRIE_BASIC implemented
     }
 #else
@@ -64,9 +63,10 @@
         }
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
-        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
+        //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
+        palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, value);
 
-        palmtrie_commit(t->table);
+        //palmtrie_commit(t->table); // PALMTRIE_PLUS implemented
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)

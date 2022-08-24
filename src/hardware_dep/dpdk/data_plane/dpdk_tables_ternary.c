@@ -34,7 +34,7 @@
 
         memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
 
-        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
+        //if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],

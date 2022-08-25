@@ -32,8 +32,6 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), *mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
-        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
-
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -47,24 +45,14 @@
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         u64 temp;
 
-        RTE_LOG(INFO, USER1, "Before reverse edata = %s\n", edata);
-        RTE_LOG(INFO, USER1, "Before reverse emask = %s\n", emask);
-
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
-
-        RTE_LOG(INFO, USER1, "After reverse edata = %s\n", edata);
-        RTE_LOG(INFO, USER1, "After reverse emask = %s\n", emask);
 
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
-        }
-
-        for ( int i = 0; i < 8; i++ ) {
-            RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX)\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
         }
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
@@ -91,7 +79,7 @@
         acl_tcam_entry_t tcam_e;
         char edata[256];
 
-        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 0); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 32); // ACL like "permit ip 0.0.0.0/0 10.0.1.2/32"
 
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
@@ -109,13 +97,6 @@
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        //addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-
-        //tmp.a[0] = 0x0200000000000000;
-        //tmp.a[1] = 0x00000000000A0000;
-
-        //u64 ret = palmtrie_lookup(t->table, tmp);
- 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }

@@ -60,25 +60,6 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        /*
-        addr_t_key.a[0] = 0x0000000000000000;
-        addr_t_mask.a[0] = 0xFFFFFFFFFFFFFFFF;
-        addr_t_key.a[1] = 0x00000000000A0000;
-        addr_t_mask.a[1] = 0xFFFFFFFFFF000000;
-        addr_t_key.a[2] = 0x0000000000000000;
-        addr_t_mask.a[2] = 0x0000000000000000;
-        addr_t_key.a[3] = 0x0000000000000000; 
-        addr_t_mask.a[3] = 0x0000000000000000;
-        addr_t_key.a[4] = 0x0000000000000000; 
-        addr_t_mask.a[4] = 0x0000000000000000;
-        addr_t_key.a[5] = 0x0000000000000000;
-        addr_t_mask.a[5] = 0x0000000000000000;
-        addr_t_key.a[6] = 0x0000000000000000;
-        addr_t_mask.a[6] = 0x0000000000000000;
-        addr_t_key.a[7] = 0x0000000000000000;
-        addr_t_mask.a[7] = 0x0000000000000000;
-        */
-
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
 
@@ -99,10 +80,31 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
+        char strline[256];
+        acl_tcam_entry_t tcam_e;
+        char edata[256];
+
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), 32); // ACL like "permit ip 0.0.0.0/0 10.0.0.2/32"
+
+        memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
+
+        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
+
+        sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                           tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
+                           tcam_e.data[8], tcam_e.data[9], tcam_e.data[10], tcam_e.data[11], tcam_e.data[12], tcam_e.data[13], tcam_e.data[14], tcam_e.data[15]);
+
         addr_t addr_t_key;
+        u64 temp;
 
         memset(&addr_t_key, 0, sizeof(addr_t));
-        addr_t_key.a[0] = (*key << 24) | (*(key++) << 16) | (*(key++) << 8) | (*(key++)); 
+
+        palmtrie_reverse(&edata[0]);
+
+        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
+            temp = palmtrie_hex2bin(edata[i]);
+            addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
+        }
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;

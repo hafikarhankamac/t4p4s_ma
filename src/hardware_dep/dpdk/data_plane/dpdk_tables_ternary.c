@@ -108,10 +108,16 @@
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        for ( i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX \n", i, addr_t_key.a[i]);
+        addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
-        u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        tmp.a[0] = 0x0200000000000000;
+        tmp.a[1] = 0x00000000000A0000;
+
+        for ( i = 0; i < 8; i++ )
+            RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX tmp[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, tmp.a[i]);
+
+        //u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        u64 ret = palmtrie_lookup(t->table, tmp);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

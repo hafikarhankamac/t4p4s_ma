@@ -391,7 +391,7 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
     int k;
     acl_ipv4_entry_t *data;
     acl_ipv4_entry_t *mask;
-    int flagc = 1;
+    int flagc;
     tcp_flag flagd[2];
     tcp_flag flagm[2];
 
@@ -426,19 +426,23 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
         flagm[1].rst = 0;
     } else if ( ACL_ACK & acl.flags ) {
         /* Ack */
+        flagc = 1;
         flagd[0].ack = 1;
         flagm[0].ack = 0;
     } else if ( ACL_NOSYN & acl.flags ) {
         /* No-syn */
+        flagc = 1;
         flagd[0].syn = 0;
         flagm[0].syn = 0;
+    } else {
+        flagc = 1;
     }
 
     /* Build TCAM */
     for ( i = 0; i < sports.count; i++ ) {
         for ( j = 0; j < dports.count; j++ ) {
             for ( k = 0; k < flagc; k++ ) {
-                //memset(&tcam_e, 0x0, sizeof(acl_tcam_entry_t));
+                memset(tcam_e, 0x0, sizeof(acl_tcam_entry_t));
                 data = (acl_ipv4_entry_t *)tcam_e->data;
                 mask = (acl_ipv4_entry_t *)tcam_e->mask;
                 memset(mask, 0xff, 16);
@@ -516,12 +520,12 @@ parse_acl(char *strline, acl_tcam_entry_t *tcam_e)
                 mask->saddr = htonl(acl.saddr.ip4.mask);
                 data->daddr = htonl(acl.daddr.ip4.prefix);
                 mask->daddr = htonl(acl.daddr.ip4.mask);
-                //data->sport = htons(sports.data[i]);
-                //mask->sport = htons(sports.mask[i]);
-                //data->dport = htons(dports.data[j]);
-                //mask->dport = htons(dports.mask[j]);
-                //data->flags = *(uint16_t *)&flagd[k];
-                //mask->flags = *(uint16_t *)&flagm[k];
+                data->sport = htons(sports.data[i]);
+                mask->sport = htons(sports.mask[i]);
+                data->dport = htons(dports.data[j]);
+                mask->dport = htons(dports.mask[j]);
+                data->flags = *(uint16_t *)&flagd[k];
+                mask->flags = *(uint16_t *)&flagm[k];
             }
         }
     }

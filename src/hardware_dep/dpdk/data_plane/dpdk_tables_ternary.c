@@ -30,9 +30,7 @@
         char edata[256];
         char emask[256];
 
-        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
-
-        memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key+3), *(key+2), *(key+1), *(key), mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
 
@@ -84,9 +82,7 @@
         acl_tcam_entry_t tcam_e;
         char edata[256];
 
-        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0 ", *key, *(key++), *(key++), *(key++), 32); // ACL like "permit ip 0.0.0.0/0 10.0.0.2/32"
-
-        memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key+3), *(key+2), *(key+1), *(key), mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 

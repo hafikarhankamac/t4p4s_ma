@@ -88,7 +88,7 @@
 
         memset(&tcam_e, 0, sizeof(acl_tcam_entry_t));
 
-        if (parse_acl(&strline[0], &tcam_e) == (-1)) return;
+        if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
@@ -106,7 +106,13 @@
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+
+        tmp.a[0] = 0x0200000000000000;
+        tmp.a[1] = 0x00000000000A0000;
+
+        //u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        u64 ret = palmtrie_lookup(t->table, tmp);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

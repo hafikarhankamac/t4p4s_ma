@@ -32,6 +32,8 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), *mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
+        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
+
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -48,7 +50,9 @@
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
 
-        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
+        int i;
+
+        for ( i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             temp = palmtrie_hex2bin(emask[i]);
@@ -84,6 +88,8 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 32); // ACL like "permit ip 0.0.0.0/0 10.0.1.2/32"
 
+        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
+
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -95,12 +101,14 @@
 
         palmtrie_reverse(&edata[0]);
 
-        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
+        int i;
+
+        for ( i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        for ( i = 0; i < 8; i++ ) {
+        for ( i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX \n", i, addr_t_key.a[i]);
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);

@@ -32,6 +32,8 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key+3), *(key+2), *(key+1), *(key), mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
+        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
+
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
         sprintf(&edata[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -48,8 +50,14 @@
         memset(&addr_t_key, 0, sizeof(addr_t));
         memset(&addr_t_mask, 0, sizeof(addr_t));
 
+        RTE_LOG(INFO, USER1, "Before reverse edata = %s\n", edata);
+        RTE_LOG(INFO, USER1, "Before reverse emask = %s\n", emask);
+
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
+
+        RTE_LOG(INFO, USER1, "After reverse edata = %s\n", edata);
+        RTE_LOG(INFO, USER1, "After reverse emask = %s\n", emask);
 
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);

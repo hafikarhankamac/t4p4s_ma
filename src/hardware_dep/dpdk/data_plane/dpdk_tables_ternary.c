@@ -32,7 +32,7 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), *mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
-        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
+        //RTE_LOG(INFO, USER1, "strline = %s\n", strline);
 
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
@@ -44,13 +44,8 @@
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        //addr_t addr_t_key;
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        //addr_t addr_t_mask;
         u64 temp;
-
-        //memset(&addr_t_key, 0, sizeof(addr_t));
-        //memset(&addr_t_mask, 0, sizeof(addr_t));
 
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
@@ -64,13 +59,13 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        for ( i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX)\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
+        //for ( i = 0; i < 8; i++ )
+        //    RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX)\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
 
-        palmtrie_commit(t->table); // PALMTRIE_PLUS implemented
+        palmtrie_commit(t->table); // if PALMTRIE_PLUS is implemented
     }
 #else
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
@@ -93,7 +88,7 @@
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 32); // ACL like "permit ip 0.0.0.0/0 10.0.1.2/32"
 
-        RTE_LOG(INFO, USER1, "strline = %s\n", strline);
+        //RTE_LOG(INFO, USER1, "strline = %s\n", strline);
 
         if (parse_acl(&strline[0], &tcam_e) == (-1)) return t->default_val;
 
@@ -102,10 +97,7 @@
                            tcam_e.data[8], tcam_e.data[9], tcam_e.data[10], tcam_e.data[11], tcam_e.data[12], tcam_e.data[13], tcam_e.data[14], tcam_e.data[15]);
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        //addr_t addr_t_key;
         u64 temp;
-
-        //memset(&addr_t_key, 0, sizeof(addr_t));
 
         palmtrie_reverse(&edata[0]);
 
@@ -116,13 +108,13 @@
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        //addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
-        tmp.a[0] = 0x0200000000000000;
-        tmp.a[1] = 0x00000000000A0000;
+        //tmp.a[0] = 0x0200000000000000;
+        //tmp.a[1] = 0x00000000000A0000;
 
-        for ( i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX tmp[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, tmp.a[i]);
+        //for ( i = 0; i < 8; i++ )
+        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX tmp[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, tmp.a[i]);
 
         //u64 ret = palmtrie_lookup(t->table, tmp);
         u64 ret = palmtrie_lookup(t->table, addr_t_key);

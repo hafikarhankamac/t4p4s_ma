@@ -19,17 +19,13 @@ palmtrie_init(struct palmtrie *palmtrie, enum palmtrie_type type)
 {
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
-    //if ( NULL == palmtrie ) {
-        palmtrie = malloc(sizeof(struct palmtrie));
-        if ( NULL == palmtrie ) {
-            /* Memory allocation error */
-            return NULL;
-        }
-        (void)memset(palmtrie, 0, sizeof(struct palmtrie));
-        palmtrie->allocated = 1;
-    //} else {
-    //    (void)memset(palmtrie, 0, sizeof(struct palmtrie));
-    //}
+    palmtrie = malloc(sizeof(struct palmtrie));
+    if ( NULL == palmtrie ) {
+        /* Memory allocation error */
+        return NULL;
+    }
+    (void)memset(palmtrie, 0, sizeof(struct palmtrie));
+    palmtrie->allocated = 1;
 
     /* Set the type and initialize the type-specific data structure */
     switch ( type ) {

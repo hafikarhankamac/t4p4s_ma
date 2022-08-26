@@ -124,8 +124,8 @@
         for ( i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX tmp[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, tmp.a[i]);
 
-        //u64 ret = palmtrie_lookup(t->table, addr_t_key);
-        u64 ret = palmtrie_lookup(t->table, tmp);
+        //u64 ret = palmtrie_lookup(t->table, tmp);
+        u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

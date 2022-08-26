@@ -91,7 +91,7 @@
         acl_tcam_entry_t tcam_e;
         char edata[256];
 
-        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 0); // ACL like "permit ip 0.0.0.0/0 10.0.1.2/0"
+        sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), 32); // ACL like "permit ip 0.0.0.0/0 10.0.1.2/32"
 
         RTE_LOG(INFO, USER1, "strline = %s\n", strline);
 

@@ -43,12 +43,14 @@
                            tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
 
-        addr_t addr_t_key;
-        addr_t addr_t_mask;
+        addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        //addr_t addr_t_key;
+        addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        //addr_t addr_t_mask;
         u64 temp;
 
-        memset(&addr_t_key, 0, sizeof(addr_t));
-        memset(&addr_t_mask, 0, sizeof(addr_t));
+        //memset(&addr_t_key, 0, sizeof(addr_t));
+        //memset(&addr_t_mask, 0, sizeof(addr_t));
 
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
@@ -99,10 +101,11 @@
                            tcam_e.data[0], tcam_e.data[1], tcam_e.data[2], tcam_e.data[3], tcam_e.data[4], tcam_e.data[5], tcam_e.data[6], tcam_e.data[7],
                            tcam_e.data[8], tcam_e.data[9], tcam_e.data[10], tcam_e.data[11], tcam_e.data[12], tcam_e.data[13], tcam_e.data[14], tcam_e.data[15]);
 
-        addr_t addr_t_key;
+        addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        //addr_t addr_t_key;
         u64 temp;
 
-        memset(&addr_t_key, 0, sizeof(addr_t));
+        //memset(&addr_t_key, 0, sizeof(addr_t));
 
         palmtrie_reverse(&edata[0]);
 

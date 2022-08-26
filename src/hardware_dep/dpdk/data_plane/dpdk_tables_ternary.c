@@ -8,7 +8,8 @@
     {
         struct palmtrie palmtrie;
 
-        t->table = palmtrie_init(&palmtrie, PALMTRIE_BASIC); //default PALMTRIE_BASIC implemented
+        //t->table = palmtrie_init(&palmtrie, PALMTRIE_BASIC); // default PALMTRIE_BASIC is implemented
+        t->table = palmtrie_init(&palmtrie, PALMTRIE_PLUS); // default PALMTRIE_PLUS is implemented
     }
 #else
     void ternary_create(lookup_table_t* t, int socketid)
@@ -50,9 +51,7 @@
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
 
-        int i;
-
-        for ( i = 0; i < (ssize_t)strlen(edata); i++ ) {
+        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             temp = palmtrie_hex2bin(emask[i]);
@@ -101,22 +100,14 @@
 
         palmtrie_reverse(&edata[0]);
 
-        int i;
-
-        for ( i = 0; i < (ssize_t)strlen(edata); i++ ) {
+        for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        //addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-
-        //tmp.a[0] = 0x0200000000000000;
-        //tmp.a[1] = 0x00000000000A0000;
-
         //for ( i = 0; i < 8; i++ )
-        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX tmp[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, tmp.a[i]);
+        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
-        //u64 ret = palmtrie_lookup(t->table, tmp);
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }

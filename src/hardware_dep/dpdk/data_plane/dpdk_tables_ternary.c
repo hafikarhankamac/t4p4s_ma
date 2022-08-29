@@ -81,6 +81,7 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
+        /*
         char strline[256];
         acl_tcam_entry_t tcam_e;
         char edata[256];
@@ -104,11 +105,17 @@
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
+        */
+
+        addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        tmp.a[0] = 0x0200000000000000;
+        tmp.a[1] = 0x00000000000A0000;
 
         //for ( i = 0; i < 8; i++ )
         //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
-        u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        //u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        u64 ret = palmtrie_lookup(t->table, tmp);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

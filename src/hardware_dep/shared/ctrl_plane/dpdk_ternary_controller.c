@@ -44,7 +44,8 @@ int process_ternary(const char* line) {
  
     printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
  
-    send_ternary_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+    //send_ternary_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+    send_ternary_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
 
     return 0;
 }

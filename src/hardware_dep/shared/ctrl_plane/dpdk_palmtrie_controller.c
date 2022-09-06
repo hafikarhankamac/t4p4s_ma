@@ -45,7 +45,8 @@ int process_ternary(const char* line) {
  
     printf("Process PALMTRIE - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
  
-    send_ternary_palmtrie_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+    //send_ternary_palmtrie_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+    send_ternary_palmtrie_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
 
     return 0;
 }

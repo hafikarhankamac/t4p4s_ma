@@ -117,8 +117,8 @@
         addr_t_key.a[0] = *key_ptr;
         addr_t_key.a[1] = *(key_ptr + 1);
 
-        for ( int i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
+        //for ( int i = 0; i < 8; i++ )
+        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         //u64 ret = palmtrie_lookup(t->table, tmp);

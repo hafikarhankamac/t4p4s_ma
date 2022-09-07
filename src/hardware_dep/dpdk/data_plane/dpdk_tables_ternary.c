@@ -107,32 +107,21 @@
         }
         */
 
-        addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        tmp.a[0] = 0x0200000000000000;
-        tmp.a[1] = 0x00000000000A0000;
-
-        //for ( int i = 0; i < 16; i++ ) {
-        //    RTE_LOG(INFO, USER1, "key[%ld]: %02x", i, *key);
-        //    key++;
-        //}
-        //RTE_LOG(INFO, USER1, "\n");
+        //addr_t tmp = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        //tmp.a[0] = 0x0200000000000000;
+        //tmp.a[1] = 0x00000000000A0000;
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        u64 temp;
-        for ( int i = 0; i < 16; i++ ) {
-            temp = *key;
-            addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
-            key++;
-        }
+        u64* key_ptr = (u64*)key;
+
+        addr_t_key.[0] = *key_ptr;
+        addr_t_key.[0] = *(key_ptr + 1);
 
         for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
-        //for ( int i = 0; i < 8; i++ )
-        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
-
-        //u64 ret = palmtrie_lookup(t->table, addr_t_key);
-        u64 ret = palmtrie_lookup(t->table, tmp);
+        u64 ret = palmtrie_lookup(t->table, addr_t_key);
+        //u64 ret = palmtrie_lookup(t->table, tmp);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
 #else

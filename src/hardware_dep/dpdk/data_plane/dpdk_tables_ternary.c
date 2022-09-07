@@ -125,7 +125,7 @@
             key++;
         }
 
-        for ( i = 0; i < 8; i++ )
+        for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
         //for ( int i = 0; i < 8; i++ )

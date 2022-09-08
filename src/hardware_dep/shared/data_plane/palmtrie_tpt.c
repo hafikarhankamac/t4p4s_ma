@@ -193,7 +193,7 @@ _add_internal(struct palmtrie_tpt_node **node, addr_t addr, addr_t mask,
         n->left = *node;
     }
     if ( n->bit == (*node)->bit ) {
-        fprintf(stderr, "Error in _add_internal()\n");
+        fprintf(stderr, "PALMTRIE_TPT - Error in _add_internal()\n");
         return -1;
     }
 

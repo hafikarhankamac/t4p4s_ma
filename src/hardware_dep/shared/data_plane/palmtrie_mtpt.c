@@ -175,7 +175,7 @@ _add_leaf(struct palmtrie_mtpt_node_data **node, addr_t addr, addr_t mask,
         if ( bit < -PALMTRIE_MTPT_STRIDE ) {
             /* Same node */
             free(n);
-            printf("xxx %llx %llx/%llx %llx , %llx %llx/%llx %llx %d xxx",
+            fprintf(stderr, "PALMTRIE_MTPT - %llx %llx/%llx %llx , %llx %llx/%llx %llx %d\n",
                    (*node)->addr.a[0], (*node)->addr.a[1],
                    (*node)->mask.a[0], (*node)->mask.a[1],
                    addr.a[0], addr.a[1], mask.a[0], mask.a[1], cbit);
@@ -300,7 +300,7 @@ _add_internal(struct palmtrie_mtpt_node_data **node, addr_t addr, addr_t mask,
         n->children[aidx] = *node;
     }
     if ( n->bit == (*node)->bit ) {
-        printf("Error in _add_internal()\n");
+        fprintf(stderr, "PALMTRIE_MTPT - Error in _add_internal()\n");
         return -1;
     }
 
@@ -496,7 +496,7 @@ _lookup_pfs(struct palmtrie_mtpt_node_data *node, addr_t addr, int bit,
         }
 
         if ( nr >= _STACK_DEPTH ) {
-            fprintf(stderr, "Fatal error: Stack overflow\n");
+            fprintf(stderr, "PALMTRIE_MTPT - Fatal error: Stack overflow\n");
         }
     }
 

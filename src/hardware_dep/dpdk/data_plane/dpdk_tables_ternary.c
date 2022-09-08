@@ -66,7 +66,7 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        for ( i = 0; i < 8; i++ )
+        for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "Add addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);

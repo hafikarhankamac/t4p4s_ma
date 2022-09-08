@@ -123,7 +123,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
         cbase += popcnt(bitmap[i]);
         t->nodes.used += popcnt(bitmap[i]);
         if ( t->nodes.used > t->nodes.nr ) {
-            fprintf(stderr, "Too many nodes\n");
+            fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
             return -1;
         }
     }
@@ -133,7 +133,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
         pn->u.inode.bitmap_c[i] = bitmap[i];
         t->nodes.used += popcnt(bitmap[i]);
         if ( t->nodes.used > t->nodes.nr ) {
-            fprintf(stderr, "Too many nodes\n");
+            fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
             return -1;
         }
     }
@@ -142,7 +142,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
     pn->u.inode.bitmap_c[0] = bitmap[0];
     t->nodes.used += popcnt(bitmap[0]);
     if ( t->nodes.used > t->nodes.nr ) {
-        fprintf(stderr, "Too many nodes\n");
+        fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
         return -1;
     }
 #endif
@@ -202,7 +202,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
         tbase += popcnt(bitmap[i]);
         t->nodes.used += popcnt(bitmap[i]);
         if ( t->nodes.used > t->nodes.nr ) {
-            fprintf(stderr, "Too many nodes\n");
+            fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
             return -1;
         }
     }
@@ -212,7 +212,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
         pn->u.inode.bitmap_t[i] = bitmap[i];
         t->nodes.used += popcnt(bitmap[i]);
         if ( t->nodes.used > t->nodes.nr ) {
-            fprintf(stderr, "Too many nodes\n");
+            fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
             return -1;
         }
     }
@@ -221,7 +221,7 @@ _traverse_node(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *pn,
     pn->u.inode.bitmap_t[0] = bitmap[0];
     t->nodes.used += popcnt(bitmap[0]);
     if ( t->nodes.used > t->nodes.nr ) {
-        fprintf(stderr, "Too many nodes\n");
+        fprintf(stderr, "PALMTRIE_POPMTPT - Too many nodes\n");
         return -1;
     }
 #endif
@@ -270,7 +270,7 @@ _convert(struct palmtrie_popmtpt *popmtpt)
     popmtpt->nodes.ptr = malloc(sizeof(struct palmtrie_popmtpt_node)
                                 * popmtpt->nodes.nr);
     if ( NULL == popmtpt->nodes.ptr ) {
-        fprintf(stderr, "Memory allocation error\n");
+        fprintf(stderr, "PALMTRIE_POPMTPT - Memory allocation error\n");
         return -1;
     }
     popmtpt->nodes.used = 0;
@@ -483,7 +483,7 @@ _lookup(struct palmtrie_popmtpt *t, struct palmtrie_popmtpt_node *node,
 
 #endif
         if ( __builtin_expect(!!(nr >= _STACK_DEPTH), 0) ) {
-            fprintf(stderr, "Fatal error: Stack overflow\n");
+            fprintf(stderr, "PALMTRIE_POPMTPT - Fatal error: Stack overflow\n");
         }
     }
 

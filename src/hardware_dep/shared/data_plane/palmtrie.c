@@ -198,7 +198,7 @@ palmtrie_hex2bin(char c)
 }
 
 void
-palmtrie_string2hexString(char *input, char *output)
+palmtrie_string2hexstring(char *input, char *output)
 {
     int loop;
     int i; 
@@ -208,11 +208,60 @@ palmtrie_string2hexString(char *input, char *output)
     
     while (input[loop] != '\0') {
         sprintf((char*)(output + i), "%02X", input[loop]);
+
         loop += 1;
+
         i += 2;
     }
 
     output[i++] = '\0';
+}
+
+unsigned
+palmtrie_char2digit(int ch)
+{
+    static const char Hex[] = "0123456789ABCDEF0123456789abcdef";
+    char *p = memchr(Hex, ch, 32);
+
+    if (p)
+        return (unsigned) (p - Hex) % 16;
+
+    return (unsigned)(-1);
+}
+
+char *
+palmtrie_hexstring2string(char *dest, size_t size, const char *src)
+{
+    char *p = dest;
+
+    if (size <= 0)
+        return NULL;
+
+    size--;
+
+    while (*src) {
+        if (size == 0) return NULL;
+
+        size--;
+
+        unsigned msb = palmtrie_char2digit(*src++);
+
+        if (msb > 15) return NULL;
+
+        unsigned lsb = char2digit(*src++);
+        
+        if (lsb > 15) return NULL;
+        
+        char ch = (char) (msb * 16 + lsb);
+
+        if (ch == 0) return NULL;
+
+        *p++ = ch;
+    }
+
+    *p = '\0';
+
+    return dest;
 }
 
 /*

@@ -59,19 +59,22 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
         */
-        char ekey[256];
-        char emask[256];
+        char buffer[256];
 
-        palmtrie_string2hexString(key, ekey);
-        palmtrie_string2hexString(mask, emask);
+        char* ekey = palmtrie_hexstring2string(buffer, sizeof buffer, key);
+        char* emask = palmtrie_hexstring2string(buffer, sizeof buffer, mask);
 
         palmtrie_reverse(ekey);
         palmtrie_reverse(emask);
 
         for ( int i = 0; i < (ssize_t)strlen(ekey); i++ ) {
-            temp = palmtrie_hex2bin(ekey[i]);
+            //temp = palmtrie_hex2bin(ekey[i]);
+            temp = palmtrie_hex2bin(*ekey);
+            ekey++;
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
-            temp = palmtrie_hex2bin(emask[i]);
+            //temp = palmtrie_hex2bin(emask[i]);
+            temp = palmtrie_hex2bin(*emask);
+            emask++;
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 

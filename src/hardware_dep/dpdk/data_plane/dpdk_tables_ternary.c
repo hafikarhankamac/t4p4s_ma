@@ -64,8 +64,8 @@
         // for Bits
         char buffer[256];
 
-        char* ekey = palmtrie_hexstring2string(buffer, sizeof buffer, key);
-        char* emask = palmtrie_hexstring2string(buffer, sizeof buffer, mask);
+        char* ekey = palmtrie_hexstring2string(buffer, 64 (char *)key);
+        char* emask = palmtrie_hexstring2string(buffer, 64, (char *)mask);
 
         palmtrie_reverse(ekey);
         palmtrie_reverse(emask);

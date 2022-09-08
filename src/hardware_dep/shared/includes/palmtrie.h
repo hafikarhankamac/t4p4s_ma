@@ -7,7 +7,6 @@
 #define _PALMTRIE_H
 
 #include <stdint.h>
-#include <stddef.h>
 
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -319,14 +318,14 @@ struct palmtrie * palmtrie_init(struct palmtrie *, enum palmtrie_type);
 int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
 //void palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
 u64 palmtrie_lookup(struct palmtrie *, addr_t);
-//uint8_t* palmtrie_lookup(struct palmtrie *, addr_t);
+//uint8_t * palmtrie_lookup(struct palmtrie *, addr_t);
 int palmtrie_commit(struct palmtrie *);
 
 void palmtrie_reverse(char *);
 int palmtrie_hex2bin(char);
 void palmtrie_string2hexstring(char *input, char *output);
 unsigned palmtrie_char2digit(int ch);
-char *palmtrie_hexstring2string(char *dest, size_t size, const char *src);
+char * palmtrie_hexstring2string(char *dest, int size, char *src);
 
 
 /* in palmtrie_sl.c */

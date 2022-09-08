@@ -221,7 +221,7 @@ unsigned
 palmtrie_char2digit(int ch)
 {
     static const char Hex[] = "0123456789ABCDEF0123456789abcdef";
-    char *p = memchr(Hex, ch, 32);
+    char* p = memchr(Hex, ch, 32);
 
     if (p)
         return (unsigned) (p - Hex) % 16;
@@ -229,17 +229,17 @@ palmtrie_char2digit(int ch)
     return (unsigned)(-1);
 }
 
-char *
-palmtrie_hexstring2string(char *dest, size_t size, const char *src)
+char * palmtrie_hexstring2string(char* dest, int size, char* src)
 {
-    char *p = dest;
+    char* p = dest;
 
     if (size <= 0)
         return NULL;
 
-    size--;
+    //size--;
 
-    while (*src) {
+    //while (*src) {
+    while (size > 0) {
         if (size == 0) return NULL;
 
         size--;

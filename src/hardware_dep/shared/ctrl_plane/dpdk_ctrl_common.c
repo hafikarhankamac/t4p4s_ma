@@ -125,7 +125,7 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
 }
 
 
-int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
+int send_ternary_ipv4_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
 {
     struct p4_header* h = create_p4_header(buffer, 0, 2048);
     struct p4_add_table_entry* te = create_p4_add_table_entry(buffer, 0, 2048);
@@ -147,12 +147,39 @@ int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const c
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %hhd %s.%s %hhd.%hhd.%hhd.%hhd %hhx%hhx%hhx%hhx\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3]);
+    printf("<<<< TERNARY %s %s.%s %hhd.%hhd.%hhd.%hhd %hhx%hhx%hhx%hhx %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
     return 0;
 }
 
 
-int send_ternary_palmtrie_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
+int send_ternary_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
+{
+    struct p4_header* h = create_p4_header(buffer, 0, 2048);
+    struct p4_add_table_entry* te = create_p4_add_table_entry(buffer, 0, 2048);
+    strcpy(te->table_name, table_name);
+
+    struct p4_field_match_ternary* ternary = add_p4_field_match_ternary(te, 2048);
+    strcpy(ternary->header.name, translate(header_name));
+    memcpy(ternary->bitmap, bitmap, num_of_bytes);
+    memcpy(ternary->mask, mask, num_of_bytes);
+    ternary->length = 2*num_of_bytes*8+1*8; // Bitmap + Mask + Priority
+    ternary->priority = priority;
+
+    struct p4_action* a = add_p4_action(h, 2048);
+    strcpy(a->description.name, translate(action_name));
+
+    netconv_p4_header(h);
+    netconv_p4_add_table_entry(te);
+    netconv_p4_field_match_ternary(ternary);
+    netconv_p4_action(a);
+
+    send_p4_msg(c, buffer, 2048);
+    printf("<<<< TERNARY %s %s.%s %32s %32s %hhd\n", table_name, header_name, action_name, bitmap, mask, priority);
+    return 0;
+}
+
+
+int send_ternary_palmtrie_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
 {
     struct p4_header* h = create_p4_header(buffer, 0, 2048);
     struct p4_add_table_entry* te = create_p4_add_table_entry(buffer, 0, 2048);
@@ -174,7 +201,34 @@ int send_ternary_palmtrie_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, 
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< PALMTRIE %s %hhd %s.%s %hhd.%hhd.%hhd.%hhd %hhd\n", table_name, priority, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask);
+    printf("<<<< PALMTRIE %s %s.%s %hhd.%hhd.%hhd.%hhd %hhd %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask, priority);
+    return 0;
+}
+
+
+int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name)
+{
+    struct p4_header* h = create_p4_header(buffer, 0, 2048);
+    struct p4_add_table_entry* te = create_p4_add_table_entry(buffer, 0, 2048);
+    strcpy(te->table_name, table_name);
+
+    struct p4_field_match_ternary* ternary = add_p4_field_match_ternary(te, 2048);
+    strcpy(ternary->header.name, translate(header_name));
+    memcpy(ternary->bitmap, bitmap, num_of_bytes);
+    memcpy(ternary->mask, mask, num_of_bytes);
+    ternary->length = 2*num_of_bytes*8+1*8; // Bitmap + Mask + Priority
+    ternary->priority = priority;
+
+    struct p4_action* a = add_p4_action(h, 2048);
+    strcpy(a->description.name, translate(action_name));
+
+    netconv_p4_header(h);
+    netconv_p4_add_table_entry(te);
+    netconv_p4_field_match_ternary(ternary);
+    netconv_p4_action(a);
+
+    send_p4_msg(c, buffer, 2048);
+    printf("<<<< PALMTRIE %s %s.%s %32s %32s %hhd\n", table_name, header_name, action_name, bitmap, mask, priority);
     return 0;
 }
 

@@ -33,8 +33,10 @@ void undigest_ip(digest_ip_t* dig, void* digest);
 
 int send_exact_entry(uint8_t port, uint8_t mac[6], const char* table_name, const char* header_name, const char* action_name, const char* par1, const char* par2);
 int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name, const char* header_name, const char* action_name, int i1, int i2, int i3);
-int send_ternary_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
-int send_ternary_palmtrie_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_ipv4_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_palmtrie_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
 
 int fill_teid_rate_limiter_table(uint32_t teid, const char* table_name, const char* header_name, const char* mode);
 

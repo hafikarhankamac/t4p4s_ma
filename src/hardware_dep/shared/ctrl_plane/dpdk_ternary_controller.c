@@ -14,6 +14,56 @@
 #define MAX_MACS 60000
 #define MAX_IPS 60000
 
+/*
+ * Xorshift
+ * Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
+*/
+
+uint32_t xor32_state;
+
+static __inline__ uint32_t
+xor32(uint32_t state)
+{
+	uint64_t x = state;
+
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+
+	return xor32_state = x;
+}
+
+uint64_t xor64_state;
+
+static __inline__ uint64_t
+xor64(uint64_t state)
+{
+	uint64_t x = state;
+
+	x ^= x << 13;
+	x ^= x >> 7;
+	x ^= x << 17;
+
+	return xor64_state = x;
+}
+
+static __inline__ uint32_t
+xor128(void)
+{
+    static uint32_t x = 123456789;
+    static uint32_t y = 362436069;
+    static uint32_t z = 521288629;
+    static uint32_t w = 88675123;
+    uint32_t t;
+
+    t = x ^ (x<<11);
+    x = y;
+    y = z;
+    z = w;
+
+    return w = (w ^ (w>>19)) ^ (t ^ (t >> 8));
+}
+
 controller c;
 
 void dhf(void* b) {
@@ -33,7 +83,7 @@ int process_set_default(const char* line) {
     return 0;
 }
 
-int process_ternary(const char* line) {
+int process_ternary_ipv4(const char* line) {
     char table_name[100];
     uint8_t ip[4];
     uint8_t mask[4];
@@ -42,10 +92,46 @@ int process_ternary(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hhx:%hhx:%hhx:%hhx %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask[0], &mask[1], &mask[2], &mask[3], &priority);
     if (10 != matches) return -1;
  
-    printf("Process TERNARY - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+    printf("Process TERNARY-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
  
-    //send_ternary_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
-    send_ternary_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
+    //send_ternary_ipv4_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
+    send_ternary_ipv4_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
+
+    return 0;
+}
+
+int process_ternary_bits(const char* line) {
+    char table_name[100];
+    uint8_t bitmap[100];
+    uint8_t mask[100];
+    uint8_t num_of_bytes;
+    uint8_t priority;
+
+    int matches = sscanf(line, "%*s %s %hhd %32s %32s %hhd", table_name, &num_of_bytes, &bitmap[0], &mask[0], &priority);
+    if (5 != matches) return -1;
+
+    printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, bitmap, mask, priority);
+ 
+    send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
+
+    return 0;
+}
+
+int process_random_bits(const char* line) {
+    char table_name[100];
+    int table_size;
+    uint8_t byte_size;
+
+    int matches = sscanf(line, "%*s %s %hhd", table_name, &table_size, &byte_size);
+    if (3 != matches) return -1;
+
+    printf("Process RANDOM-BITS - Table Size: %hhd Byte Size: %hhd\n", table_size, byte_size);
+
+    xor64_state = 88172645463325252LL;
+
+    //for ( int i = 0; i < table_size; i++) {
+        //send_ternary_random_bits_entry(ip, htonl((1ULL << (32 - (rand() % (32 - 1 + 1)) + 1)) - 1), table_name, "payload.lookup", ".reflect");
+    //}
 
     return 0;
 }
@@ -59,7 +145,9 @@ typedef struct config_processor_s {
 
 config_processor_t code_processors[] = {
     { "SET-DEFAULT", process_set_default },
-    { "TERNARY", process_ternary },
+    { "TERNARY-IPv4", process_ternary_ipv4 },
+    { "TERNARY-BITS", process_ternary_bits },
+    { "RANDOM-BITS", process_random_bits },
     { {0}, 0 },
 };
 

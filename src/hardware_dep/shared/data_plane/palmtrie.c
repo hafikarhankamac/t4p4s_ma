@@ -248,7 +248,7 @@ palmtrie_hexstring2string(char *dest, size_t size, const char *src)
 
         if (msb > 15) return NULL;
 
-        unsigned lsb = char2digit(*src++);
+        unsigned lsb = palmtrie_char2digit(*src++);
         
         if (lsb > 15) return NULL;
         

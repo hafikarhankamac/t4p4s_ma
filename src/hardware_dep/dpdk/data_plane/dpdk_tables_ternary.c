@@ -62,7 +62,8 @@
         palmtrie_reverse(key);
         palmtrie_reverse(mask);
 
-        for ( int i = 0; i < (ssize_t)strlen(key); i++ ) {
+        //for ( int i = 0; i < (ssize_t)strlen(key); i++ ) {
+        for ( int i = 0; i < 32; i++ ) {
             temp = palmtrie_hex2bin(*key);
             key++;
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);

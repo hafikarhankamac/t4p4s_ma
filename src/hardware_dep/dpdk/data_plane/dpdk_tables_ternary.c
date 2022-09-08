@@ -66,8 +66,8 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 
-        //for ( i = 0; i < 8; i++ )
-        //    RTE_LOG(INFO, USER1, "(addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX)\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
+        for ( i = 0; i < 8; i++ )
+            RTE_LOG(INFO, USER1, "Add addr_t_key[%ld]: 0x%.16lX addr_t_mask[%ld]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
@@ -125,8 +125,8 @@
         addr_t_key.a[0] = *key_ptr;
         addr_t_key.a[1] = *(key_ptr + 1);
 
-        //for ( int i = 0; i < 8; i++ )
-        //    RTE_LOG(INFO, USER1, "addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
+        for ( int i = 0; i < 8; i++ )
+            RTE_LOG(INFO, USER1, "Lookup addr_t_key[%ld]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         //u64 ret = palmtrie_lookup(t->table, tmp);

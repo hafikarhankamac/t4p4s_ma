@@ -30,6 +30,7 @@
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         u64 temp;
 
+        // for IPv4
         /*
         char strline[256];
         acl_tcam_entry_t tcam_e;
@@ -59,6 +60,8 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
         */
+
+        // for Bits
         char buffer[256];
 
         char* ekey = palmtrie_hexstring2string(buffer, sizeof buffer, key);

@@ -26,6 +26,10 @@
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
 
+        addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
+        u64 temp;
+
         /*
         char strline[256];
         acl_tcam_entry_t tcam_e;
@@ -44,11 +48,7 @@
         sprintf(&emask[0], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                            tcam_e.mask[0], tcam_e.mask[1], tcam_e.mask[2], tcam_e.mask[3], tcam_e.mask[4], tcam_e.mask[5], tcam_e.mask[6], tcam_e.mask[7],
                            tcam_e.mask[8], tcam_e.mask[9], tcam_e.mask[10], tcam_e.mask[11], tcam_e.mask[12], tcam_e.mask[13], tcam_e.mask[14], tcam_e.mask[15]);
-        */
-        addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        u64 temp;
-        /*
+
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
 
@@ -59,16 +59,19 @@
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
         */
-        palmtrie_reverse(key);
-        palmtrie_reverse(mask);
+        char ekey[256];
+        char emask[256];
 
-        //for ( int i = 0; i < (ssize_t)strlen(key); i++ ) {
-        for ( int i = 0; i < 32; i++ ) {
-            temp = palmtrie_hex2bin(*key);
-            key++;
+        palmtrie_string2hexString(key, ekey);
+        palmtrie_string2hexString(mask, emask);
+
+        palmtrie_reverse(ekey);
+        palmtrie_reverse(emask);
+
+        for ( int i = 0; i < (ssize_t)strlen(ekey); i++ ) {
+            temp = palmtrie_hex2bin(ekey[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
-            temp = palmtrie_hex2bin(*mask);
-            mask++;
+            temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 

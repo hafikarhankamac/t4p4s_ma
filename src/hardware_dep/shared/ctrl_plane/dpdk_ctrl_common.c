@@ -216,7 +216,7 @@ int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint
     strcpy(ternary->header.name, translate(header_name));
     memcpy(ternary->bitmap, bitmap, num_of_bytes);
     memcpy(ternary->mask, mask, num_of_bytes);
-    ternary->length = 2*2*num_of_bytes*8+1*8; // Bitmap + Mask + Priority
+    ternary->length = 2*num_of_bytes*8+1*8; // Bitmap + Mask + Priority
     ternary->priority = priority;
 
     struct p4_action* a = add_p4_action(h, 2048);

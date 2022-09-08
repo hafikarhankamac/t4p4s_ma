@@ -323,6 +323,7 @@ int palmtrie_commit(struct palmtrie *);
 
 void palmtrie_reverse(char *);
 int palmtrie_hex2bin(char);
+void palmtrie_string2hexString(char *input, char *output)
 
 /* in palmtrie_sl.c */
 int palmtrie_sl_add(struct palmtrie *, addr_t, addr_t, int, void *);

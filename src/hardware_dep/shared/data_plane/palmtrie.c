@@ -197,6 +197,24 @@ palmtrie_hex2bin(char c)
     }
 }
 
+void
+palmtrie_string2hexString(char *input, char *output)
+{
+    int loop;
+    int i; 
+    
+    loop = 0;
+    i = 0;
+    
+    while (input[loop] != '\0') {
+        sprintf((char*)(output + i), "%02X", input[loop]);
+        loop += 1;
+        i += 2;
+    }
+
+    output[i++] = '\0';
+}
+
 /*
  * Local variables:
  * tab-width: 4

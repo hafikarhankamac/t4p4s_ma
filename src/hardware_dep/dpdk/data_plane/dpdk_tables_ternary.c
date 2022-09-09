@@ -85,6 +85,15 @@
         palmtrie_reverse(key);
         palmtrie_reverse(mask);
 
+        for ( int i = 0; i < 16; i++ ) {
+            RTE_LOG(INFO, USER1, "key[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, *key, i, *mask);
+            key++;
+            mask++;
+        }
+
+        key = tmpkey;
+        mask = tmpmask;
+
         for ( int i = 0; i < 16; i++ ) { // number of bytes
             //temp = palmtrie_hex2bin(ekey[i]);
             //temp = palmtrie_hex2bin(*ekey);

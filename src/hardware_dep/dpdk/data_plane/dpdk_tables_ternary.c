@@ -70,6 +70,15 @@
         //palmtrie_reverse(ekey);
         //palmtrie_reverse(emask);
 
+        uint8_t* tmpkey = key;
+        uint8_t* tmpmask = mask;
+
+        for ( int i = 0; i < 16; i++ ) {
+            RTE_LOG(INFO, USER1, "key[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, *tmpkey, i, *tmpmask);
+            tmpkey++;
+            tmpmask++;
+        }
+
         palmtrie_reverse(key);
         palmtrie_reverse(mask);
 

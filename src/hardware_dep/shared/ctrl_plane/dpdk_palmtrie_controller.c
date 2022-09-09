@@ -133,6 +133,7 @@ int process_ternary_bits(const char* line) {
         if (!(i % 2)) {
             bitmap[(i - 1) / 2] = hex2bin(tbitmap[i]) << 4 | hex2bin(tbitmap[i + 1]);
             mask[(i - 1) / 2] = hex2bin(tmask[i]) << 4 | hex2bin(tmask[i + 1]);
+            printf("Process PALMTRIE-BITS - bitmap[%ld] = 0x%02X mask[%ld] = 0x%02X", (i - 1) / 2, bitmap[(i - 1) / 2], (i - 1) / 2, mask[(i - 1) / 2]);
         }
     }
 

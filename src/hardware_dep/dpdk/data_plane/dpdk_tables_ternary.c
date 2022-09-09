@@ -73,7 +73,7 @@
         palmtrie_reverse(key);
         palmtrie_reverse(mask);
 
-        for ( int i = 0; i < (ssize_t)strlen(ekey); i++ ) {
+        for ( int i = 0; i < 16; i++ ) { // number of bytes
             //temp = palmtrie_hex2bin(ekey[i]);
             //temp = palmtrie_hex2bin(*ekey);
             //ekey++;

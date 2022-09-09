@@ -74,10 +74,13 @@
         uint8_t* tmpmask = mask;
 
         for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "key[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, *tmpkey, i, *tmpmask);
-            tmpkey++;
-            tmpmask++;
+            RTE_LOG(INFO, USER1, "key[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, *key, i, *mask);
+            key++;
+            mask++;
         }
+
+        key = tmpkey;
+        mask = tmpmask;
 
         palmtrie_reverse(key);
         palmtrie_reverse(mask);

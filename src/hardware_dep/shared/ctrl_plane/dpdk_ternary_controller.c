@@ -128,12 +128,14 @@ int process_ternary_bits(const char* line) {
 
     printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
  
-     for (int i = 0; i < (num_of_bytes * 2); i++) {
+    for (int i = 0; i < (num_of_bytes * 2); i++) {
         if (!(i % 2)) {
             bitmap[(i - 1) / 2] = hex2bin(tbitmap[i]) << 4 | hex2bin(tbitmap[i + 1]);
             mask[(i - 1) / 2] = hex2bin(tmask[i]) << 4 | hex2bin(tmask[i + 1]);
         }
     }
+    for (int i = 0; i < num_of_bytes; i++)
+        printf("Process TERNARY-BITS - bitmap[%ld] = 0x%02X mask[%ld] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 

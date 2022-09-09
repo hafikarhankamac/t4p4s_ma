@@ -104,7 +104,7 @@ int process_ternary_ipv4(const char* line) {
     uint32_t mask;
     uint8_t priority;
 
-    int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd/%hhd %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask, &priority);
+    int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd/%d %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask, &priority);
     if (7 != matches) return -1;
  
     printf("Process PALMTRIE-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
@@ -138,7 +138,7 @@ int process_ternary_bits(const char* line) {
         }
     }
     for (int i = 0; i < num_of_bytes; i++)
-        printf("Process PALMTRIE-BITS - bitmap[%ld] = 0x%02X mask[%ld] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+        printf("Process PALMTRIE-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 
@@ -150,10 +150,10 @@ int process_random_bits(const char* line) {
     int table_size;
     uint8_t num_of_bytes;
 
-    int matches = sscanf(line, "%*s %s %hhd", table_name, &table_size, &num_of_bytes);
+    int matches = sscanf(line, "%*s %s %d %hhd", table_name, &table_size, &num_of_bytes);
     if (3 != matches) return -1;
 
-    printf("Process RANDOM-BITS - Table Size: %hhd Byte Size: %hhd\n", table_size, num_of_bytes);
+    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd\n", table_size, num_of_bytes);
 
     xor64_state = 88172645463325252LL;
 

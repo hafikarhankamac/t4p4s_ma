@@ -137,7 +137,7 @@ int process_ternary_bits(const char* line) {
         }
     }
     for (int i = 0; i < num_of_bytes; i++)
-        printf("Process TERNARY-BITS - bitmap[%ld] = 0x%02X mask[%ld] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+        printf("Process TERNARY-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 
@@ -149,10 +149,10 @@ int process_random_bits(const char* line) {
     int table_size;
     uint8_t byte_size;
 
-    int matches = sscanf(line, "%*s %s %hhd", table_name, &table_size, &byte_size);
+    int matches = sscanf(line, "%*s %s %d %hhd", table_name, &table_size, &byte_size);
     if (3 != matches) return -1;
 
-    printf("Process RANDOM-BITS - Table Size: %hhd Byte Size: %hhd\n", table_size, byte_size);
+    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd\n", table_size, byte_size);
 
     xor64_state = 88172645463325252LL;
 

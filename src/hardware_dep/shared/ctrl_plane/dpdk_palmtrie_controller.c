@@ -130,9 +130,9 @@ int process_ternary_bits(const char* line) {
     printf("Process PALMTRIE-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
 
     for (int i = 0; i < (num_of_bytes * 2); i++) {
-        if (!(i % 2)) {
-            bitmap[(i - 1) / 2] = hex2bin(tbitmap[i]) << 4 | hex2bin(tbitmap[i + 1]);
-            mask[(i - 1) / 2] = hex2bin(tmask[i]) << 4 | hex2bin(tmask[i + 1]);
+        if ((i % 2) == 0) {
+            bitmap[i] = hex2bin(tbitmap[i]) << 4 | hex2bin(tbitmap[i + 1]);
+            mask[i] = hex2bin(tmask[i]) << 4 | hex2bin(tmask[i + 1]);
         }
     }
     for (int i = 0; i < num_of_bytes; i++)

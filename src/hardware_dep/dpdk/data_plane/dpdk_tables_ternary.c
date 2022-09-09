@@ -62,22 +62,29 @@
         */
 
         // for Bits
-        char buffer[256];
+        //char buffer[256];
 
-        char* ekey = palmtrie_hexstring2string(buffer, 64, key);
-        char* emask = palmtrie_hexstring2string(buffer, 64, mask);
+        //char* ekey = palmtrie_hexstring2string(buffer, 16, key);
+        //char* emask = palmtrie_hexstring2string(buffer, 16, mask);
 
-        palmtrie_reverse(ekey);
-        palmtrie_reverse(emask);
+        //palmtrie_reverse(ekey);
+        //palmtrie_reverse(emask);
+
+        palmtrie_reverse(key);
+        palmtrie_reverse(mask);
 
         for ( int i = 0; i < (ssize_t)strlen(ekey); i++ ) {
             //temp = palmtrie_hex2bin(ekey[i]);
-            temp = palmtrie_hex2bin(*ekey);
-            ekey++;
+            //temp = palmtrie_hex2bin(*ekey);
+            //ekey++;
+            temp = palmtrie_hex2bin(*key);
+            key++;
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             //temp = palmtrie_hex2bin(emask[i]);
-            temp = palmtrie_hex2bin(*emask);
-            emask++;
+            //temp = palmtrie_hex2bin(*emask);
+            //emask++;
+            temp = palmtrie_hex2bin(*mask);
+            mask++;
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 

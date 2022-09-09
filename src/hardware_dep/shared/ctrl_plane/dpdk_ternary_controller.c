@@ -104,14 +104,23 @@ int process_ternary_bits(const char* line) {
     char table_name[100];
     uint8_t bitmap[100];
     uint8_t mask[100];
+    uint8_t tbitmap[100];
+    uint8_t tmask[100];
     uint8_t num_of_bytes;
     uint8_t priority;
 
-    int matches = sscanf(line, "%*s %s %hhd %32s %32s %hhd", table_name, &num_of_bytes, &bitmap[0], &mask[0], &priority);
+    int matches = sscanf(line, "%*s %s %hhd %100s %100s %hhd", table_name, &num_of_bytes, &tbitmap[0], &tmask[0], &priority);
     if (5 != matches) return -1;
 
-    printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, bitmap, mask, priority);
+    printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
  
+     for (int i = 0; i < (num_of_bytes * 2); i++) {
+        if (!(i % 2)) {
+            bitmap[(i - 1) / 2] = hex2bin(tbitmap[i]) << 4 | hex2bin(tbitmap[i + 1]);
+            mask[(i - 1) / 2] = hex2bin(tmask[i]) << 4 | hex2bin(tmask[i + 1]);
+        }
+    }
+
     send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 
     return 0;

@@ -68,6 +68,7 @@
         */
 
         // for Bits
+        /*
         uint8_t* tmpkey = key;
         uint8_t* tmpmask = mask;
 
@@ -77,7 +78,7 @@
         emask[t->entry.key_size] = '\0';
 
         for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "Before reverse key[%d]: 0x%02X mask[%d]: 0x%02X\n", i, *key, i, *mask);
+            RTE_LOG(INFO, USER1, "Before reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
             key++;
             mask++;
         }
@@ -93,7 +94,7 @@
         palmtrie_reverse(&emask[0]);
 
         //for ( int i = 0; i < 16; i++ ) {
-        //    RTE_LOG(INFO, USER1, "After reverse key[%d]: 0x%02X mask[%d]: 0x%02X\n", i, *key, i, *mask);
+        //    RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
         //    key++;
         //    mask++;
         //}
@@ -102,6 +103,7 @@
 
         key = tmpkey;
         mask = tmpmask;
+        */
 
         //for ( int i = 0; i < 16; i++ ) { // number of bytes
         for ( int i = 0; i < t->entry.key_size; i++ ) { // number of bytes
@@ -109,16 +111,16 @@
             //temp = palmtrie_hex2bin(ekey[i]);
             //temp = palmtrie_hex2bin(*ekey);
             //ekey++;
-            //temp = palmtrie_hex2bin(*key);
-            //key++;
-            temp = palmtrie_hex2bin(edata[i]);
+            temp = palmtrie_hex2bin(*key);
+            key++;
+            //temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
             //temp = palmtrie_hex2bin(emask[i]);
             //temp = palmtrie_hex2bin(*emask);
             //emask++;
-            //temp = palmtrie_hex2bin(*mask);
-            //mask++;
-            temp = palmtrie_hex2bin(emask[i]);
+            temp = palmtrie_hex2bin(*mask);
+            mask++;
+            //temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
 

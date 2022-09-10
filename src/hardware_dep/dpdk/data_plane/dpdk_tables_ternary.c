@@ -76,11 +76,11 @@
         memcpy(&emask[0], mask, t->entry.key_size);
         emask[t->entry.key_size] = '\0';
 
-        //for ( int i = 0; i < 16; i++ ) {
-        //    RTE_LOG(INFO, USER1, "Before reverse key[%d]: 0x%02X mask[%d]: 0x%02X\n", i, *key, i, *mask);
-        //    key++;
-        //    mask++;
-        //}
+        for ( int i = 0; i < 16; i++ ) {
+            RTE_LOG(INFO, USER1, "Before reverse key[%d]: 0x%02X mask[%d]: 0x%02X\n", i, *key, i, *mask);
+            key++;
+            mask++;
+        }
         for ( int i = 0; i < t->entry.key_size; i++ )
             RTE_LOG(INFO, USER1, "Before reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 

@@ -78,7 +78,7 @@
         //    key++;
         //    mask++;
         //}
-        for ( int i = 0; i < t->entry.key_size; i++ ) {
+        for ( int i = 0; i < t->entry.key_size; i++ )
             RTE_LOG(INFO, USER1, "Before reverse data[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, edata[i], i, emask[i]);
 
         key = tmpkey;
@@ -92,7 +92,7 @@
         //    key++;
         //    mask++;
         //}
-        for ( int i = 0; i < t->entry.key_size; i++ ) {
+        for ( int i = 0; i < t->entry.key_size; i++ )
             RTE_LOG(INFO, USER1, "After reverse data[%ld]: 0x%02X mask[%ld]: 0x%02X\n", i, edata[i], i, emask[i]);
 
         key = tmpkey;

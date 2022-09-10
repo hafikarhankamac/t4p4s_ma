@@ -315,6 +315,7 @@ struct palmtrie {
 
 /* Prototype declarations */
 struct palmtrie * palmtrie_init(struct palmtrie *, enum palmtrie_type);
+void palmtrie_release(struct palmtrie *palmtrie);
 int palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
 //void palmtrie_add_data(struct palmtrie *, addr_t, addr_t, int, /*u64*/uint8_t*);
 u64 palmtrie_lookup(struct palmtrie *, addr_t);

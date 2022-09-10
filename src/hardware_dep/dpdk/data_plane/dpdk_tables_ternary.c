@@ -85,26 +85,26 @@
         for ( int i = 0; i < t->entry.key_size; i++ )
             RTE_LOG(INFO, USER1, "Before reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 
-        key = tmpkey;
-        mask = tmpmask;
-
         //palmtrie_reverse(key);
         //palmtrie_reverse(mask);
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
+        */
+       
+        uint8_t* tmpkey = key;
+        uint8_t* tmpmask = mask;
 
-        //for ( int i = 0; i < 16; i++ ) {
-        //    RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
-        //    key++;
-        //    mask++;
-        //}
-        for ( int i = 0; i < t->entry.key_size; i++ )
-            RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
+        for ( int i = 0; i < 16; i++ ) {
+            RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
+            key++;
+            mask++;
+        }
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 
         key = tmpkey;
         mask = tmpmask;
-        */
-
+        
         //for ( int i = 0; i < 16; i++ ) { // number of bytes
         for ( int i = 0; i < t->entry.key_size; i++ ) { // number of bytes
         //for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) { // number of bytes

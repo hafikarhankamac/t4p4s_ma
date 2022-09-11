@@ -182,13 +182,13 @@
         */
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        u64* key_ptr = (u64*)key;
+        //u64* key_ptr = (u64*)key;
 
         //addr_t_key.a[0] = *key_ptr;
         //addr_t_key.a[1] = *(key_ptr + 1);
 
-        addr_t_key.a[0] = 0x0000000000000002
-        addr_t_key.a[1] = 0x00000A0000000000
+        addr_t_key.a[0] = 0x0000000000000002;
+        addr_t_key.a[1] = 0x00000A0000000000;
 
         for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "Lookup addr_t_key[%d]: 0x%.16lX\n", i, addr_t_key.a[i]);

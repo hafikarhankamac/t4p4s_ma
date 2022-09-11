@@ -29,6 +29,7 @@
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         u64 temp;
+        u64* temp_ptr;
         char edata[MAX_FIELD_LENGTH];
         char emask[MAX_FIELD_LENGTH];
 
@@ -39,9 +40,6 @@
         /*
         char strline[MAX_FIELD_LENGTH];
         acl_tcam_entry_t tcam_e;
-
-        memset(&edata[0], 0, MAX_FIELD_LENGTH);
-        memset(&emask[0], 0, MAX_FIELD_LENGTH);
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), *mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
@@ -93,6 +91,7 @@
        
         uint8_t* tmpkey = key;
         uint8_t* tmpmask = mask;
+        u64 temp_ptr = key;
 
         for ( int i = 0; i < 16; i++ ) {
             RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
@@ -105,6 +104,7 @@
         key = tmpkey;
         mask = tmpmask;
         
+        /*
         //for ( int i = 0; i < 16; i++ ) { // number of bytes
         for ( int i = 0; i < t->entry.key_size; i++ ) { // number of bytes
         //for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) { // number of bytes
@@ -123,6 +123,15 @@
             //temp = palmtrie_hex2bin(emask[i]);
             addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
         }
+        */
+
+        u64 temp_ptr = key;
+        addr_t_key[0] = *(u64 temp_ptr + 1);
+        addr_t_key[1] = *(u64 temp_ptr);
+
+        u64 temp_ptr = mask;
+        addr_t_mask[0] = *(u64 temp_ptr + 1);
+        addr_t_mask[1] = *(u64 temp_ptr);
 
         for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);

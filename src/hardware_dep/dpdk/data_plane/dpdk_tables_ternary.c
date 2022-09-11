@@ -28,7 +28,6 @@
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        u64 temp;
         u64* temp_ptr;
         // for IPv4
         /*
@@ -36,6 +35,7 @@
         acl_tcam_entry_t tcam_e;
         char edata[MAX_FIELD_LENGTH];
         char emask[MAX_FIELD_LENGTH];
+        u64 temp;
 
         memset(&edata[0], 0, MAX_FIELD_LENGTH);
         memset(&emask[0], 0, MAX_FIELD_LENGTH);
@@ -72,7 +72,7 @@
         //    RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
         //    key++;
         //    mask++;
-        }
+        //}
         //for ( int i = 0; i < t->entry.key_size; i++ )
         //    RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 

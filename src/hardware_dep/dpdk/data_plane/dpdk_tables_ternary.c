@@ -125,12 +125,12 @@
         */
 
         temp_ptr = key;
-        addr_t_key[0] = *(u64 temp_ptr + 1);
-        addr_t_key[1] = *(u64 temp_ptr);
+        addr_t_key[0] = *(temp_ptr + 1);
+        addr_t_key[1] = *(temp_ptr);
 
         temp_ptr = mask;
-        addr_t_mask[0] = *(u64 temp_ptr + 1);
-        addr_t_mask[1] = *(u64 temp_ptr);
+        addr_t_mask[0] = *(temp_ptr + 1);
+        addr_t_mask[1] = *(temp_ptr);
 
         for ( int i = 0; i < 8; i++ )
             RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);

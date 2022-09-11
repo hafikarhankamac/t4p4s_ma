@@ -107,7 +107,7 @@ int process_ternary_ipv4(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd/%d %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask, &priority);
     if (7 != matches) return -1;
  
-    printf("Process PALMTRIE-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
+    //printf("Process PALMTRIE-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
  
     //send_ternary_palmtrie_ipv4_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
     send_ternary_palmtrie_ipv4_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
@@ -127,7 +127,7 @@ int process_ternary_bits(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd %100s %100s %hhd", table_name, &num_of_bytes, &tbitmap[0], &tmask[0], &priority);
     if (5 != matches) return -1;
  
-    printf("Process PALMTRIE-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
+    //printf("Process PALMTRIE-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
 
     int index = 0;
     for (int i = 0; i < (num_of_bytes * 2); i++) {
@@ -137,8 +137,8 @@ int process_ternary_bits(const char* line) {
             index++;
         }
     }
-    for (int i = 0; i < num_of_bytes; i++)
-        printf("Process PALMTRIE-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+    //for (int i = 0; i < num_of_bytes; i++)
+    //    printf("Process PALMTRIE-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 
@@ -156,7 +156,7 @@ int process_random_bits(const char* line) {
     int matches = sscanf(line, "%*s %s %d %hhd %hhd", table_name, &table_size, &num_of_bytes, &num_of_wildcard_bits);
     if (4 != matches) return -1;
 
-    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
+    //printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
 
     memset(&bitmap[0], 0x00, 100);
     memset(&mask[0], 0xFF, 100);

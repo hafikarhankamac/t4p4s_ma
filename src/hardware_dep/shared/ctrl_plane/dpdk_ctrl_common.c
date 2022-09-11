@@ -204,7 +204,7 @@ int send_ternary_palmtrie_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t prior
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< PALMTRIE %s %s%s %hhd.%hhd.%hhd.%hhd %hhd %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask, priority);
+    //printf("<<<< PALMTRIE %s %s%s %hhd.%hhd.%hhd.%hhd %hhd %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask, priority);
     return 0;
 }
 
@@ -231,10 +231,10 @@ int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< PALMTRIE %s %s%s\n", table_name, header_name, action_name);
-    for (int i = 0; i < num_of_bytes; i++)
-        printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
-    printf("%hhd\n", priority);
+    //printf("<<<< PALMTRIE %s %s%s\n", table_name, header_name, action_name);
+    //for (int i = 0; i < num_of_bytes; i++)
+    //    printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+    //printf("%hhd\n", priority);
 
     return 0;
 }

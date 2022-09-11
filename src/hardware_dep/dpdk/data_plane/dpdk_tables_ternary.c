@@ -91,7 +91,6 @@
        
         uint8_t* tmpkey = key;
         uint8_t* tmpmask = mask;
-        u64 temp_ptr = key;
 
         for ( int i = 0; i < 16; i++ ) {
             RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
@@ -125,11 +124,11 @@
         }
         */
 
-        u64 temp_ptr = key;
+        temp_ptr = key;
         addr_t_key[0] = *(u64 temp_ptr + 1);
         addr_t_key[1] = *(u64 temp_ptr);
 
-        u64 temp_ptr = mask;
+        temp_ptr = mask;
         addr_t_mask[0] = *(u64 temp_ptr + 1);
         addr_t_mask[1] = *(u64 temp_ptr);
 

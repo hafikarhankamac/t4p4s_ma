@@ -147,18 +147,47 @@ int process_ternary_bits(const char* line) {
 int process_random_bits(const char* line) {
     char table_name[100];
     int table_size;
-    uint8_t byte_size;
+    uint8_t num_of_bytes;
+    uint8_t num_of_wildcard_bits;
+    uint8_t bitmap[100];
+    uint8_t mask[100];
 
-    int matches = sscanf(line, "%*s %s %d %hhd", table_name, &table_size, &byte_size);
-    if (3 != matches) return -1;
+    int matches = sscanf(line, "%*s %s %d %hhd %hhd", table_name, &table_size, &num_of_bytes, &num_of_wildcard_bits);
+    if (4 != matches) return -1;
 
-    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd\n", table_size, byte_size);
+    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
 
-    xor64_state = 88172645463325252LL;
+    memset(&bitmap[0], 0x00, 100);
+    memset(&mask[0], 0xFF, 100);
 
-    //for ( int i = 0; i < table_size; i++) {
-        //send_ternary_random_bits_entry(ip, htonl((1ULL << (32 - (rand() % (32 - 1 + 1)) + 1)) - 1), table_name, "payload.lookup", ".reflect");
-    //}
+    for ( int ts = 0; ts < table_size; ts++) {
+        bitmap[6] = rand() % 255;
+        bitmap[7] = rand() % 255;
+        bitmap[8] = rand() % 255;
+        bitmap[9] = rand() % 255;
+
+        switch(num_of_wildcard_bits) {
+            case 24:
+                mask[6] = 0x00;
+                mask[7] = 0x00;
+                mask[8] = 0x00;
+                break;
+                
+            case 16:
+                mask[6] = 0x00;
+                mask[7] = 0x00;
+                break;
+                
+            case 8:
+                mask[6] = 0x00;
+                break;
+                
+            default:
+                return -1;
+        }
+
+        send_ternary_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "payload.lookup", ".reflect");
+    }
 
     return 0;
 }

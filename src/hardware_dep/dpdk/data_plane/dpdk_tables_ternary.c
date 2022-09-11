@@ -30,16 +30,15 @@
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         u64 temp;
         u64* temp_ptr;
+        // for IPv4
+        /*
+        char strline[MAX_FIELD_LENGTH];
+        acl_tcam_entry_t tcam_e;
         char edata[MAX_FIELD_LENGTH];
         char emask[MAX_FIELD_LENGTH];
 
         memset(&edata[0], 0, MAX_FIELD_LENGTH);
         memset(&emask[0], 0, MAX_FIELD_LENGTH);
-
-        // for IPv4
-        /*
-        char strline[MAX_FIELD_LENGTH];
-        acl_tcam_entry_t tcam_e;
 
         sprintf(&strline[0], "%s %hhd.%hhd.%hhd.%hhd/%hhd", "permit ip 0.0.0.0/0", *(key), *(key+1), *(key+2), *(key+3), *mask); // ACL like "permit ip 0.0.0.0/0 10.0.1.0/24"
 
@@ -66,64 +65,20 @@
         */
 
         // for Bits
-        /*
-        uint8_t* tmpkey = key;
-        uint8_t* tmpmask = mask;
+        //uint8_t* tmpkey = key;
+        //uint8_t* tmpmask = mask;
 
-        memcpy(&edata[0], key, t->entry.key_size);
-        edata[t->entry.key_size] = '\0';
-        memcpy(&emask[0], mask, t->entry.key_size);
-        emask[t->entry.key_size] = '\0';
-
-        for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "Before reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
-            key++;
-            mask++;
-        }
-        for ( int i = 0; i < t->entry.key_size; i++ )
-            RTE_LOG(INFO, USER1, "Before reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
-
-        //palmtrie_reverse(key);
-        //palmtrie_reverse(mask);
-        palmtrie_reverse(&edata[0]);
-        palmtrie_reverse(&emask[0]);
-        */
-       
-        uint8_t* tmpkey = key;
-        uint8_t* tmpmask = mask;
-
-        for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
-            key++;
-            mask++;
+        //for ( int i = 0; i < 16; i++ ) {
+        //    RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
+        //    key++;
+        //    mask++;
         }
         //for ( int i = 0; i < t->entry.key_size; i++ )
         //    RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 
-        key = tmpkey;
-        mask = tmpmask;
+        //key = tmpkey;
+        //mask = tmpmask;
         
-        /*
-        //for ( int i = 0; i < 16; i++ ) { // number of bytes
-        for ( int i = 0; i < t->entry.key_size; i++ ) { // number of bytes
-        //for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) { // number of bytes
-            //temp = palmtrie_hex2bin(ekey[i]);
-            //temp = palmtrie_hex2bin(*ekey);
-            //ekey++;
-            temp = palmtrie_hex2bin(*key);
-            key++;
-            //temp = palmtrie_hex2bin(edata[i]);
-            addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
-            //temp = palmtrie_hex2bin(emask[i]);
-            //temp = palmtrie_hex2bin(*emask);
-            //emask++;
-            temp = palmtrie_hex2bin(*mask);
-            mask++;
-            //temp = palmtrie_hex2bin(emask[i]);
-            addr_t_mask.a[i >> 4] |= temp << ((i & 0xf) << 2);
-        }
-        */
-
         temp_ptr = key;
         addr_t_key.a[0] = *(temp_ptr + 1);
         addr_t_key.a[1] = *(temp_ptr);
@@ -132,8 +87,8 @@
         addr_t_mask.a[0] = *(temp_ptr + 1);
         addr_t_mask.a[1] = *(temp_ptr);
 
-        for ( int i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
+        //for ( int i = 0; i < 8; i++ )
+        //    RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);
@@ -187,11 +142,8 @@
         addr_t_key.a[0] = *key_ptr;
         addr_t_key.a[1] = *(key_ptr + 1);
 
-        //addr_t_key.a[0] = 0x0000000000000002;
-        //addr_t_key.a[1] = 0x00000A0000000000;
-
-        for ( int i = 0; i < 8; i++ )
-            RTE_LOG(INFO, USER1, "Lookup addr_t_key[%d]: 0x%.16lX\n", i, addr_t_key.a[i]);
+        //for ( int i = 0; i < 8; i++ )
+        //    RTE_LOG(INFO, USER1, "Lookup addr_t_key[%d]: 0x%.16lX\n", i, addr_t_key.a[i]);
 
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;

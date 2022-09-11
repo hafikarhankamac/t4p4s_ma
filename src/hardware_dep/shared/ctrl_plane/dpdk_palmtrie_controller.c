@@ -173,16 +173,13 @@ int process_random_bits(const char* line) {
                 mask[7] = 0x00;
                 mask[8] = 0x00;
                 break;
-                
             case 16:
                 mask[6] = 0x00;
                 mask[7] = 0x00;
                 break;
-                
             case 8:
                 mask[6] = 0x00;
                 break;
-                
             default:
                 return -1;
         }

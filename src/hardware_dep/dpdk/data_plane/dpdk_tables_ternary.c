@@ -56,6 +56,9 @@
         palmtrie_reverse(&edata[0]);
         palmtrie_reverse(&emask[0]);
 
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
+
         for ( int i = 0; i < (ssize_t)strlen(edata); i++ ) {
             temp = palmtrie_hex2bin(edata[i]);
             addr_t_key.a[i >> 4] |= temp << ((i & 0xf) << 2);
@@ -68,13 +71,11 @@
         //uint8_t* tmpkey = key;
         //uint8_t* tmpmask = mask;
 
-        //for ( int i = 0; i < 16; i++ ) {
-        //    RTE_LOG(INFO, USER1, "After reverse key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
+        //for ( int i = 0; i < t->entry.key_size; i++ ) {
+        //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
         //    key++;
         //    mask++;
         //}
-        //for ( int i = 0; i < t->entry.key_size; i++ )
-        //    RTE_LOG(INFO, USER1, "After reverse data[%d]: 0x%02X mask[%d]: 0x%02X\n", i, edata[i], i, emask[i]);
 
         //key = tmpkey;
         //mask = tmpmask;
@@ -99,6 +100,18 @@
     void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
     {
         if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+
+        uint8_t* tmpkey = key;
+        uint8_t* tmpmask = mask;
+
+        for ( int i = 0; i < t->entry.key_size; i++ ) {
+            RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, *key, i, *mask);
+            key++;
+            mask++;
+        }
+
+        key = tmpkey;
+        mask = tmpmask;
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
         naive_ternary_add(t->table, key, mask, entry);
@@ -163,8 +176,15 @@
         temp_key[5] = 0x0A;       
         temp_key[8] = 0x02;       
 
-        for (int i = 0; i < 8 ;i++ )
-          RTE_LOG(INFO, USER1, "Lookup temp_key[%d]: 0x%.16lX\n", i, temp_key.a[i]);
+        uint8_t* tmpkey = key;
+
+        for ( int i = 0; i < 16; i++ ) {
+            RTE_LOG(INFO, USER1, "Add key[%d]: %hhd\n", i, *key);
+            key++;
+        }
+
+        key = tmpkey;
+
         //uint8_t* ret = naive_ternary_lookup(t->table, key);
         uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
         return ret == NULL ? t->default_val : ret;

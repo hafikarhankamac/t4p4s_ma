@@ -28,7 +28,7 @@
 
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         addr_t addr_t_mask = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
-        u64* temp_ptr;
+        u64* temp64_ptr;
         // for IPv4
         /*
         char strline[MAX_FIELD_LENGTH];
@@ -79,13 +79,13 @@
         //key = tmpkey;
         //mask = tmpmask;
         
-        temp_ptr = key;
-        addr_t_key.a[0] = *(temp_ptr + 1);
-        addr_t_key.a[1] = *(temp_ptr);
+        temp64_ptr = key;
+        addr_t_key.a[0] = *(temp64_ptr + 1);
+        addr_t_key.a[1] = *(temp64_ptr);
 
-        temp_ptr = mask;
-        addr_t_mask.a[0] = *(temp_ptr + 1);
-        addr_t_mask.a[1] = *(temp_ptr);
+        temp64_ptr = mask;
+        addr_t_mask.a[0] = *(temp64_ptr + 1);
+        addr_t_mask.a[1] = *(temp64_ptr);
 
         //for ( int i = 0; i < 8; i++ )
         //    RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
@@ -156,7 +156,15 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        uint8_t* ret = naive_ternary_lookup(t->table, key);
+        uint8_t temp_key[MAX_FIELD_LENGTH];
+
+        memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
+
+        temp_key[5] = 0x0A;       
+        temp_key[8] = 0x02;       
+
+        //uint8_t* ret = naive_ternary_lookup(t->table, key);
+        uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
         return ret == NULL ? t->default_val : ret;
     }
 #endif

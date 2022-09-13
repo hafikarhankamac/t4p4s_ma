@@ -11,59 +11,6 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define MAX_MACS 60000
-#define MAX_IPS 60000
-
-/*
- * Xorshift
- * Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
-*/
-
-uint32_t xor32_state;
-
-static __inline__ uint32_t
-xor32(uint32_t state)
-{
-	uint64_t x = state;
-
-	x ^= x << 13;
-	x ^= x >> 17;
-	x ^= x << 5;
-
-	return xor32_state = x;
-}
-
-uint64_t xor64_state;
-
-static __inline__ uint64_t
-xor64(uint64_t state)
-{
-	uint64_t x = state;
-
-	x ^= x << 13;
-	x ^= x >> 7;
-	x ^= x << 17;
-
-	return xor64_state = x;
-}
-
-static __inline__ uint32_t
-xor128(void)
-{
-    static uint32_t x = 123456789;
-    static uint32_t y = 362436069;
-    static uint32_t z = 521288629;
-    static uint32_t w = 88675123;
-    uint32_t t;
-
-    t = x ^ (x<<11);
-    x = y;
-    y = z;
-    z = w;
-
-    return w = (w ^ (w>>19)) ^ (t ^ (t >> 8));
-}
-
 int
 hex2bin(char c)
 {
@@ -106,9 +53,8 @@ int process_ternary_ipv4(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd %hhx:%hhx:%hhx:%hhx %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask[0], &mask[1], &mask[2], &mask[3], &priority);
     if (10 != matches) return -1;
  
-    printf("Process TERNARY-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+    //printf("Process TERNARY-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhx%hhx%hhx%hhx Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
  
-    //send_ternary_ipv4_entry(ip, mask, priority, table_name, "ipv4.dstAddr", ".reflect");
     send_ternary_ipv4_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
 
     return 0;
@@ -126,7 +72,7 @@ int process_ternary_bits(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd %100s %100s %hhd", table_name, &num_of_bytes, &tbitmap[0], &tmask[0], &priority);
     if (5 != matches) return -1;
 
-    printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
+    //printf("Process TERNARY-BITS - Num of Bytes: %hhd Bitmap: %32s Mask: %32s Priority: %hhd\n", num_of_bytes, tbitmap, tmask, priority);
  
     int index = 0;
     for (int i = 0; i < (num_of_bytes * 2); i++) {
@@ -136,8 +82,8 @@ int process_ternary_bits(const char* line) {
             index++;
         }
     }
-    for (int i = 0; i < num_of_bytes; i++)
-        printf("Process TERNARY-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+    //for (int i = 0; i < num_of_bytes; i++)
+    //    printf("Process TERNARY-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
 
@@ -155,33 +101,33 @@ int process_random_bits(const char* line) {
     int matches = sscanf(line, "%*s %s %d %hhd %hhd", table_name, &table_size, &num_of_bytes, &num_of_wildcard_bits);
     if (4 != matches) return -1;
 
-    printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
+    //printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
 
     memset(&bitmap[0], 0x00, 100);
     memset(&mask[0], 0xFF, 100);
+
+    switch(num_of_wildcard_bits) {
+        case 24:
+            mask[6] = 0x00;
+            mask[7] = 0x00;
+            mask[8] = 0x00;
+            break;
+        case 16:
+            mask[6] = 0x00;
+            mask[7] = 0x00;
+            break;
+        case 8:
+            mask[6] = 0x00;
+            break;
+        default:
+            return -1;
+    }
 
     for ( int ts = 0; ts < table_size; ts++) {
         bitmap[6] = rand() % 255;
         bitmap[7] = rand() % 255;
         bitmap[8] = rand() % 255;
         bitmap[9] = rand() % 255;
-
-        switch(num_of_wildcard_bits) {
-            case 24:
-                mask[6] = 0x00;
-                mask[7] = 0x00;
-                mask[8] = 0x00;
-                break;
-            case 16:
-                mask[6] = 0x00;
-                mask[7] = 0x00;
-                break;
-            case 8:
-                mask[6] = 0x00;
-                break;
-            default:
-                return -1;
-        }
 
         send_ternary_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "payload.lookup", ".reflect");
     }

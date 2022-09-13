@@ -64,7 +64,9 @@ int send_exact_entry(uint8_t port, uint8_t mac[6], const char* table_name, const
     }
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< EXACT %s %s.%s %hhx:%hhx:%hhx:%hhx:%hhx:%hhx %hd\n", table_name, header_name, action_name, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], port);
+
+    //printf("<<<< EXACT %s %s.%s %hhx:%hhx:%hhx:%hhx:%hhx:%hhx %hd\n", table_name, header_name, action_name, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], port);
+
     return 0;
 }
 
@@ -120,7 +122,9 @@ int send_lpm_entry(uint8_t ip[4], uint16_t prefix_length, const char* table_name
     }
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< LPM %s %hd %s.%s %hhd.%hhd.%hhd.%hhd\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
+
+    //printf("<<<< LPM %s %hd %s.%s %hhd.%hhd.%hhd.%hhd\n", table_name, prefix_length, header_name, action_name, ip[0], ip[1], ip[2], ip[3]);
+
     return 0;
 }
 
@@ -147,7 +151,9 @@ int send_ternary_ipv4_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, co
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %s%s %hhd.%hhd.%hhd.%hhd %hhx%hhx%hhx%hhx %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+
+    //printf("<<<< TERNARY %s %s%s %hhd.%hhd.%hhd.%hhd %hhx%hhx%hhx%hhx %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], priority);
+
     return 0;
 }
 
@@ -174,10 +180,12 @@ int send_ternary_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
-    printf("<<<< TERNARY %s %s%s\n", table_name, header_name, action_name);
-    for (int i = 0; i < num_of_bytes; i++)
-        printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
-    printf("%hhd\n", priority);
+
+    //printf("<<<< TERNARY %s %s%s\n", table_name, header_name, action_name);
+    //for (int i = 0; i < num_of_bytes; i++)
+    //    printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
+    //printf("%hhd\n", priority);
+
     return 0;
 }
 
@@ -204,7 +212,9 @@ int send_ternary_palmtrie_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t prior
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
+
     //printf("<<<< PALMTRIE %s %s%s %hhd.%hhd.%hhd.%hhd %hhd %hhd\n", table_name, header_name, action_name, ip[0], ip[1], ip[2], ip[3], mask, priority);
+
     return 0;
 }
 
@@ -231,6 +241,7 @@ int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint
     netconv_p4_action(a);
 
     send_p4_msg(c, buffer, 2048);
+
     //printf("<<<< PALMTRIE %s %s%s\n", table_name, header_name, action_name);
     //for (int i = 0; i < num_of_bytes; i++)
     //    printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
@@ -340,7 +351,7 @@ void undigest_macport(digest_macport_t* dig, void* digest) {
 
     dig->port = port[0];
 
-    printf(">>>> digest PORT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", dig->port, dig->mac[0],dig->mac[1],dig->mac[2],dig->mac[3],dig->mac[4],dig->mac[5]);
+    //printf(">>>> digest PORT: %d MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", dig->port, dig->mac[0],dig->mac[1],dig->mac[2],dig->mac[3],dig->mac[4],dig->mac[5]);
 }
 
 void undigest_ip(digest_ip_t* dig, void* digest) {
@@ -367,7 +378,8 @@ void undigest_ip(digest_ip_t* dig, void* digest) {
     memcpy(&(dig->i3), df->value, 4);
 
     uint8_t* port_bytes = dig->ip;
-    printf(">>>> digest IP: %d.%d.%d.%d PORT: %d DATA: %d %d %d\n", port_bytes[0], port_bytes[1], port_bytes[2], port_bytes[3], dig->prefix_length, dig->i1, dig->i2, dig->i3);
+
+    //printf(">>>> digest IP: %d.%d.%d.%d PORT: %d DATA: %d %d %d\n", port_bytes[0], port_bytes[1], port_bytes[2], port_bytes[3], dig->prefix_length, dig->i1, dig->i2, dig->i3);
 }
 
 // ------------------
@@ -386,7 +398,7 @@ void notify_controller_initialized()
 }
 
 void set_table_default_action(const char* table_nickname, const char* table_name, const char* default_action_name) {
-    printf("Generate set_default_action message for table %s\n", table_nickname);
+    //printf("Generate set_default_action message for table %s\n", table_nickname);
 
     struct p4_header* h = create_p4_header(buffer, 0, sizeof(buffer));
 

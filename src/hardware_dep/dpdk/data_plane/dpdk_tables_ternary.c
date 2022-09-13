@@ -173,13 +173,13 @@
 
         memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
 
-        temp_key[5] = 0x0A;       
+        temp_key[5] = 0x0a;       
         temp_key[8] = 0x02;       
 
         uint8_t* tmpkey = key;
 
         for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd\n", i, *key);
+            RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, *key, i, temp_key[i]);
             key++;
         }
 

@@ -377,7 +377,7 @@ void undigest_ip(digest_ip_t* dig, void* digest) {
     df = netconv_p4_digest_field(unpack_p4_digest_field(digest, offset));
     memcpy(&(dig->i3), df->value, 4);
 
-    uint8_t* port_bytes = dig->ip;
+    //uint8_t* port_bytes = dig->ip;
 
     //printf(">>>> digest IP: %d.%d.%d.%d PORT: %d DATA: %d %d %d\n", port_bytes[0], port_bytes[1], port_bytes[2], port_bytes[3], dig->prefix_length, dig->i1, dig->i2, dig->i3);
 }

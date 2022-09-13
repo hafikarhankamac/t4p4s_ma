@@ -179,7 +179,7 @@
         uint8_t* tmpkey = key;
 
         for ( int i = 0; i < 16; i++ ) {
-            RTE_LOG(INFO, USER1, "Add key[%d]: %hhd\n", i, *key);
+            RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd\n", i, *key);
             key++;
         }
 

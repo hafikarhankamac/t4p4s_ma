@@ -104,20 +104,20 @@ int process_random_bits(const char* line) {
     //printf("Process RANDOM-BITS - Table Size: %d Byte Size: %hhd Wildcard Bits: %hhd\n", table_size, num_of_bytes, num_of_wildcard_bits);
 
     memset(&bitmap[0], 0x00, 100);
-    memset(&mask[0], 0xFF, 100);
+    memset(&mask[0], 0x00, 100);
 
     switch(num_of_wildcard_bits) {
         case 24:
-            mask[6] = 0x00;
-            mask[7] = 0x00;
-            mask[8] = 0x00;
+            mask[6] = 0xFF;
+            mask[7] = 0xFF;
+            mask[8] = 0xFF;
             break;
         case 16:
-            mask[6] = 0x00;
-            mask[7] = 0x00;
+            mask[6] = 0xFF;
+            mask[7] = 0xFF;
             break;
         case 8:
-            mask[6] = 0x00;
+            mask[6] = 0xFF;
             break;
         default:
             return -1;

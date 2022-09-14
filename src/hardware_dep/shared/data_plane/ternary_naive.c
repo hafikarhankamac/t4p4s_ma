@@ -2,6 +2,7 @@
 // Copyright 2016 Eotvos Lorand University, Budapest, Hungary
 
 #include "ternary_naive.h"
+#include <stdio.h>
 
 ternary_table*
 naive_ternary_create(uint8_t keylen, uint8_t max_size)
@@ -31,6 +32,9 @@ naive_ternary_add(ternary_table* t, uint8_t* key, uint8_t* mask, uint8_t* value)
     memcpy(e->mask, mask, t->keylen);
     e->value = value;
     t->entries[t->size++] = e;
+
+    for ( int i = 0; i < t->keylen; i++ )
+        fprintf(stderr, "TERNARY-NAIVE-ADD - key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 }
 
 uint8_t*
@@ -52,6 +56,10 @@ naive_ternary_lookup(ternary_table* t, uint8_t* key)
         }
         if(match) res = e;
     }
+
+    for ( int i = 0; i < t->keylen; i++ )
+        fprintf(stderr, "TERNARY-NAIVE-LOOKUP - key[%d]: %hhd\n", i, key[i]);
+
     return match ? res->value : NULL;
 }
 

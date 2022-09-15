@@ -98,6 +98,8 @@ int process_random_bits(const char* line) {
     uint8_t bitmap[100];
     uint8_t mask[100];
 
+    srand(248651973);
+
     int matches = sscanf(line, "%*s %s %d %hhd %hhd", table_name, &table_size, &num_of_bytes, &num_of_wildcard_bits);
     if (4 != matches) return -1;
 

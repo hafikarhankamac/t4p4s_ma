@@ -143,11 +143,11 @@
         addr_t addr_t_key = {0, {0, 0, 0, 0, 0, 0, 0, 0}};
         u64* key_ptr = (u64*)key;
 
-        //addr_t_key.a[0] = *key_ptr;
-        //addr_t_key.a[1] = *(key_ptr + 1);
+        addr_t_key.a[0] = *key_ptr;
+        addr_t_key.a[1] = *(key_ptr + 1);
 
-        addr_t_key.a[0] = 0x0000000000000002;
-        addr_t_key.a[1] = 0x00000A0000000000;
+        //addr_t_key.a[0] = 0x0000000000000002;
+        //addr_t_key.a[1] = 0x00000A0000000000;
 
         //for ( int i = 0; i < 8; i++ )
         //   RTE_LOG(INFO, USER1, "Lookup addr_t_key[%d]: 0x%.16lX\n", i, addr_t_key.a[i]);
@@ -160,18 +160,18 @@
     {
         if (t->entry.key_size == 0) return t->default_val;
 
-        uint8_t temp_key[MAX_FIELD_LENGTH];
+        //uint8_t temp_key[MAX_FIELD_LENGTH];
 
-        memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
+        //memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
 
-        temp_key[5] = 0x0a;       
-        temp_key[8] = 0x02;       
+        //temp_key[5] = 0x0a;       
+        //temp_key[8] = 0x02;       
 
         //for ( int i = 0; i < t->entry.key_size; i++ )
         //    RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
 
-        //uint8_t* ret = naive_ternary_lookup(t->table, key);
-        uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
+        uint8_t* ret = naive_ternary_lookup(t->table, key);
+        //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
         return ret == NULL ? t->default_val : ret;
     }
 #endif

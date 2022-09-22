@@ -17,6 +17,7 @@ extern controller c;
 // ------------------
 
 char buffer[2048];
+int table_size_check = 0;
 
 
 int send_exact_entry(uint8_t port, uint8_t mac[6], const char* table_name, const char* header_name, const char* action_name, const char* par1, const char* par2)

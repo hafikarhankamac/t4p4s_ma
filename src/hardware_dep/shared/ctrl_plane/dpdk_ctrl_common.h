@@ -3,6 +3,8 @@
 
 #pragma once
 
+int table_size_check = 0;
+
 typedef struct {
     uint8_t ip[4];
     uint16_t prefix_length;

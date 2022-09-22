@@ -242,6 +242,10 @@ int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint
 
     send_p4_msg(c, buffer, 2048);
 
+    table_size_check++;
+
+    if (table_size_check == 15999) printf("table_size_check == 15999\n");
+
     //printf("<<<< PALMTRIE %s %s%s\n", table_name, header_name, action_name);
     //for (int i = 0; i < num_of_bytes; i++)
     //    printf("bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);

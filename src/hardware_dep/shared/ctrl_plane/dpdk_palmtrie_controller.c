@@ -56,7 +56,7 @@ int process_ternary_ipv4(const char* line) {
  
     //printf("Process PALMTRIE-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, priority);
  
-    send_ternary_palmtrie_ipv4_entry(ip, mask, priority, table_name, "payload.lookup", ".reflect");
+    send_ternary_palmtrie_ipv4_entry(ip, mask, priority, table_name, "custom.lookup", ".reflect");
 
     return 0;
 }
@@ -86,7 +86,7 @@ int process_ternary_bits(const char* line) {
     //for (int i = 0; i < num_of_bytes; i++)
     //    printf("Process PALMTRIE-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
-    send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "payload.lookup", ".reflect");
+    send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "custom.lookup", ".reflect");
 
     return 0;
 }
@@ -132,7 +132,7 @@ int process_random_bits(const char* line) {
         bitmap[8] = rand() % 255;
         bitmap[9] = rand() % 255;
 
-        send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "payload.lookup", ".reflect");
+        send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "custom.lookup", ".reflect");
     }
 
     return 0;

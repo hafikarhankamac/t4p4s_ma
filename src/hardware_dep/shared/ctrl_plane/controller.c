@@ -54,9 +54,6 @@ void input_processor(void *t)
         if (mem_cell==0) continue;
 
         ct->dh( mem_cell->data );
-#ifdef T4P4S_DEBUG
-        printf("controller.c input_processor\n");
-#endif
         free( mem_cell );
     }
 }
@@ -74,9 +71,6 @@ void output_processor(void *t)
 
         if (mem_cell==0) continue;
         write_p4_msg(ti->sock_fd, mem_cell->data, mem_cell->length);
-#ifdef T4P4S_DEBUG
-        printf("controller.c output_processor\n");
-#endif
 	    free ( mem_cell );
     }
 }

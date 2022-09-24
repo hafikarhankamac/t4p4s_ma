@@ -16,7 +16,6 @@
     {
         if (t->table != NULL){
             naive_ternary_flush(t->table);
-            free(t);
         } 
 
         t->table = naive_ternary_create(t->entry.key_size, t->max_size);

@@ -14,10 +14,6 @@
 #else
     void ternary_create(lookup_table_t* t, int socketid)
     {
-        if (t->table != NULL){
-            naive_ternary_flush(t->table);
-        } 
-
         t->table = naive_ternary_create(t->entry.key_size, t->max_size);
     }
 #endif

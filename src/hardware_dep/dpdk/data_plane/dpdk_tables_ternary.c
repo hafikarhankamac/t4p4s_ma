@@ -168,7 +168,8 @@
         //temp_key[8] = 0x02;       
 
         for ( int i = 0; i < t->entry.key_size; i++ )
-           RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
+           //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
+           RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
 
         uint8_t* ret = naive_ternary_lookup(t->table, key);
         //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);

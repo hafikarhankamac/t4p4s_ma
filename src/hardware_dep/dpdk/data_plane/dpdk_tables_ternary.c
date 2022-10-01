@@ -101,8 +101,8 @@
     {
         if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
-        for ( int i = 0; i < t->entry.key_size; i++ )
-            RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 
         uint8_t* entry = make_table_entry_on_socket(t, value);
         naive_ternary_add(t->table, key, mask, entry);
@@ -167,9 +167,9 @@
         //temp_key[5] = 0x0a;       
         //temp_key[8] = 0x02;       
 
-        for ( int i = 0; i < t->entry.key_size; i++ )
+        //for ( int i = 0; i < t->entry.key_size; i++ )
            //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
-           RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
+           //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
 
         uint8_t* ret = naive_ternary_lookup(t->table, key);
         //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);

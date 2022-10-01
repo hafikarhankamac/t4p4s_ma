@@ -125,7 +125,7 @@ int process_random_bits(const char* line) {
             return -1;
     }
 
-    for ( int ts = 0; ts < table_size; ts++) {
+    for (int ts = 0; ts < table_size; ts++) {
         bitmap[6] = rand() % 255;
         bitmap[7] = rand() % 255;
         bitmap[8] = rand() % 255;

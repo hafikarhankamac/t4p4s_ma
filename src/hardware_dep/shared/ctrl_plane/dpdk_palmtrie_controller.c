@@ -25,6 +25,8 @@ hex2bin(char c)
     }
 }
 
+extern int usleep(__useconds_t usec);
+
 controller c;
 
 void dhf(void* b) {
@@ -58,6 +60,8 @@ int process_ternary_ipv4(const char* line) {
  
     send_ternary_palmtrie_ipv4_entry(ip, mask, priority, table_name, "custom.lookup", ".reflect");
 
+    usleep(1200);
+
     return 0;
 }
 
@@ -87,6 +91,8 @@ int process_ternary_bits(const char* line) {
     //    printf("Process PALMTRIE-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "custom.lookup", ".reflect");
+
+    usleep(1200);
 
     return 0;
 }
@@ -126,13 +132,15 @@ int process_random_bits(const char* line) {
             return -1;
     }
 
-    for ( int ts = 0; ts < table_size; ts++) {
+    for (int ts = 0; ts < table_size; ts++) {
         bitmap[6] = rand() % 255;
         bitmap[7] = rand() % 255;
         bitmap[8] = rand() % 255;
         bitmap[9] = rand() % 255;
 
         send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "custom.lookup", ".reflect");
+
+        usleep(1200);
     }
 
     return 0;

@@ -98,7 +98,7 @@ typedef struct {
 //8
 
 #ifndef PALMTRIE_MTPT_STRIDE
-#define PALMTRIE_MTPT_STRIDE  4
+#define PALMTRIE_MTPT_STRIDE  6
 #endif
 
 #ifndef PALMTRIE_PRIORITY_SKIP

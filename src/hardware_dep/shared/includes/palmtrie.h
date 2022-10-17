@@ -95,10 +95,8 @@ typedef struct {
 
 #endif
 
-//8
-
 #ifndef PALMTRIE_MTPT_STRIDE
-#define PALMTRIE_MTPT_STRIDE  6
+#define PALMTRIE_MTPT_STRIDE  8
 #endif
 
 #ifndef PALMTRIE_PRIORITY_SKIP
@@ -255,7 +253,7 @@ struct palmtrie_popmtpt_leaf
     addr_t mask;
     void *data;
 };
-#define PALMTRIE_STRIDE_OPT 1
+#define PALMTRIE_STRIDE_OPT 0
 struct palmtrie_popmtpt_node {
     int16_t bit;
     union {

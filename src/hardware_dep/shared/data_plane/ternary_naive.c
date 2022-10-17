@@ -51,7 +51,11 @@ naive_ternary_lookup(ternary_table* t, uint8_t* key)
                 break;
             }
         }
-        if(match) res = e;
+        if(match) { 
+            res = e;
+            break;
+        }
+
     }
     return match ? res->value : NULL;
 }

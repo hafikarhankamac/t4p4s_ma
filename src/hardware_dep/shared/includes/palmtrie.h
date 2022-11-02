@@ -346,7 +346,7 @@ int palmtrie_mtpt_release(struct palmtrie *);
 
 /* in palmtrie_popmtpt.c */
 void * palmtrie_popmtpt_lookup(struct palmtrie_popmtpt *, addr_t);
-int
+int 
 palmtrie_popmtpt_add(struct palmtrie_popmtpt *, addr_t, addr_t, int, void *);
 int palmtrie_popmtpt_commit(struct palmtrie_popmtpt *);
 

@@ -59,7 +59,7 @@ project_source_files = [
 ]
 
 build_args = [
-    '-lm -Wno-parentheses-equality',
+    '-Wno-parentheses-equality',
 ]
 
 include_dirs = include_directories(

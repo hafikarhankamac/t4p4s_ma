@@ -855,7 +855,7 @@ EOT
     cd - >/dev/null
 
     cd ${T4P4S_TARGET_DIR}
-    sudo CC="ccache $T4P4S_CC" CC_LD="$T4P4S_LD" CFLAGS="$FLTO" $MESON_CMD $MESON_OPTS -Dbuildtype=$MESON_BUILDTYPE build >$T4P4S_LOG_DIR/20_meson.txt 2>&1
+    sudo CC="ccache $T4P4S_CC" CC_LD="$T4P4S_LD" CFLAGS="-lm $FLTO" $MESON_CMD $MESON_OPTS -Dbuildtype=$MESON_BUILDTYPE build >$T4P4S_LOG_DIR/20_meson.txt 2>&1
     exit_on_error "$?" "Meson invocation $(cc 2)failed$nn, see $(cc 1)$(realpath --relative-to="$STARTPWD" $T4P4S_LOG_DIR/20_meson.txt)$nn"
     cd - >/dev/null
 

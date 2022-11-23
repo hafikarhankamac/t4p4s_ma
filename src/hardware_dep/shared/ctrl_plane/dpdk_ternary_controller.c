@@ -57,6 +57,8 @@ int process_ternary_ipv4(const char* line) {
  
     send_ternary_ipv4_entry(ip, mask, priority, table_name, "custom.lookup", ".reflect");
 
+    usleep(1200);
+
     return 0;
 }
 
@@ -86,6 +88,8 @@ int process_ternary_bits(const char* line) {
     //    printf("Process TERNARY-BITS - bitmap[%d] = 0x%02X mask[%d] = 0x%02X\n", i, bitmap[i], i, mask[i]);
 
     send_ternary_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "custom.lookup", ".reflect");
+
+    usleep(1200);
 
     return 0;
 }
@@ -132,6 +136,8 @@ int process_random_bits(const char* line) {
         bitmap[9] = rand() % 255;
 
         send_ternary_bits_entry(num_of_bytes, bitmap, mask, ((1 << 20) - ts), table_name, "custom.lookup", ".reflect");
+
+        usleep(1200);
     }
 
     return 0;

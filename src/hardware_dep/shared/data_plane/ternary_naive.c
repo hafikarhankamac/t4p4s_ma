@@ -46,7 +46,7 @@ naive_ternary_lookup(ternary_table* t, uint8_t* key)
         // if(e->priority >= min_priority) continue;
         match = 1;
         for(j = 0; j < t->keylen; j++) {
-            if(e->key[j] != (key[j] & e->mask[j])) {
+            if((e->key[j] & e->mask[j])!= (key[j] & e->mask[j])) {
                 match = 0;
                 break;
             }

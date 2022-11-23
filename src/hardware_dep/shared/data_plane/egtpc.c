@@ -34,7 +34,7 @@
  *
  * **************************************************************************/
 
-#include "egt_pc.h"
+#include "egtpc.h"
 
 void CopyFilter(PFilter f1,PFilter f2) {
 

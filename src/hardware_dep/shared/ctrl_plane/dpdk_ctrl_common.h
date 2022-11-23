@@ -37,6 +37,8 @@ int send_ternary_ipv4_entry(uint8_t ip[4], uint8_t mask[4], uint8_t priority, co
 int send_ternary_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
 int send_ternary_palmtrie_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
 int send_ternary_palmtrie_bits_entry(uint8_t num_of_bytes, uint8_t* bitmap, uint8_t* mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_abv_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
+int send_ternary_egtpc_ipv4_entry(uint8_t ip[4], uint32_t mask, uint8_t priority, const char* table_name, const char* header_name, const char* action_name);
 
 int fill_teid_rate_limiter_table(uint32_t teid, const char* table_name, const char* header_name, const char* mode);
 

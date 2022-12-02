@@ -25,7 +25,12 @@
 unsigned int WORDSIZE = 32; //define the size of the bit vector chunk to be aggregated
 
 //#define INFINITY      0xffffffff
-#define MAXFILTERS      10000
+//#define MAXFILTERS    10000
+#define MAXFILTERS      1048576
+
+#define NUM_OF_PREFIX   2
+#define NUM_OF_FIELD    5
+#define NUM_OF_PROTOCOL 100
 
 #define DEBUG			0
 #define DEBUGC			0
@@ -36,7 +41,7 @@ typedef unsigned char uchar;
 typedef unsigned long unslong;
 
 struct PORTPREFIX {
-    uchar pref[2];
+    uchar pref[NUM_OF_PREFIX];
     uchar len;
 };
 
@@ -47,9 +52,9 @@ typedef struct PORTPREFIX PortPrefix;
 struct FILTER {
     unsint filtId;
     unsint cost;
-    uchar  pref[5][SRCADRLEN];
-    uchar  len[5];
-    uchar  maxlen[5];
+    uchar  pref[NUM_OF_FIELD][SRCADRLEN];
+    uchar  len[NUM_OF_FIELD];
+    uchar  maxlen[NUM_OF_FIELD];
 };
 
 typedef struct FILTER* Filter;
@@ -63,7 +68,7 @@ typedef struct FILTSET* FiltSet;
 struct FILTSET abvfiltset;
 
 struct PACKET {
-    uchar pref[2][SRCADRLEN];
+    uchar pref[NUM_OF_PREFIX][SRCADRLEN];
     unsint destPort;
     unsint sourcePort;
     uchar protocol;
@@ -125,6 +130,6 @@ struct PROTOCOL {
 
 typedef struct PROTOCOL Protocol;
 
-BitArray *bA[5];
-Trie *trieArray[5];
-Protocol protocol[101];
+BitArray *bA[NUM_OF_FIELD];
+Trie *trieArray[NUM_OF_FIELD];
+Protocol protocol[NUM_OF_PROTOCOL + 1];

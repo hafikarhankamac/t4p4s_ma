@@ -652,7 +652,7 @@ BitArray* searchPortTrie(unsint port, Trie *trie) {
 }
 
 unsint findMatch5(FILE *fp) {
-    unsint nH = 5, nrCuv, i, j, temp, result; 
+    unsint nH = NUM_OF_FIELD, nrCuv, i, j, temp, result; 
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
 
     if ((bA[0] == 0) || (bA[1] == 0) || (bA[2] == 0) || (bA[3] == 0) || (bA[4] == 0))
@@ -672,15 +672,15 @@ unsint findMatch5(FILE *fp) {
         if (result) { // got a match!!!
             for (i = 0; i < WORDSIZE; i++)
                 if (result & (((unsint)1) << i)) {
-                    curWord = (curPos << 5 + i);
+                    curWord = (curPos << NUM_OF_FIELD + i);
                     result = 0xFFFFFFFF;
 
                     for (i = 0; i < nH; i++)
                         result &= bA[i]->map[curCuv];
 
                     for (j = 0; j < WORDSIZE; j++)
-                        if (result & (((unsint)1) << i)) {
-                            temp = curWord << 5 + j;
+                        if (result & (((unsint)1) << j)) {
+                            temp = curWord << NUM_OF_FIELD + j;
                             fprintf(fp, "%d \n", temp);
 
                             return temp;
@@ -696,7 +696,7 @@ void search5Dim(struct PACKET *tempPkt) {
     if (tempPkt == (struct PACKET *)0)
         return;
 
-    if (tempPkt->protocol > 100)
+    if (tempPkt->protocol > NUM_OF_PROTOCOL)
         return;
 
     if (protocol[tempPkt->protocol].bA == (BitArray*)0)

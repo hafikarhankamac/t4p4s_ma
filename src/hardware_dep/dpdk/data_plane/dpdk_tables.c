@@ -26,11 +26,7 @@
     #ifdef T4P4S_ABV
         #include "abv.h"
     #else
-        #ifdef T4P4S_EGTPC
-            #include "egtpc.h"
-        #else
-            #include "ternary_naive.h"  // TERNARY
-        #endif
+        #include "ternary_naive.h"  // TERNARY
     #endif
 #endif
 

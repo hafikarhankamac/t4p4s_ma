@@ -48,7 +48,6 @@ project_source_files = [
     hdep / 'shared/data_plane/acltotcam.c',
 
     hdep / 'shared/data_plane/abv.c',
-    hdep / 'shared/data_plane/egtpc.c',
 
     hdep / 'shared/util_debug.c',
     hdep / 'shared/backend.c',

@@ -15,14 +15,10 @@
     #ifdef T4P4S_ABV
         //t->table = abv_init();
     #else
-        #ifdef T4P4S_EGTPC
-            //t->table = egtpc_init();
-        #else
-            void ternary_create(lookup_table_t* t, int socketid)
-            {
-                t->table = naive_ternary_create(t->entry.key_size, t->max_size);
-            }
-        #endif
+        void ternary_create(lookup_table_t* t, int socketid)
+        {
+            t->table = naive_ternary_create(t->entry.key_size, t->max_size);
+        }
     #endif
 #endif
 
@@ -110,22 +106,16 @@
         {
         }
     #else
-        #ifdef T4P4S_EGTPC
-            void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
-            {
-            }
-        #else
-            void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
-            {
-                if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+        void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
+        {
+            if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
-                //for ( int i = 0; i < t->entry.key_size; i++ )
-                //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+            //for ( int i = 0; i < t->entry.key_size; i++ )
+            //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 
-                uint8_t* entry = make_table_entry_on_socket(t, value);
-                naive_ternary_add(t->table, key, mask, entry);
+            uint8_t* entry = make_table_entry_on_socket(t, value);
+            naive_ternary_add(t->table, key, mask, entry);
             }
-        #endif
     #endif
 #endif
 
@@ -181,31 +171,25 @@
         {
         }
     #else
-        #ifdef T4P4S_EGTPC
-            uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
-            {
+        uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
+        {
+            if (t->entry.key_size == 0) return t->default_val;
+
+            //uint8_t temp_key[MAX_FIELD_LENGTH];
+
+            //memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
+
+            //temp_key[5] = 0x0a;       
+            //temp_key[8] = 0x02;       
+
+            //for ( int i = 0; i < t->entry.key_size; i++ )
+            //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
+            //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
+
+            uint8_t* ret = naive_ternary_lookup(t->table, key);
+            //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
+            return ret == NULL ? t->default_val : ret;
             }
-        #else
-            uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
-            {
-                if (t->entry.key_size == 0) return t->default_val;
-
-                //uint8_t temp_key[MAX_FIELD_LENGTH];
-
-                //memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
-
-                //temp_key[5] = 0x0a;       
-                //temp_key[8] = 0x02;       
-
-                //for ( int i = 0; i < t->entry.key_size; i++ )
-                //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
-                //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
-
-                uint8_t* ret = naive_ternary_lookup(t->table, key);
-                //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
-                return ret == NULL ? t->default_val : ret;
-            }
-        #endif
     #endif
 #endif
 
@@ -225,20 +209,11 @@
             //abv_release(t->table);
         }
     #else
-        #ifdef T4P4S_EGTPC
-            void ternary_flush(lookup_table_t* t)
-            {
-                if (t->entry.key_size == 0) return; // nothing must have been added
+        void ternary_flush(lookup_table_t* t)
+        {
+            if (t->entry.key_size == 0) return; // nothing must have been added
 
-                //egtpc_release(t->table);
-            }
-        #else
-            void ternary_flush(lookup_table_t* t)
-            {
-                if (t->entry.key_size == 0) return; // nothing must have been added
-
-                naive_ternary_flush(t->table);
-            }
-        #endif
+            naive_ternary_flush(t->table);
+        }
     #endif
 #endif

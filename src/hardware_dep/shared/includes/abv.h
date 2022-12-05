@@ -65,7 +65,7 @@ struct FILTSET {
 };
 
 typedef struct FILTSET* FiltSet;
-struct FILTSET abvfiltset;
+struct FILTSET filtset;
 
 struct PACKET {
     uchar pref[NUM_OF_PREFIX][SRCADRLEN];

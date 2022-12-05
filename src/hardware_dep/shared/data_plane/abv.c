@@ -32,12 +32,12 @@
 
 #include "abv.h"
 
-void abvCopyFilter(Filter f1, Filter f2) {
+void CopyFilter(Filter f1, Filter f2) {
 
     memcpy((char *)f1, (char *)f2, sizeof(struct FILTER));
 }
 
-void abvReadPrefix(FILE *fp, unsigned char* pref, unsigned char *len) {
+void ReadPrefix(FILE *fp, unsigned char* pref, unsigned char *len) {
     /* assumes IPv4 prefixes */
     unsigned int tpref[4], templen;
 
@@ -50,7 +50,7 @@ void abvReadPrefix(FILE *fp, unsigned char* pref, unsigned char *len) {
     *len = (unsigned char) templen;
 }
 
-void abvReadIPAddr(FILE *fp, unsigned char *pref) {
+void ReadIPAddr(FILE *fp, unsigned char *pref) {
     unsigned int tpref[4];
 
     int matches = fscanf(fp, "%d.%d.%d.%d", &tpref[0], &tpref[1], &tpref[2], &tpref[3]);
@@ -60,7 +60,7 @@ void abvReadIPAddr(FILE *fp, unsigned char *pref) {
     pref[3] = (unsigned char)tpref[3];
 }
 
-void abvReadPortAddr(FILE *fp, unsigned int *port) {
+void ReadPortAddr(FILE *fp, unsigned int *port) {
     unsigned int tempPort;
 
     int matches = fscanf(fp, "%d", &tempPort);
@@ -148,7 +148,7 @@ int convert_any_range_to_prefix(unsigned int portstart, unsigned int portend, un
     }
 }     
 
-void abvReadPort(FILE *fp, PortPrefix *portpref, unsigned char *num_prefix) {
+void ReadPort(FILE *fp, PortPrefix *portpref, unsigned char *num_prefix) {
     unsigned int portstart, portend;
     unsigned char i;
 
@@ -165,7 +165,7 @@ void abvReadPort(FILE *fp, PortPrefix *portpref, unsigned char *num_prefix) {
     }
 }
 
-int abvReadFilter(FILE *fp, FiltSet abvfiltset, unsint cost) {
+int ReadFilter(FILE *fp, FiltSet filtset, unsint cost) {
     /* allocate a few more bytes just to be on the safe side to avoid overflow etc */
     char status, validfilter;
     unsigned int protocol;
@@ -181,58 +181,23 @@ int abvReadFilter(FILE *fp, FiltSet abvfiltset, unsint cost) {
         
         tempfilt = &tempfilt1;
 
-        //abvReadPrefix(fp, tempfilt->srcpref, &(tempfilt->srclen));
-        abvReadPrefix(fp, tempfilt->pref[1], &(tempfilt->len[1]));
-        abvReadPrefix(fp, tempfilt->pref[2], &(tempfilt->len[2]));
+        ReadPrefix(fp, tempfilt->pref[0], &(tempfilt->len[0]));
+        ReadPrefix(fp, tempfilt->pref[1], &(tempfilt->len[1]));
 
-        abvReadPort(fp, destportpref, &numDestPortPref);
-        abvReadPort(fp, srcportpref, &numSrcPortPref);
-        //abvReadPort(fp, destportpref, &numDestPortPref);
+        if (filtset->numFilters == MAXFILTERS) {
+            if (DEBUG) printf("Out of memory: too many filters\n");
 
-        //ReadPortPrefix(fp, tempfilt->destportpref, &(tempfilt->destportlen));
-        //ReadPortPrefix(fp, tempfilt->srcportpref, &(tempfilt->srcportlen));
-
-        /* a value of 0 (wildcard) means protocol is unspecified */
-        /* 1 is for TCP, 2 is for UDP */
-        int matches = fscanf(fp, "%d", &protocol);
-        //tempfilt->protocol[0] = (unsigned char)protocol;
-
-        if (protocol == 0) {
-            tempfilt->len[0] = 0;
-            tempfilt->pref[0][0] =  0;
-        }
-        else {
-            tempfilt->len[0] = 1;
-            tempfilt->pref[0][0] = (uchar) protocol;
+            exit(3);
         }
 
-        //abvReadPrefix(fp, tempfilt->protocolpref, &(tempfilt->protocollen));
-        
-        for (i = 0; i < numDestPortPref; i++)
-          for (j = 0; j < numSrcPortPref; j++) {
-              if (abvfiltset->numFilters == MAXFILTERS) {
-                  if (DEBUG) printf("Out of memory: too many filters\n");
+        tempfilt->filtId = 1 + filtset->numFilters;
+        tempfilt->cost = cost;
 
-                  exit(3);
-              }
+        tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
 
-              tempfilt->filtId = 1 + abvfiltset->numFilters;
-              tempfilt->cost = cost;
+        CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
 
-              memcpy((char*)tempfilt->pref[3], (char*)destportpref[i].pref, sizeof(uchar)*DESTPORTLEN);
-              tempfilt->len[3] = destportpref[i].len;
-
-              memcpy((char*)tempfilt->pref[4], (char*)srcportpref[j].pref, sizeof(uchar)*SRCPORTLEN);
-              tempfilt->len[4] = srcportpref[j].len;
-
-              tempfilt->maxlen[0] = PROTOLEN;
-              tempfilt->maxlen[1] = tempfilt->maxlen[2] = ADRLEN/8;
-              tempfilt->maxlen[3] = tempfilt->maxlen[4] = PORTLEN/8;
-
-              abvCopyFilter(&(abvfiltset->filtArr[abvfiltset->numFilters]), tempfilt);
-
-              abvfiltset->numFilters++;
-          }
+        filtset->numFilters++;
 
         return SUCCESS;
     }
@@ -240,66 +205,17 @@ int abvReadFilter(FILE *fp, FiltSet abvfiltset, unsint cost) {
     return 0;
 }
 
-void abvLoadFilters(FILE *fp, FiltSet abvfiltset, int max) {
+void LoadFilters(FILE *fp, FiltSet filtset, int max) {
     int status, line = 0;
     struct FILTER tempfilt1, *tempfilt;
 
-    abvfiltset->numFilters = 0;
+    filtset->numFilters = 0;
 
-    while ( (!(feof(fp))) && (abvfiltset->numFilters < max)) {
+    while ( (!(feof(fp))) && (filtset->numFilters < max)) {
         line++;
-        status = abvReadFilter(fp, abvfiltset, line);
+        status = ReadFilter(fp, filtset, line);
         if (status == ERROR)
             break;
-    }
-}
-
-void WritePrefix(FILE *fp, unsigned char* pref, unsigned char len) {
-    /* assumes IPv4 prefixes */
-    unsigned int tpref[4], templen;
-
-    tpref[0] = (unsigned int)pref[0];
-    tpref[1] = (unsigned int)pref[1];
-    tpref[2] = (unsigned int)pref[2];
-    tpref[3] = (unsigned int)pref[3];
-
-    fprintf(fp, " %d.%d.%d.%d/%d ", tpref[0], tpref[1], tpref[2], tpref[3], len);
-}
-
-void WritePort(FILE *fp, uchar *portpref, uchar len) {
-
-    fprintf(fp, " %d.%d/%d ", portpref[0], portpref[1], len);
-}
-
-int WriteFilter(FILE *fp, Filter tempfilt, char *comment) {
-    /* allocate a few more bytes just to be on the safe side to avoid overflow etc */
-    char status, validfilter;
-    unsigned int protocol;
-    struct FILTER filt;
-
-    WritePrefix(fp, tempfilt->pref[1], tempfilt->len[1]);
-    WritePrefix(fp, tempfilt->pref[2], tempfilt->len[2]);
-    
-    WritePort(fp, tempfilt->pref[3], tempfilt->len[3]);
-    WritePort(fp, tempfilt->pref[4], tempfilt->len[4]);
-    
-    //WritePrefix(fp, tempfilt->protocolpref, tempfilt->protocollen);
-    
-    /* a value of 0 (wildcard) means protocol is unspecified */
-    /* 1 is for TCP, 2 is for UDP */
-    protocol = (unsigned int)tempfilt->pref[0][0];
-
-    //fprintf(fp, "%d [%s = %d]\n", protocol, comment, tempfilt->filtId);
-    fprintf(fp, "%d %d\n", protocol, tempfilt->filtId);
-
-    return SUCCESS;
-}
-
-void DumpFilters(FILE *fp, FiltSet abvfiltset) {
-    int i;
-
-    for (i = 0; i < abvfiltset->numFilters; i++) {
-        WriteFilter(fp, &(abvfiltset->filtArr[i]), "ID ");
     }
 }
 
@@ -342,27 +258,6 @@ BitArray* createArray(int nF) {
     return temp;
 }
 
-void printArray(FILE* fp, BitArray *bA) {
-    unsint nrCuv, curCuv, cuvAggr;
-    nrCuv = (unsint)(bA->noOfFilters / (8 * sizeof(unsint))) + 1;
-    cuvAggr = (unsint)(bA->noOfFilters / WORDSIZE +1) / (8 * sizeof(unsint)) + 1;
-
-    fprintf(fp, "No. of filters is:\t%u\t No. of Aggregate:\t%u\n ", bA->noOfFilters, cuvAggr);
-    fprintf(fp, "MapVector:");
-
-    for (curCuv = 0; curCuv < nrCuv; curCuv++) {
-        if (curCuv%4 == 0)
-            fprintf(fp, "\n");
-        fprintf(fp, "%x\t", bA->map[curCuv]);
-    }
-
-    fprintf(fp, "\nAggregate:\t");
-    for (curCuv = 0; curCuv < cuvAggr; curCuv++)
-        fprintf(fp, "%x\t", bA->aggregate[curCuv]);
-
-    fprintf(fp, "\n********************************\n");   
-}
-
 /* Releases the memory space allocated for a bit vector using createArray */
 void removeArray(BitArray* bA) {
 
@@ -381,7 +276,7 @@ void removeArray(BitArray* bA) {
 /* Set the bit in the bit vector. It also sets the aggregate bit accordingly
  * filtNo should have a value between in [0, bA->noOfFilters)
  */
-void setFilter(BitArray * bA, int filtNo){
+void setFilter(BitArray * bA, int filtNo) {
     unsint cuv, bitAggr, posInCuv, sunst, mask;
 
     if (bA == (BitArray*)0) {
@@ -494,7 +389,7 @@ void copyFilters(BitArray * source, BitArray *dest) {
  * in all the childrens.
  * If the node is not a PREFIX than it sets it to prefix and it does the same.
  */
-void insertFilter(int FiltNo, uchar *pref, uchar len, Trie *trie){
+void insertFilter(int FiltNo, uchar *pref, uchar len, Trie *trie) {
     Node *curNode;
     uchar i, curByte, curBit, flag = 0;
     BitArray *temp = (BitArray*)0;
@@ -554,7 +449,7 @@ void insertFilter(int FiltNo, uchar *pref, uchar len, Trie *trie){
         /* if a new created node (flag =1) or a node changing from 
          * NONPREFIX to PREFIX
          */
-        curNode->filters = createArray(abvfiltset.numFilters);
+        curNode->filters = createArray(filtset.numFilters);
         //trie->noPrefixNodes++;
         curNode->type = PREFIX;
         if (curNode->filters == (BitArray*)0) {
@@ -652,10 +547,10 @@ BitArray* searchPortTrie(unsint port, Trie *trie) {
 }
 
 unsint findMatch5(FILE *fp) {
-    unsint nH = NUM_OF_FIELD, nrCuv, i, j, temp, result; 
+    unsint nrCuv, i, j, temp, result; 
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
 
-    if ((bA[0] == 0) || (bA[1] == 0) || (bA[2] == 0) || (bA[3] == 0) || (bA[4] == 0))
+    if ((bA[0] == 0) || (bA[1] == 0))
         return (-1);
 
     nrCuv = bA[0]->noOfFilters / WORDSIZE + 1;
@@ -666,7 +561,7 @@ unsint findMatch5(FILE *fp) {
     for (curCuv = 0; curCuv < nrCuvAggr; curCuv++) {
         result = 0xFFFFFFFF;
 
-        for (i = 0; i < nH; i++)
+        for (i = 0; i < NUM_OF_FIELD; i++)
           result &= bA[i]->aggregate[curCuv];
 
         if (result) { // got a match!!!
@@ -675,7 +570,7 @@ unsint findMatch5(FILE *fp) {
                     curWord = (curPos << NUM_OF_FIELD + i);
                     result = 0xFFFFFFFF;
 
-                    for (i = 0; i < nH; i++)
+                    for (i = 0; i < NUM_OF_FIELD; i++)
                         result &= bA[i]->map[curCuv];
 
                     for (j = 0; j < WORDSIZE; j++)
@@ -696,18 +591,8 @@ void search5Dim(struct PACKET *tempPkt) {
     if (tempPkt == (struct PACKET *)0)
         return;
 
-    if (tempPkt->protocol > NUM_OF_PROTOCOL)
-        return;
-
-    if (protocol[tempPkt->protocol].bA == (BitArray*)0)
-        bA[0] = protocol[0].bA;
-    else
-        bA[0] = protocol[tempPkt->protocol].bA;
-
-    bA[1] = searchIPTrie(tempPkt->pref[0], trieArray[1]);
-    bA[2] = searchIPTrie(tempPkt->pref[1], trieArray[2]);
-    bA[3] = searchPortTrie(tempPkt->destPort, trieArray[3]);
-    bA[4] = searchPortTrie(tempPkt->sourcePort, trieArray[4]);
+    bA[0] = searchIPTrie(tempPkt->pref[0], trieArray[0]);
+    bA[1] = searchIPTrie(tempPkt->pref[1], trieArray[1]);
 
     return;
 }
@@ -723,14 +608,8 @@ void matchHeaders(FILE *fp, FILE *out) {
 
         tempPkt = &tempPkt1;
 
-        abvReadIPAddr(fp, tempPkt->pref[0]);
-        abvReadIPAddr(fp, tempPkt->pref[1]);
-
-        abvReadPortAddr(fp, &(tempPkt->destPort));
-        abvReadPortAddr(fp, &(tempPkt->sourcePort));
-
-        //int matches = fscanf(fp, "%d", &(tempPkt->protocol));
-        int matches = fscanf(fp, "%hhd", &(tempPkt->protocol));
+        ReadIPAddr(fp, tempPkt->pref[0]);
+        ReadIPAddr(fp, tempPkt->pref[1]);
 
         search5Dim(tempPkt);
 

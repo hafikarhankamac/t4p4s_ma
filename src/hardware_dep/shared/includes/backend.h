@@ -34,7 +34,7 @@ void             lpm_add (lookup_table_t* t, uint8_t* key, uint8_t depth, uint8_
     #ifdef T4P4S_ABV
         void ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value);
     #else
-        void ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value);
+            void ternary_add (lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value);
     #endif
 #endif
 

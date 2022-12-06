@@ -60,127 +60,18 @@ void ReadIPAddr(FILE *fp, unsigned char *pref) {
     pref[3] = (unsigned char)tpref[3];
 }
 
-void ReadPortAddr(FILE *fp, unsigned int *port) {
-    unsigned int tempPort;
-
-    int matches = fscanf(fp, "%d", &tempPort);
-    *port = tempPort;
-}
-
-/* pre: start[i:PORTLEN] == end[i:PORTLEN] && start[0:i-1]==0 && 
-   end[0:j-1]==1 
-*/
-PortPrefix convert_full_range_to_prefix(unsigned int start, unsigned int end)  {
-    PortPrefix portpref;
-
-    SETPORT(portpref.pref, start);
-    portpref.len = PORTLEN - floor(log10(end + 1 - start) / log10(2) + 0.5);
-
-    return portpref;
-}
-
-/* arbitrary range */
-int convert_any_range_to_prefix(unsigned int portstart, unsigned int portend, unsigned char *num_prefix, PortPrefix *portpref) {
-    unsigned int start, end, half, k, k1, k2;
-
-    unsigned int binary_start[PORTLEN], binary_end[PORTLEN];
-
-    int i, j;
-
-    start = portstart;
-    end = portend;
-
-    /* 0 : 15 from least significant to most significant */
-    for (i = 0; i < PORTLEN; i++) {
-        binary_start[i] = start % 2;
-        start /= 2;
-    }
-
-    for (i = 0; i < PORTLEN; i++) {
-        binary_end[i] = end % 2;
-        end /= 2;
-    }
-
-    for (i = PORTLEN - 1; i >= 0; i--) {
-        if (binary_start[i] != binary_end[i])
-            break;
-    }
-
-    for (j = i; j >= 0; j--) {
-        if (binary_start[j] != 0 || binary_end[j] != 1)
-            break;
-    }
-
-    /* base case */
-    if (j == -1) {
-        portpref[(*num_prefix)++] = convert_full_range_to_prefix(portstart, portend);
-
-        return 0;
-    }
-
-    /* split */
-    k = ceil(log10(portend + 1) / log10(2));
-    half = pow(2, k - 1);
-
-    if (portstart < half) {
-        convert_any_range_to_prefix(portstart, half - 1, num_prefix, portpref);
-        convert_any_range_to_prefix(half, portend, num_prefix, portpref);
-
-        return 0;
-    } else {
-        start = pow(2, k - 1);
-        end = pow(2, k) - 1;
-        
-        while (start < end) {
-            half = floor((start + end + 1) / 2);
-            if (portstart >= half) {
-                start = half;
-            } else if (portend <= half-1) {
-                end = half - 1;
-            } else {
-                convert_any_range_to_prefix(portstart, half - 1, num_prefix, portpref);
-                convert_any_range_to_prefix(half, portend, num_prefix, portpref);
-
-                return 0;
-            }
-        }
-        convert_any_range_to_prefix(start, end, num_prefix, portpref);
-    }
-}     
-
-void ReadPort(FILE *fp, PortPrefix *portpref, unsigned char *num_prefix) {
-    unsigned int portstart, portend;
-    unsigned char i;
-
-    int matches = fscanf(fp, "%d : %d", &portstart, &portend);
-
-    /* 0 : 1 denotes wildcard */
-    if (portstart == 0 && portend == 1) {
-        SETPORT(portpref[0].pref, 0);
-        portpref[0].len = 0;
-        *num_prefix = 1;
-    } else {
-        *num_prefix = 0;
-        convert_any_range_to_prefix(portstart, portend, num_prefix, portpref);
-    }
-}
-
 int ReadFilter(FILE *fp, FiltSet filtset, unsint cost) {
     /* allocate a few more bytes just to be on the safe side to avoid overflow etc */
     char status, validfilter;
-    unsigned int protocol;
     struct FILTER tempfilt1, *tempfilt;
-    PortPrefix srcportpref[MAXEXPANSION], destportpref[MAXEXPANSION];
-    unsigned char numSrcPortPref, numDestPortPref;
-    unsigned char i, j;
     
+    tempfilt = &tempfilt1;
+
     while (TRUE) {
         status = fscanf(fp, "%c", &validfilter);
         if (status == EOF) return ERROR;
         if (validfilter != '@') continue;	 
         
-        tempfilt = &tempfilt1;
-
         ReadPrefix(fp, tempfilt->pref[0], &(tempfilt->len[0]));
         ReadPrefix(fp, tempfilt->pref[1], &(tempfilt->len[1]));
 
@@ -507,45 +398,6 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     }
 }
 
-BitArray* searchPortTrie(unsint port, Trie *trie) {
-    Node *curNode;
-    uchar i, curByte, curBit, flag = 0;
-    BitArray *temp = (BitArray*)0;
-
-    if (trie == (Trie*)0) {
-        if (DEBUG) printf("ERROR: searchTrie: wrong trie initialization!\n");
-
-        return NULL;
-    }
-
-    curNode = trie->root;
-    if (curNode == (Node*)0) {
-        if (DEBUG) printf("ERROR: searchTrie: wrong trie initialization!\n");
-
-        return NULL;
-    }
-
-    for (i = 0; i < 16; i++) {
-        curBit = 15 - i;
-
-        if (curNode->type == PREFIX) {
-            temp = curNode->filters;
-        }
-
-        if (port & (1 << curBit)) {
-            if (curNode->one == (Node*)0) {
-                return temp;
-            }
-            curNode = curNode->one;
-        } else {
-            if (curNode->zero == (Node*)0) {
-                return temp;
-            }
-            curNode=curNode->zero;
-        } 
-    }
-}
-
 unsint findMatch5(FILE *fp) {
     unsint nrCuv, i, j, temp, result; 
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
@@ -561,21 +413,21 @@ unsint findMatch5(FILE *fp) {
     for (curCuv = 0; curCuv < nrCuvAggr; curCuv++) {
         result = 0xFFFFFFFF;
 
-        for (i = 0; i < NUM_OF_FIELD; i++)
+        for (i = 0; i < NUM_OF_PREFIX; i++)
           result &= bA[i]->aggregate[curCuv];
 
         if (result) { // got a match!!!
             for (i = 0; i < WORDSIZE; i++)
                 if (result & (((unsint)1) << i)) {
-                    curWord = (curPos << NUM_OF_FIELD + i);
+                    curWord = (curPos << NUM_OF_PREFIX + i);
                     result = 0xFFFFFFFF;
 
-                    for (i = 0; i < NUM_OF_FIELD; i++)
+                    for (i = 0; i < NUM_OF_PREFIX; i++)
                         result &= bA[i]->map[curCuv];
 
                     for (j = 0; j < WORDSIZE; j++)
                         if (result & (((unsint)1) << j)) {
-                            temp = curWord << NUM_OF_FIELD + j;
+                            temp = curWord << NUM_OF_PREFIX + j;
                             fprintf(fp, "%d \n", temp);
 
                             return temp;

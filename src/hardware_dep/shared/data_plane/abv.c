@@ -33,84 +33,6 @@
 #include "abv.h"
 #include <stdio.h>
 
-struct FILTSET * abv_init(struct FILTSET *filtset) {
-
-    filtset->numFilters = 0;
-
-    for (int i = 0; i < NUM_OF_PREFIX; i++)
-        trieArray[i] = InitTrie(0);
-
-    return &filtset;
-}
-
-void abv_release(struct FILTSET *filtset) {
-
-    return;
-}
-
-void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value) {
-    struct FILTER tempfilt1, *tempfilt;
-
-    if (filtset->numFilters == MAXFILTERS) {
-        if (DEBUG) printf("Out of memory: too many filters\n");
-
-        return;
-    }
-
-    tempfilt = &tempfilt1;
-
-    // ACL like "0.0.0.0/0 10.0.1.0/24"
-    tempfilt->pref[0][0] = 0;
-    tempfilt->pref[0][1] = 0;
-    tempfilt->pref[0][2] = 0;
-    tempfilt->pref[0][3] = 0;
-    tempfilt->len[0] = 0;
-
-    tempfilt->pref[1][0] = *(key);
-    tempfilt->pref[1][1] = *(key+1);
-    tempfilt->pref[1][2] = *(key+2);
-    tempfilt->pref[1][3] = *(key+3);
-    tempfilt->len[1] = *mask;
-
-    tempfilt->filtId = 1 + filtset->numFilters;
-    tempfilt->cost = 1 + filtset->numFilters;
-
-    tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
-
-    tempfilt->value = value;
-
-    CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
-
-    for (int i = 0; i < NUM_OF_PREFIX; i++)
-        insertFilter(filtset->numFilters, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
-
-    filtset->numFilters++;
-}
-
-uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
-
-    struct PACKET tempPkt1, *tempPkt;
-
-    tempPkt = &tempPkt1;
-
-    // Lookup like "0.0.0.0 10.0.1.0"
-    tempPkt->pref[0][0] = 0;
-    tempPkt->pref[0][1] = 0;
-    tempPkt->pref[0][2] = 0;
-    tempPkt->pref[0][3] = 0;
-
-    tempPkt->pref[1][0] = *(key);
-    tempPkt->pref[1][1] = *(key+1);
-    tempPkt->pref[1][2] = *(key+2);
-    tempPkt->pref[1][3] = *(key+3);
- 
-    bA[0] = searchIPTrie(tempPkt->pref[0], trieArray[0]);
-    bA[1] = searchIPTrie(tempPkt->pref[1], trieArray[1]);
-
-    //return (uint64_t)findMatch5();
-    return (uint8_t*)findMatch5();
-}
-
 void CopyFilter(Filter f1, Filter f2) {
 
     memcpy((char *)f1, (char *)f2, sizeof(struct FILTER));
@@ -286,7 +208,7 @@ void copyFilters(BitArray * source, BitArray *dest) {
  * in all the childrens.
  * If the node is not a PREFIX than it sets it to prefix and it does the same.
  */
-void insertFilter(int FiltNo, uchar *pref, uchar len, Trie *trie) {
+void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
     Node *curNode;
     uchar i, curByte, curBit, flag = 0;
     BitArray *temp = (BitArray*)0;
@@ -346,7 +268,8 @@ void insertFilter(int FiltNo, uchar *pref, uchar len, Trie *trie) {
         /* if a new created node (flag =1) or a node changing from 
          * NONPREFIX to PREFIX
          */
-        curNode->filters = createArray(filtset.numFilters);
+        //curNode->filters = createArray(filtset.numFilters); //by HAK
+        curNode->filters = createArray(nF);
         //trie->noPrefixNodes++;
         curNode->type = PREFIX;
         if (curNode->filters == (BitArray*)0) {
@@ -404,12 +327,15 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     }
 }
 
-unsint findMatch5() {
+//unsint findMatch() {
+uint8_t* findMatch() {
     unsint nrCuv, i, j, temp, result; 
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
 
-    if ((bA[0] == 0) || (bA[1] == 0))
-        return (-1);
+    for (int i = 0; i < NUM_OF_PREFIX; i++) {
+        if (bA[0] == 0)
+            return NULL;
+    }
 
     nrCuv = bA[0]->noOfFilters / WORDSIZE + 1;
     nrBitAggr = bA[0]->noOfFilters / WORDSIZE + 1;
@@ -435,10 +361,91 @@ unsint findMatch5() {
                         if (result & (((unsint)1) << j)) {
                             temp = curWord << NUM_OF_PREFIX + j;
 
-                            return temp;
+                            return (uint8_t*)temp;
                         }
                 }
         }
         curPos += WORDSIZE;
     }
+
+    return NULL;
+}
+
+struct FILTSET * abv_init(struct FILTSET *filtset) {
+
+    filtset->numFilters = 0;
+
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        trieArray[i] = InitTrie(0);
+
+    return filtset;
+}
+
+void abv_release(struct FILTSET *filtset) {
+
+    return;
+}
+
+void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value) {
+    struct FILTER tempfilt1, *tempfilt;
+
+    if (filtset->numFilters == MAXFILTERS) {
+        if (DEBUG) printf("Out of memory: too many filters\n");
+
+        return;
+    }
+
+    tempfilt = &tempfilt1;
+
+    // ACL like "0.0.0.0/0 10.0.1.0/24"
+    tempfilt->pref[0][0] = 0;
+    tempfilt->pref[0][1] = 0;
+    tempfilt->pref[0][2] = 0;
+    tempfilt->pref[0][3] = 0;
+    tempfilt->len[0] = 0;
+
+    tempfilt->pref[1][0] = *(key);
+    tempfilt->pref[1][1] = *(key+1);
+    tempfilt->pref[1][2] = *(key+2);
+    tempfilt->pref[1][3] = *(key+3);
+    tempfilt->len[1] = *mask;
+
+    tempfilt->filtId = 1 + filtset->numFilters;
+    tempfilt->cost = 1 + filtset->numFilters;
+
+    tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
+
+    tempfilt->value = value;
+
+    CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
+
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        insertFilter(filtset->numFilters, filtset->numFilters + 1, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
+
+    filtset->numFilters++;
+}
+
+uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
+
+    struct PACKET tempPkt1, *tempPkt;
+
+    tempPkt = &tempPkt1;
+
+    // Lookup like "0.0.0.0 10.0.1.0"
+    tempPkt->pref[0][0] = 0;
+    tempPkt->pref[0][1] = 0;
+    tempPkt->pref[0][2] = 0;
+    tempPkt->pref[0][3] = 0;
+
+    tempPkt->pref[1][0] = *(key);
+    tempPkt->pref[1][1] = *(key+1);
+    tempPkt->pref[1][2] = *(key+2);
+    tempPkt->pref[1][3] = *(key+3);
+ 
+
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        bA[i] = searchIPTrie(tempPkt->pref[i], trieArray[i]);
+
+    //return (uint64_t)findMatch();
+    return (uint8_t*)findMatch();
 }

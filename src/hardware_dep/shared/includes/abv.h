@@ -1,9 +1,17 @@
+#ifndef _ABV_H
+#define _ABV_H
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <memory.h>
 #include <sys/types.h>
+
+#include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define ADRLEN          32
 #define SRCADRLEN       ADRLEN/8
@@ -36,6 +44,8 @@ struct FILTER {
     uchar  pref[NUM_OF_PREFIX][SRCADRLEN];
     uchar  len[NUM_OF_PREFIX];
     uchar  maxlen[NUM_OF_PREFIX];
+
+    uint8_t* value;
 };
 
 typedef struct FILTER* Filter;
@@ -46,7 +56,7 @@ struct FILTSET {
 };
 
 typedef struct FILTSET* FiltSet;
-struct FILTSET filtset;
+//struct FILTSET filtset;
 
 struct PACKET {
     uchar pref[NUM_OF_PREFIX][SRCADRLEN];
@@ -90,3 +100,10 @@ typedef struct TRIE Trie;
 
 BitArray *bA[NUM_OF_PREFIX];
 Trie *trieArray[NUM_OF_PREFIX];
+
+struct FILTSET * abv_init(struct FILTSET *filtset);
+void abv_release(struct FILTSET *filtset);
+void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value);
+uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key);
+
+#endif

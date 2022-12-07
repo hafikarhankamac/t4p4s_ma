@@ -13,7 +13,12 @@
     }
 #else
     #ifdef T4P4S_ABV
-        //t->table = abv_init();
+        void ternary_create(lookup_table_t* t, int socketid)
+        {
+            struct FILTSET filtset;
+            
+            t->table = abv_init(&filtset);
+        }
     #else
         void ternary_create(lookup_table_t* t, int socketid)
         {
@@ -104,6 +109,13 @@
     #ifdef T4P4S_ABV
         void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
         {
+            if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+
+            //for ( int i = 0; i < t->entry.key_size; i++ )
+            //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+
+            uint8_t* entry = make_table_entry_on_socket(t, value);
+            abv_add_data(t->table, key, mask, entry);
         }
     #else
         void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
@@ -115,7 +127,7 @@
 
             uint8_t* entry = make_table_entry_on_socket(t, value);
             naive_ternary_add(t->table, key, mask, entry);
-            }
+        }
     #endif
 #endif
 
@@ -169,6 +181,10 @@
     #ifdef T4P4S_ABV
         uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
         {
+            if (t->entry.key_size == 0) return t->default_val;
+
+            uint8_t* ret = abv_lookup(t->table, key);
+            return ret == NULL ? t->default_val : ret;
         }
     #else
         uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
@@ -206,7 +222,7 @@
         {
             if (t->entry.key_size == 0) return; // nothing must have been added
 
-            //abv_release(t->table);
+            abv_release(t->table);
         }
     #else
         void ternary_flush(lookup_table_t* t)

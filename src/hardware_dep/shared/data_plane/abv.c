@@ -31,83 +31,89 @@
   ********************************************************************************************/
 
 #include "abv.h"
+#include <stdio.h>
+
+struct FILTSET * abv_init(struct FILTSET *filtset) {
+
+    filtset->numFilters = 0;
+
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        trieArray[i] = InitTrie(0);
+
+    return &filtset;
+}
+
+void abv_release(struct FILTSET *filtset) {
+
+    return;
+}
+
+void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value) {
+    struct FILTER tempfilt1, *tempfilt;
+
+    if (filtset->numFilters == MAXFILTERS) {
+        if (DEBUG) printf("Out of memory: too many filters\n");
+
+        return;
+    }
+
+    tempfilt = &tempfilt1;
+
+    // ACL like "0.0.0.0/0 10.0.1.0/24"
+    tempfilt->pref[0][0] = 0;
+    tempfilt->pref[0][1] = 0;
+    tempfilt->pref[0][2] = 0;
+    tempfilt->pref[0][3] = 0;
+    tempfilt->len[0] = 0;
+
+    tempfilt->pref[1][0] = *(key);
+    tempfilt->pref[1][1] = *(key+1);
+    tempfilt->pref[1][2] = *(key+2);
+    tempfilt->pref[1][3] = *(key+3);
+    tempfilt->len[1] = *mask;
+
+    tempfilt->filtId = 1 + filtset->numFilters;
+    tempfilt->cost = 1 + filtset->numFilters;
+
+    tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
+
+    tempfilt->value = value;
+
+    CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
+
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        insertFilter(filtset->numFilters, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
+
+    filtset->numFilters++;
+}
+
+uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
+
+    struct PACKET tempPkt1, *tempPkt;
+
+    tempPkt = &tempPkt1;
+
+    // Lookup like "0.0.0.0 10.0.1.0"
+    tempPkt->pref[0][0] = 0;
+    tempPkt->pref[0][1] = 0;
+    tempPkt->pref[0][2] = 0;
+    tempPkt->pref[0][3] = 0;
+
+    tempPkt->pref[1][0] = *(key);
+    tempPkt->pref[1][1] = *(key+1);
+    tempPkt->pref[1][2] = *(key+2);
+    tempPkt->pref[1][3] = *(key+3);
+ 
+    bA[0] = searchIPTrie(tempPkt->pref[0], trieArray[0]);
+    bA[1] = searchIPTrie(tempPkt->pref[1], trieArray[1]);
+
+    //return (uint64_t)findMatch5();
+    return (uint8_t*)findMatch5();
+}
 
 void CopyFilter(Filter f1, Filter f2) {
 
     memcpy((char *)f1, (char *)f2, sizeof(struct FILTER));
-}
-
-void ReadPrefix(FILE *fp, unsigned char* pref, unsigned char *len) {
-    /* assumes IPv4 prefixes */
-    unsigned int tpref[4], templen;
-
-    int matches = fscanf(fp, "%d.%d.%d.%d/%d", &tpref[0], &tpref[1], &tpref[2], &tpref[3], &templen);
-    pref[0] = (unsigned char)tpref[0];
-    pref[1] = (unsigned char)tpref[1];
-    pref[2] = (unsigned char)tpref[2];
-    pref[3] = (unsigned char)tpref[3];
-
-    *len = (unsigned char) templen;
-}
-
-void ReadIPAddr(FILE *fp, unsigned char *pref) {
-    unsigned int tpref[4];
-
-    int matches = fscanf(fp, "%d.%d.%d.%d", &tpref[0], &tpref[1], &tpref[2], &tpref[3]);
-    pref[0] = (unsigned char)tpref[0];
-    pref[1] = (unsigned char)tpref[1];
-    pref[2] = (unsigned char)tpref[2];
-    pref[3] = (unsigned char)tpref[3];
-}
-
-int ReadFilter(FILE *fp, FiltSet filtset, unsint cost) {
-    /* allocate a few more bytes just to be on the safe side to avoid overflow etc */
-    char status, validfilter;
-    struct FILTER tempfilt1, *tempfilt;
-    
-    tempfilt = &tempfilt1;
-
-    while (TRUE) {
-        status = fscanf(fp, "%c", &validfilter);
-        if (status == EOF) return ERROR;
-        if (validfilter != '@') continue;	 
-        
-        ReadPrefix(fp, tempfilt->pref[0], &(tempfilt->len[0]));
-        ReadPrefix(fp, tempfilt->pref[1], &(tempfilt->len[1]));
-
-        if (filtset->numFilters == MAXFILTERS) {
-            if (DEBUG) printf("Out of memory: too many filters\n");
-
-            exit(3);
-        }
-
-        tempfilt->filtId = 1 + filtset->numFilters;
-        tempfilt->cost = cost;
-
-        tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
-
-        CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
-
-        filtset->numFilters++;
-
-        return SUCCESS;
-    }
-
-    return 0;
-}
-
-void LoadFilters(FILE *fp, FiltSet filtset, int max) {
-    int status, line = 0;
-    struct FILTER tempfilt1, *tempfilt;
-
-    filtset->numFilters = 0;
-
-    while ( (!(feof(fp))) && (filtset->numFilters < max)) {
-        line++;
-        status = ReadFilter(fp, filtset, line);
-        if (status == ERROR)
-            break;
-    }
 }
 
 /* Allocates memory for a bit vector structure with a number of nF bits
@@ -398,7 +404,7 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     }
 }
 
-unsint findMatch5(FILE *fp) {
+unsint findMatch5() {
     unsint nrCuv, i, j, temp, result; 
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
 
@@ -428,43 +434,11 @@ unsint findMatch5(FILE *fp) {
                     for (j = 0; j < WORDSIZE; j++)
                         if (result & (((unsint)1) << j)) {
                             temp = curWord << NUM_OF_PREFIX + j;
-                            fprintf(fp, "%d \n", temp);
 
                             return temp;
                         }
                 }
         }
         curPos += WORDSIZE;
-    }
-}
-
-void search5Dim(struct PACKET *tempPkt) {
-
-    if (tempPkt == (struct PACKET *)0)
-        return;
-
-    bA[0] = searchIPTrie(tempPkt->pref[0], trieArray[0]);
-    bA[1] = searchIPTrie(tempPkt->pref[1], trieArray[1]);
-
-    return;
-}
-
-void matchHeaders(FILE *fp, FILE *out) {
-    char status, validPkt;
-    struct PACKET tempPkt1, *tempPkt;
-
-    while (TRUE) {
-        status = fscanf(fp, "%c", &validPkt);
-        if (status == EOF) return;
-        if (validPkt != '@') continue;	 
-
-        tempPkt = &tempPkt1;
-
-        ReadIPAddr(fp, tempPkt->pref[0]);
-        ReadIPAddr(fp, tempPkt->pref[1]);
-
-        search5Dim(tempPkt);
-
-        findMatch5(out);
     }
 }

@@ -26,7 +26,11 @@
     #ifdef T4P4S_ABV
         #include "abv.h"
     #else
-        #include "ternary_naive.h"  // TERNARY
+        #ifdef T4P4S_RANGE
+            #include "range.h"
+        #else
+            #include "ternary_naive.h"  // TERNARY
+        #endif
     #endif
 #endif
 

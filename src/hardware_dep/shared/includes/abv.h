@@ -27,8 +27,9 @@ unsigned int WORDSIZE = 32; //define the size of the bit vector chunk to be aggr
 //#define MAXFILTERS    10000
 #define MAXFILTERS      1048576
 
+#define LASTFILTERSYMBOLOFMASK       255
+
 #define NUM_OF_PREFIX   2
-//#define NUM_OF_FIELD    2
 
 #define DEBUG			0
 #define DEBUGC			0

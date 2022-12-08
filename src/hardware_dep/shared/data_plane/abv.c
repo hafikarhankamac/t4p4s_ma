@@ -395,38 +395,45 @@ void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* valu
         return;
     }
 
-    tempfilt = &tempfilt1;
+    if (*mask == LASTFILTERSYMBOLOFMASK) { // symbol of the last filter (/255)
+        for (int i = 0; i < filtset->numFilters; i++) {
+            for (int j = 0; j < NUM_OF_PREFIX; j++)
+                insertFilter(i, filtset->numFilters, filtset->filtArr[i].pref[j], filtset->filtArr[i].len[j], trieArray[j]);
+        }
 
-    // ACL like "0.0.0.0/0 10.0.1.0/24"
-    tempfilt->pref[0][0] = 0;
-    tempfilt->pref[0][1] = 0;
-    tempfilt->pref[0][2] = 0;
-    tempfilt->pref[0][3] = 0;
-    tempfilt->len[0] = 0;
+        //for (int i = 0; i < NUM_OF_PREFIX; i++)
+        //    insertFilter(filtset->numFilters, filtset->numFilters + 1, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
+    }
+    else {
+        tempfilt = &tempfilt1;
 
-    tempfilt->pref[1][0] = *(key);
-    tempfilt->pref[1][1] = *(key+1);
-    tempfilt->pref[1][2] = *(key+2);
-    tempfilt->pref[1][3] = *(key+3);
-    tempfilt->len[1] = *mask;
+        // ACL like "0.0.0.0/0 10.0.1.0/24"
+        tempfilt->pref[0][0] = 0;
+        tempfilt->pref[0][1] = 0;
+        tempfilt->pref[0][2] = 0;
+        tempfilt->pref[0][3] = 0;
+        tempfilt->len[0] = 0;
 
-    tempfilt->filtId = 1 + filtset->numFilters;
-    tempfilt->cost = 1 + filtset->numFilters;
+        tempfilt->pref[1][0] = *(key);
+        tempfilt->pref[1][1] = *(key+1);
+        tempfilt->pref[1][2] = *(key+2);
+        tempfilt->pref[1][3] = *(key+3);
+        tempfilt->len[1] = *mask;
 
-    tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
+        tempfilt->filtId = 1 + filtset->numFilters;
+        tempfilt->cost = 1 + filtset->numFilters;
 
-    tempfilt->value = value;
+        tempfilt->maxlen[0] = tempfilt->maxlen[1] = ADRLEN/8;
 
-    CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
+        tempfilt->value = value;
 
-    for (int i = 0; i < NUM_OF_PREFIX; i++)
-        insertFilter(filtset->numFilters, filtset->numFilters + 1, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
+        CopyFilter(&(filtset->filtArr[filtset->numFilters]), tempfilt);
 
-    filtset->numFilters++;
+        filtset->numFilters++;
+    }
 }
 
 uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
-
     struct PACKET tempPkt1, *tempPkt;
 
     tempPkt = &tempPkt1;

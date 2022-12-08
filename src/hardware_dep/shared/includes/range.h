@@ -22,7 +22,7 @@
 #define ERROR           (-1)
 #define SUCCESS         1
 
-unsigned int WORDSIZE = 32; //define the size of the bit vector chunk to be aggregated
+unsigned int RANGE_WORDSIZE = 32; //define the size of the bit vector chunk to be aggregated
 
 //#define MAXFILTERS    10000
 #define MAXFILTERS      1048576

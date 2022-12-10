@@ -395,7 +395,7 @@ void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* valu
         return;
     }
 
-    if (*mask == LASTFILTERSYMBOLOFMASK) { // symbol of the last filter (/255)
+    if (*mask == LASTFILTERSYMBOLOFMASK) { // symbol of the end of filter (/255) "x.x.x.x/255"
         for (int i = 0; i < filtset->numFilters; i++) {
             for (int j = 0; j < NUM_OF_PREFIX; j++)
                 insertFilter(i, filtset->numFilters, filtset->filtArr[i].pref[j], filtset->filtArr[i].len[j], trieArray[j]);

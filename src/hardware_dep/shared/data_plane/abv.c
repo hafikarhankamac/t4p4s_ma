@@ -373,8 +373,6 @@ uint8_t* findMatch(struct FILTSET *filtset) {
 
 struct FILTSET * abv_init(struct FILTSET *filtset) {
 
-    fprintf(2, "abv_init enter\n");
-
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
     //filtset = malloc(sizeof(struct FILTSET));
@@ -384,12 +382,10 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
         return NULL;
     }
 
-    fprintf(2, "abv_init calloc\n");
+    //filtset->numFilters = 0;
 
-    filtset->numFilters = 0;
-
-    for (int i = 0; i < NUM_OF_PREFIX; i++)
-        filtset->trieArray[i] = InitTrie(0);
+    //for (int i = 0; i < NUM_OF_PREFIX; i++)
+    //    filtset->trieArray[i] = InitTrie(0);
 
     return filtset;
 }

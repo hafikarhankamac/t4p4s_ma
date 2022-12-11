@@ -382,10 +382,10 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
         return NULL;
     }
 
-    filtset->numFilters = 0;
+    //filtset->numFilters = 0;
 
-    for (int i = 0; i < NUM_OF_PREFIX; i++)
-        filtset->trieArray[i] = InitTrie(0);
+    //for (int i = 0; i < NUM_OF_PREFIX; i++)
+    //    filtset->trieArray[i] = InitTrie(0);
 
     return filtset;
 }

@@ -94,9 +94,9 @@ struct FILTER {
 
 struct FILTSET {
     unsint numFilters;
-    BitArray *bA[NUM_OF_PREFIX];
-    Trie *trieArray[NUM_OF_PREFIX];
     struct FILTER filtArr[MAXFILTERS];
+//    BitArray *bA[NUM_OF_PREFIX];
+//    Trie *trieArray[NUM_OF_PREFIX];
 };
 
 //typedef struct FILTSET* FiltSetPtr;

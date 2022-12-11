@@ -16,6 +16,8 @@
     void ternary_create(lookup_table_t* t, int socketid)
     {
         struct FILTSET filtset;
+        //BitArray *bA[NUM_OF_PREFIX];
+        //Trie *trieArray[NUM_OF_PREFIX];
 
         debug("ternary_create abv\n");
 

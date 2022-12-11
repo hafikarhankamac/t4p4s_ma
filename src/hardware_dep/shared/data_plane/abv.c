@@ -375,8 +375,8 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
 
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
-    //filtset = malloc(sizeof(struct FILTSET));
-    filtset = (struct FILTSET *)calloc(1, sizeof(struct FILTSET));
+    filtset = malloc(sizeof(struct FILTSET));
+    //filtset = (struct FILTSET *)calloc(1, sizeof(struct FILTSET));
     if (NULL == filtset) {
         /* Memory allocation error */
         return NULL;
@@ -398,6 +398,7 @@ void abv_release(struct FILTSET *filtset) {
 void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value) {
     struct FILTER tempfilt1, *tempfilt;
 
+    /*
     if (filtset->numFilters == MAXFILTERS) {
         if (DEBUG) printf("Out of memory: too many filters\n");
 
@@ -440,11 +441,14 @@ void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* valu
 
         filtset->numFilters++;
     }
+    */
 }
 
 uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
     struct PACKET tempPkt1, *tempPkt;
 
+    return NULL;
+    /*
     tempPkt = &tempPkt1;
 
     // Lookup like "0.0.0.0 10.0.1.0"
@@ -464,4 +468,5 @@ uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
 
     //return (uint64_t)findMatch(filtset);
     return (uint8_t *)findMatch(filtset);
+    */
 }

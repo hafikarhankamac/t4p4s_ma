@@ -22,7 +22,8 @@
 #define ERROR           (-1)
 #define SUCCESS         1
 
-unsigned int WORDSIZE = 32; //define the size of the bit vector chunk to be aggregated
+//unsigned int WORDSIZE = 32; //define the size of the bit vector chunk to be aggregated
+#define WORDSIZE        32 //define the size of the bit vector chunk to be aggregated
 
 //#define MAXFILTERS    10000
 #define MAXFILTERS      1048576
@@ -99,8 +100,8 @@ struct TRIE {
 
 typedef struct TRIE Trie;
 
-BitArray *bA[NUM_OF_PREFIX];
-Trie *trieArray[NUM_OF_PREFIX];
+//BitArray *abv_bA[NUM_OF_PREFIX];
+//Trie *abv_trieArray[NUM_OF_PREFIX];
 
 struct FILTSET * abv_init(struct FILTSET *filtset);
 void abv_release(struct FILTSET *filtset);

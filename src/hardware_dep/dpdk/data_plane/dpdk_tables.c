@@ -25,6 +25,9 @@
 #endif
 #ifdef T4P4S_ABV
     #include "abv.h"
+
+    BitArray *abv_bA[NUM_OF_PREFIX];
+    Trie *abv_trieArray[NUM_OF_PREFIX];
 #endif
 #ifdef T4P4S_RANGE
     #include "range.h"

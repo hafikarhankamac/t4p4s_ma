@@ -333,12 +333,12 @@ uint8_t* findMatch() {
     unsint curWord, nrBitAggr, nrCuvAggr, curPos, curCuv;
 
     for (int i = 0; i < NUM_OF_PREFIX; i++) {
-        if (bA[0] == 0)
+        if (abv_bA[0] == 0)
             return NULL;
     }
 
-    nrCuv = bA[0]->noOfFilters / WORDSIZE + 1;
-    nrBitAggr = bA[0]->noOfFilters / WORDSIZE + 1;
+    nrCuv = abv_bA[0]->noOfFilters / WORDSIZE + 1;
+    nrBitAggr = abv_bA[0]->noOfFilters / WORDSIZE + 1;
     nrCuvAggr = nrBitAggr / WORDSIZE;
 
     curPos = 0;
@@ -346,7 +346,7 @@ uint8_t* findMatch() {
         result = 0xFFFFFFFF;
 
         for (i = 0; i < NUM_OF_PREFIX; i++)
-          result &= bA[i]->aggregate[curCuv];
+          result &= abv_bA[i]->aggregate[curCuv];
 
         if (result) { // got a match!!!
             for (i = 0; i < WORDSIZE; i++)
@@ -355,7 +355,7 @@ uint8_t* findMatch() {
                     result = 0xFFFFFFFF;
 
                     for (i = 0; i < NUM_OF_PREFIX; i++)
-                        result &= bA[i]->map[curCuv];
+                        result &= abv_bA[i]->map[curCuv];
 
                     for (j = 0; j < WORDSIZE; j++)
                         if (result & (((unsint)1) << j)) {
@@ -376,7 +376,7 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
     filtset->numFilters = 0;
 
     for (int i = 0; i < NUM_OF_PREFIX; i++)
-        trieArray[i] = InitTrie(0);
+        abv_trieArray[i] = InitTrie(0);
 
     return filtset;
 }
@@ -398,11 +398,11 @@ void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* valu
     if (*mask == LASTFILTERSYMBOLOFMASK) { // symbol of the end of filter (/255) "x.x.x.x/255"
         for (int i = 0; i < filtset->numFilters; i++) {
             for (int j = 0; j < NUM_OF_PREFIX; j++)
-                insertFilter(i, filtset->numFilters, filtset->filtArr[i].pref[j], filtset->filtArr[i].len[j], trieArray[j]);
+                insertFilter(i, filtset->numFilters, filtset->filtArr[i].pref[j], filtset->filtArr[i].len[j], abv_trieArray[j]);
         }
 
         //for (int i = 0; i < NUM_OF_PREFIX; i++)
-        //    insertFilter(filtset->numFilters, filtset->numFilters + 1, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], trieArray[i]);
+        //    insertFilter(filtset->numFilters, filtset->numFilters + 1, filtset->filtArr[filtset->numFilters].pref[i], filtset->filtArr[filtset->numFilters].len[i], abv_trieArray[i]);
     }
     else {
         tempfilt = &tempfilt1;
@@ -451,7 +451,7 @@ uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
  
 
     for (int i = 0; i < NUM_OF_PREFIX; i++)
-        bA[i] = searchIPTrie(tempPkt->pref[i], trieArray[i]);
+        abv_bA[i] = searchIPTrie(tempPkt->pref[i], abv_trieArray[i]);
 
     //return (uint64_t)findMatch();
     return (uint8_t*)findMatch();

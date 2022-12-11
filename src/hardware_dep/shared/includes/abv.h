@@ -40,26 +40,6 @@ typedef unsigned int unsint;
 typedef unsigned char uchar;
 typedef unsigned long unslong;
 
-struct FILTER {
-    unsint filtId;
-    unsint cost;
-    uchar  pref[NUM_OF_PREFIX][SRCADRLEN];
-    uchar  len[NUM_OF_PREFIX];
-    uchar  maxlen[NUM_OF_PREFIX];
-
-    uint8_t* value;
-};
-
-typedef struct FILTER* Filter;
-
-struct FILTSET {
-    unsint numFilters;
-    struct FILTER filtArr[MAXFILTERS];
-};
-
-typedef struct FILTSET* FiltSet;
-//struct FILTSET filtset;
-
 struct PACKET {
     uchar pref[NUM_OF_PREFIX][SRCADRLEN];
 };
@@ -100,8 +80,26 @@ struct TRIE {
 
 typedef struct TRIE Trie;
 
-//BitArray *abv_bA[NUM_OF_PREFIX];
-//Trie *abv_trieArray[NUM_OF_PREFIX];
+struct FILTER {
+    unsint filtId;
+    unsint cost;
+    uchar  pref[NUM_OF_PREFIX][SRCADRLEN];
+    uchar  len[NUM_OF_PREFIX];
+    uchar  maxlen[NUM_OF_PREFIX];
+
+    uint8_t* value;
+};
+
+typedef struct FILTER* Filter;
+
+struct FILTSET {
+    unsint numFilters;
+    BitArray *bA[NUM_OF_PREFIX];
+    Trie *trieArray[NUM_OF_PREFIX];
+    struct FILTER filtArr[MAXFILTERS];
+};
+
+typedef struct FILTSET* FiltSet;
 
 struct FILTSET * abv_init(struct FILTSET *filtset);
 void abv_release(struct FILTSET *filtset);

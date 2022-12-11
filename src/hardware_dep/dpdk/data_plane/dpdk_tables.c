@@ -129,11 +129,9 @@ void create_table(lookup_table_t* t, int socketid)
             lpm_create(t, socketid);
             break;
         case LOOKUP_ternary:
-            debug("LOOKUP_ternary 1\n");
+            debug("LOOKUP_ternary\n");
 
             ternary_create(t, socketid);
-
-            debug("LOOKUP_ternary 2\n");
             break;
     }
 }

@@ -35,15 +35,21 @@ void create_tables_on_lcore(unsigned lcore_id)
 
     int socketid = get_socketid(lcore_id);
 
+    debug("create_tables_on_lcore 1\n");
+
     if (state[socketid].tables[0][0] == NULL) {
         create_tables_on_socket(socketid);
     }
+
+    debug("create_tables_on_lcore 2\n");
 
     // TODO is it necessary to store the table in two places?
     for (int i = 0; i < NB_TABLES; i++) {
         struct lcore_conf* qconf = &lcore_conf[lcore_id];
         qconf->state.tables[i] = state[socketid].tables[i][0];
     }
+
+    debug("create_tables_on_lcore 3\n");
 }
 
 #ifdef T4P4S_DEBUG

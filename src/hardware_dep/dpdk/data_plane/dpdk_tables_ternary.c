@@ -17,6 +17,8 @@
     {
         struct FILTSET filtset;
 
+        debug("ternary_create abv\n");
+
         t->table = abv_init(&filtset);
     }
 #endif

@@ -382,6 +382,8 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
         return NULL;
     }
 
+    debug("abv_init calloc\n");
+
     filtset->numFilters = 0;
 
     for (int i = 0; i < NUM_OF_PREFIX; i++)

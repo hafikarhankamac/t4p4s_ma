@@ -33,7 +33,7 @@
 #include "abv.h"
 #include <stdio.h>
 
-void CopyFilter(FilterPtr f1, FilterPtr f2) {
+void CopyFilter(struct FILTER *f1, struct FILTER *f2) {
 
     memcpy((char *)f1, (char *)f2, sizeof(struct FILTER));
 }
@@ -49,27 +49,27 @@ BitArray* createArray(int nF) {
     t1 = (unsint)(nF / WORDSIZE) + 1;
     t2 = (unsint)(((unsint)(nF / WORDSIZE) + 1) / WORDSIZE) + 1;
 
-    temp = (BitArray*)calloc(1, sizeof(BitArray));
-    if (temp == (BitArray*)0) {
+    temp = (BitArray *)calloc(1, sizeof(BitArray));
+    if (temp == (BitArray *)0) {
         if (DEBUG) printf("Error allocating memory in createArray\n");
 
         return temp;
     }
 
-    temp->map = (unsint*)calloc(t1, sizeof(unsint));
-    if (temp->map ==(unsint*)0) {
+    temp->map = (unsint *)calloc(t1, sizeof(unsint));
+    if (temp->map ==(unsint *)0) {
         free(temp);
         if (DEBUG) printf("Error allocating memory in createArray\n");
 
-        return (BitArray*)0;
+        return (BitArray *)0;
     }
 
-    temp->aggregate = (unsint*)calloc(t2, sizeof(unsint));
-    if (temp->aggregate == (unsint*)0) {
+    temp->aggregate = (unsint *)calloc(t2, sizeof(unsint));
+    if (temp->aggregate == (unsint *)0) {
         free(temp);
         if (DEBUG) printf("Error allocating memory in createArray\n");
 
-        return (BitArray*)0;
+        return (BitArray *)0;
     }
 
     temp->noOfFilters = nF;
@@ -78,9 +78,9 @@ BitArray* createArray(int nF) {
 }
 
 /* Releases the memory space allocated for a bit vector using createArray */
-void removeArray(BitArray* bA) {
+void removeArray(BitArray *bA) {
 
-    if (bA == (BitArray*)0)
+    if (bA == (BitArray *)0)
         return;
 
     if (bA->aggregate)
@@ -95,10 +95,10 @@ void removeArray(BitArray* bA) {
 /* Set the bit in the bit vector. It also sets the aggregate bit accordingly
  * filtNo should have a value between in [0, bA->noOfFilters)
  */
-void setFilter(BitArray * bA, int filtNo) {
+void setFilter(BitArray *bA, int filtNo) {
     unsint cuv, bitAggr, posInCuv, sunst, mask;
 
-    if (bA == (BitArray*)0) {
+    if (bA == (BitArray *)0) {
         if (DEBUG) printf("ERROR: setFilter function: Null pointer argument\n");
 
         return;
@@ -115,7 +115,7 @@ void setFilter(BitArray * bA, int filtNo) {
     cuv = (unsint)(filtNo / sunst);
     posInCuv = filtNo % sunst;
     mask = 1 << posInCuv;
-    if (bA->map == (unsint*)0) {
+    if (bA->map == (unsint *)0) {
         if (DEBUG) printf("ERROR: setFilter function: Null pointer access\n");
 
         return;
@@ -125,7 +125,7 @@ void setFilter(BitArray * bA, int filtNo) {
     cuv = (unsint)(bitAggr / sunst);
     posInCuv = bitAggr % sunst;
     mask = 1 << posInCuv;
-    if (bA->aggregate == (unsint*)0) {
+    if (bA->aggregate == (unsint *)0) {
         if (DEBUG) printf("ERROR: setFilter function: Null pointer access\n");
 
         return;
@@ -142,30 +142,30 @@ void setFilter(BitArray * bA, int filtNo) {
 Trie* InitTrie(int nF) {
     Trie *temp;
 
-    temp = (Trie*)calloc(1, sizeof(Trie));
-    if (temp == (Trie*)0) {
+    temp = (Trie *)calloc(1, sizeof(Trie));
+    if (temp == (Trie *)0) {
       if (DEBUG) printf("ERROR: InitTrie: Mem. allocation error\n");
 
       return temp;
     }
 
-    temp->root = (Node*)calloc(1, sizeof(Node));
-    if (temp->root == (Node*)0) {
+    temp->root = (Node *)calloc(1, sizeof(Node));
+    if (temp->root == (Node *)0) {
       if (DEBUG) printf("ERROR: InitTrie: Mem. allocation error\n");
 
       free(temp);
 
-      return (Trie*)0;
+      return (Trie *)0;
     }
 
     /*
     temp->root->filters = createArray(nF);
-    if (temp->root->filters == (BitArray*)0) {
+    if (temp->root->filters == (BitArray *)0) {
         if (DEBUG) printf("ERROR: InitTrie: Mem. allocation error\n");
         free(temp->root);
         free(temp);
 
-        return (Trie*)0;
+        return (Trie *)0;
     }
     temp->root->type = PREFIX;
     temp->noPrefixNodes = 1;
@@ -176,7 +176,7 @@ Trie* InitTrie(int nF) {
     return temp;
 }
 
-void setFilterChild(Node*nod, int FiltNo) {
+void setFilterChild(Node *nod, int FiltNo) {
 
     if (nod == (Node *)0) return;
 
@@ -187,7 +187,7 @@ void setFilterChild(Node*nod, int FiltNo) {
     setFilterChild(nod->one, FiltNo);
 }
 
-void copyFilters(BitArray * source, BitArray *dest) {
+void copyFilters(BitArray *source, BitArray *dest) {
     unsint nF, t1, t2, sunst, i;
 
     nF = source->noOfFilters;
@@ -211,16 +211,16 @@ void copyFilters(BitArray * source, BitArray *dest) {
 void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
     Node *curNode;
     uchar i, curByte, curBit, flag = 0;
-    BitArray *temp = (BitArray*)0;
+    BitArray *temp = (BitArray *)0;
 
-    if (trie == (Trie*)0) {
+    if (trie == (Trie *)0) {
         if (DEBUG) printf("ERROR: insertFilter: wrong trie initialization!\n");
 
         return;
     }
 
     curNode = trie->root;
-    if (curNode ==(Node*)0) {
+    if (curNode ==(Node *)0) {
         if (DEBUG) printf("ERROR: insertFilter: wrong trie initialization!\n");
 
         return;
@@ -236,9 +236,9 @@ void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
         curBit = i % 8;
         if (pref[curByte] & (1 << (7 - curBit))) {
             /* select bit i<len from the prefix */
-            if (curNode->one == (Node*)0) {
+            if (curNode->one == (Node *)0) {
                 flag = 1;
-                curNode->one = (Node*)calloc(1, sizeof(Node));
+                curNode->one = (Node *)calloc(1, sizeof(Node));
                 curNode->one->pos = i + 1;;
                 trie->noNodes++;
                 if (curNode->one == (Node*)0) {
@@ -249,12 +249,12 @@ void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
             }
             curNode = curNode->one;
         } else {
-            if (curNode->zero == (Node*)0) {
+            if (curNode->zero == (Node *)0) {
                 flag = 1;
-                curNode->zero = (Node*)calloc(1,sizeof(Node));
+                curNode->zero = (Node *)calloc(1,sizeof(Node));
                 curNode->zero->pos = i + 1;
                 trie->noNodes++;
-                if (curNode->zero == (Node*)0) {
+                if (curNode->zero == (Node *)0) {
                     if (DEBUG) printf("ERROR: insertFilter: not enough memory!\n");
 
                     return;
@@ -272,7 +272,7 @@ void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
         curNode->filters = createArray(nF);
         //trie->noPrefixNodes++;
         curNode->type = PREFIX;
-        if (curNode->filters == (BitArray*)0) {
+        if (curNode->filters == (BitArray *)0) {
             if (DEBUG) printf("ERROR: insertFilter: not enough memory!\n");
 
             return;
@@ -293,14 +293,14 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     uchar i, curByte, curBit, flag=0;
     BitArray *temp = (BitArray*)0;
 
-    if (trie == (Trie*)0) {
+    if (trie == (Trie *)0) {
         if (DEBUG) printf("ERROR: searchTrie: wrong trie initialization!\n");
 
         return NULL;
     }
 
     curNode = trie->root;
-    if (curNode == (Node*)0) {
+    if (curNode == (Node *)0) {
         if (DEBUG) printf("ERROR: searchTrie: wrong trie initialization!\n");
 
         return NULL;
@@ -314,12 +314,12 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
         curBit = i%8;
         if (pref[curByte] & (1 << (7 - curBit))) {
             /* select bit i < len from the prefix */
-            if (curNode->one == (Node*)0) {
+            if (curNode->one == (Node *)0) {
                 return temp;
             }
             curNode = curNode->one;
         } else {
-            if (curNode->zero == (Node*)0) {
+            if (curNode->zero == (Node *)0) {
                 return temp;
             }
             curNode=curNode->zero;
@@ -361,7 +361,7 @@ uint8_t* findMatch(struct FILTSET *filtset) {
                         if (result & (((unsint)1) << j)) {
                             temp = curWord << NUM_OF_PREFIX + j;
 
-                            return (uint8_t*)temp;
+                            return (uint8_t *)temp;
                         }
                 }
         }
@@ -376,7 +376,7 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
     //filtset = malloc(sizeof(struct FILTSET));
-    filtset = (FiltSetPtr)calloc(1, sizeof(struct FILTSET));
+    filtset = (struct FILTSET *)calloc(1, sizeof(struct FILTSET));
     if (NULL == filtset) {
         /* Memory allocation error */
         return NULL;
@@ -463,5 +463,5 @@ uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
         filtset->bA[i] = searchIPTrie(tempPkt->pref[i], filtset->trieArray[i]);
 
     //return (uint64_t)findMatch(filtset);
-    return (uint8_t*)findMatch(filtset);
+    return (uint8_t *)findMatch(filtset);
 }

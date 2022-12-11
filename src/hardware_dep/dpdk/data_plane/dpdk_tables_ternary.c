@@ -11,28 +11,27 @@
         //t->table = palmtrie_init(&palmtrie, PALMTRIE_BASIC); // default PALMTRIE_BASIC is implemented
         t->table = palmtrie_init(&palmtrie, PALMTRIE_PLUS); // default PALMTRIE_PLUS is implemented
     }
-#else
-    #ifdef T4P4S_ABV
-        void ternary_create(lookup_table_t* t, int socketid)
-        {
-            struct FILTSET filtset;
+#endif
+#ifdef T4P4S_ABV
+    void ternary_create(lookup_table_t* t, int socketid)
+    {
+        struct FILTSET filtset;
 
-            t->table = abv_init(&filtset);
-        }
-    #else
-        #ifdef T4P4S_RANGE
-            void ternary_create(lookup_table_t* t, int socketid)
-            {
+        t->table = abv_init(&filtset);
+    }
+#endif
+#ifdef T4P4S_RANGE
+    void ternary_create(lookup_table_t* t, int socketid)
+    {
 
-                //t->table = range_init();
-            }
-        #else
-            void ternary_create(lookup_table_t* t, int socketid)
-            {
-                t->table = naive_ternary_create(t->entry.key_size, t->max_size);
-            }
-        #endif
-    #endif
+        //t->table = range_init();
+    }
+#endif
+#ifdef T4P4S_NAIVE
+    void ternary_create(lookup_table_t* t, int socketid)
+    {
+        t->table = naive_ternary_create(t->entry.key_size, t->max_size);
+    }
 #endif
 
 #ifdef T4P4S_PALMTRIE
@@ -113,43 +112,42 @@
 
         palmtrie_commit(t->table); // if PALMTRIE_PLUS is implemented
     }
-#else
-    #ifdef T4P4S_ABV
-        void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
-        {
-            if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+#endif
+#ifdef T4P4S_ABV
+    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
+    {
+        if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
-            //for ( int i = 0; i < t->entry.key_size; i++ )
-            //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 
-            uint8_t* entry = make_table_entry_on_socket(t, value);
-            abv_add(t->table, key, mask, entry);
-        }
-    #else
-        #ifdef T4P4S_RANGE
-            void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
-            {
-                if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+        uint8_t* entry = make_table_entry_on_socket(t, value);
+        abv_add(t->table, key, mask, entry);
+    }
+#endif
+#ifdef T4P4S_RANGE
+    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
+    {
+        if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
-                //for ( int i = 0; i < t->entry.key_size; i++ )
-                //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 
-                uint8_t* entry = make_table_entry_on_socket(t, value);
-                range_add(t->table, key, mask, entry);
-            }
-        #else
-            void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
-            {
-                if (t->entry.key_size == 0) return; // don't add lines to keyless tables
+        uint8_t* entry = make_table_entry_on_socket(t, value);
+        range_add(t->table, key, mask, entry);
+    }
+#endif
+#ifdef T4P4S_NAIVE
+    void ternary_add(lookup_table_t* t, uint8_t* key, uint8_t* mask, uint8_t* value)
+    {
+        if (t->entry.key_size == 0) return; // don't add lines to keyless tables
 
-                //for ( int i = 0; i < t->entry.key_size; i++ )
-                //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //    RTE_LOG(INFO, USER1, "Add key[%d]: %hhd mask[%d]: %hhd\n", i, key[i], i, mask[i]);
 
-                uint8_t* entry = make_table_entry_on_socket(t, value);
-                naive_ternary_add(t->table, key, mask, entry);
-            }
-        #endif
-    #endif
+        uint8_t* entry = make_table_entry_on_socket(t, value);
+        naive_ternary_add(t->table, key, mask, entry);
+    }
 #endif
 
 #ifdef T4P4S_PALMTRIE
@@ -198,46 +196,45 @@
         u64 ret = palmtrie_lookup(t->table, addr_t_key);
         return (uint8_t*)ret == NULL ? t->default_val : (uint8_t*)ret;
     }
-#else
-    #ifdef T4P4S_ABV
-        uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
-        {
-            if (t->entry.key_size == 0) return t->default_val;
+#endif
+#ifdef T4P4S_ABV
+    uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
+    {
+        if (t->entry.key_size == 0) return t->default_val;
 
-            uint8_t* ret = abv_lookup(t->table, key);
-            return ret == NULL ? t->default_val : ret;
-        }
-    #else
-        #ifdef T4P4S_RANGE
-            uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
-            {
-                if (t->entry.key_size == 0) return t->default_val;
+        uint8_t* ret = abv_lookup(t->table, key);
+        return ret == NULL ? t->default_val : ret;
+    }
+#endif
+#ifdef T4P4S_RANGE
+    uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
+    {
+        if (t->entry.key_size == 0) return t->default_val;
 
-                uint8_t* ret = range_lookup(t->table, key);
-                return ret == NULL ? t->default_val : ret;
-            }
-        #else
-            uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
-            {
-                if (t->entry.key_size == 0) return t->default_val;
+        uint8_t* ret = range_lookup(t->table, key);
+        return ret == NULL ? t->default_val : ret;
+    }
+#endif
+#ifdef T4P4S_NAIVE
+    uint8_t* ternary_lookup(lookup_table_t* t, uint8_t* key)
+    {
+        if (t->entry.key_size == 0) return t->default_val;
 
-                //uint8_t temp_key[MAX_FIELD_LENGTH];
+        //uint8_t temp_key[MAX_FIELD_LENGTH];
 
-                //memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
+        //memset(&temp_key[0], 0, MAX_FIELD_LENGTH);
 
-                //temp_key[5] = 0x0a;       
-                //temp_key[8] = 0x02;       
+        //temp_key[5] = 0x0a;       
+        //temp_key[8] = 0x02;       
 
-                //for ( int i = 0; i < t->entry.key_size; i++ )
-                //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
-                //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
+        //for ( int i = 0; i < t->entry.key_size; i++ )
+        //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd Temp key[%d]: %hhd\n", i, key[i], i, temp_key[i]);
+        //RTE_LOG(INFO, USER1, "Lookup key[%d]: %hhd \n", i, key[i]);
 
-                uint8_t* ret = naive_ternary_lookup(t->table, key);
-                //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
-                return ret == NULL ? t->default_val : ret;
-            }
-        #endif
-    #endif
+        uint8_t* ret = naive_ternary_lookup(t->table, key);
+        //uint8_t* ret = naive_ternary_lookup(t->table, &temp_key[0]);
+        return ret == NULL ? t->default_val : ret;
+    }
 #endif
 
 #ifdef T4P4S_PALMTRIE
@@ -247,29 +244,28 @@
 
         palmtrie_release(t->table);
     }
-#else
-    #ifdef T4P4S_ABV
-        void ternary_flush(lookup_table_t* t)
-        {
-            if (t->entry.key_size == 0) return; // nothing must have been added
+#endif
+#ifdef T4P4S_ABV
+    void ternary_flush(lookup_table_t* t)
+    {
+        if (t->entry.key_size == 0) return; // nothing must have been added
 
-            abv_release(t->table);
-        }
-    #else
-        #ifdef T4P4S_RANGE
-            void ternary_flush(lookup_table_t* t)
-            {
-                if (t->entry.key_size == 0) return; // nothing must have been added
+        abv_release(t->table);
+    }
+#endif
+#ifdef T4P4S_RANGE
+    void ternary_flush(lookup_table_t* t)
+    {
+        if (t->entry.key_size == 0) return; // nothing must have been added
 
-                range_release(t->table);
-            }
-        #else
-            void ternary_flush(lookup_table_t* t)
-            {
-                if (t->entry.key_size == 0) return; // nothing must have been added
+        range_release(t->table);
+    }
+#endif
+#ifdef T4P4S_NAIVE
+    void ternary_flush(lookup_table_t* t)
+    {
+        if (t->entry.key_size == 0) return; // nothing must have been added
 
-                naive_ternary_flush(t->table);
-            }
-        #endif
-    #endif
+        naive_ternary_flush(t->table);
+    }
 #endif

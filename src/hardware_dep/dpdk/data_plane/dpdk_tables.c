@@ -22,16 +22,15 @@
 
 #ifdef T4P4S_PALMTRIE
     #include "palmtrie.h"
-#else
-    #ifdef T4P4S_ABV
-        #include "abv.h"
-    #else
-        #ifdef T4P4S_RANGE
-            #include "range.h"
-        #else
-            #include "ternary_naive.h"  // TERNARY
-        #endif
-    #endif
+#endif
+#ifdef T4P4S_ABV
+    #include "abv.h"
+#endif
+#ifdef T4P4S_RANGE
+    #include "range.h"
+#endif
+#ifdef T4P4S_NAIVE
+    #include "ternary_naive.h"  // TERNARY
 #endif
 
 #include <rte_malloc.h>     // extended tables

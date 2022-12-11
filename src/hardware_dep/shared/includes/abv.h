@@ -90,7 +90,7 @@ struct FILTER {
     uint8_t* value;
 };
 
-typedef struct FILTER* Filter;
+typedef struct FILTER* FilterPtr;
 
 struct FILTSET {
     unsint numFilters;
@@ -99,7 +99,7 @@ struct FILTSET {
     struct FILTER filtArr[MAXFILTERS];
 };
 
-typedef struct FILTSET* FiltSet;
+typedef struct FILTSET* FiltSetPtr;
 
 struct FILTSET * abv_init(struct FILTSET *);
 void abv_release(struct FILTSET *filtset);

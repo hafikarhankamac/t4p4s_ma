@@ -33,7 +33,7 @@
 #include "abv.h"
 #include <stdio.h>
 
-void CopyFilter(Filter f1, Filter f2) {
+void CopyFilter(FilterPtr f1, FilterPtr f2) {
 
     memcpy((char *)f1, (char *)f2, sizeof(struct FILTER));
 }
@@ -376,16 +376,16 @@ struct FILTSET * abv_init(struct FILTSET *filtset) {
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
     //filtset = malloc(sizeof(struct FILTSET));
-    filtset = (FiltSet)calloc(1, sizeof(FiltSet));
+    filtset = (FiltSetPtr)calloc(1, sizeof(struct FILTSET));
     if (NULL == filtset) {
         /* Memory allocation error */
         return NULL;
     }
 
-    //filtset->numFilters = 0;
+    filtset->numFilters = 0;
 
-    //for (int i = 0; i < NUM_OF_PREFIX; i++)
-    //    filtset->trieArray[i] = InitTrie(0);
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        filtset->trieArray[i] = InitTrie(0);
 
     return filtset;
 }

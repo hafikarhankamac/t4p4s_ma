@@ -311,6 +311,8 @@ int main(int argc, char** argv)
         init_tables();
         init_storage();
 
+        debug("init_storage\n");
+
         init_memories();
         #ifndef T4P4S_NO_CONTROL_PLANE
             debug(" " T4LIT(::::,incoming) " Init control plane connection\n");

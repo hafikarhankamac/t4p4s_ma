@@ -56,11 +56,12 @@ int process_ternary_ipv4(const char* line) {
     int matches = sscanf(line, "%*s %s %hhd.%hhd.%hhd.%hhd/%d %hhd", table_name, &ip[0], &ip[1], &ip[2], &ip[3], &mask, &priority);
     if (7 != matches) return -1;
  
-    //printf("Process ABV-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, 1);
+    printf("Process ABV-IPv4 - IP: %hhd.%hhd.%hhd.%hhd Mask: %hhd Priority: %hhd\n", ip[0], ip[1], ip[2], ip[3], mask, 1);
  
     send_ternary_abv_ipv4_entry(ip, mask, 1, table_name, "custom.lookup", ".reflect");
 
-    usleep(1200);
+    //usleep(1200);
+    usleep(5000);
 
     return 0;
 }

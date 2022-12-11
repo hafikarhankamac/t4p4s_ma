@@ -92,7 +92,8 @@ int process_ternary_bits(const char* line) {
 
     send_ternary_palmtrie_bits_entry(num_of_bytes, bitmap, mask, priority, table_name, "custom.lookup", ".reflect");
 
-    usleep(1200);
+    //usleep(1200);
+    usleep(5000);
 
     return 0;
 }

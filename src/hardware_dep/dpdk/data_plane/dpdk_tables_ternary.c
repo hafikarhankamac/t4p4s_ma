@@ -104,8 +104,8 @@
         addr_t_mask.a[0] = *(temp64_ptr + 1);
         addr_t_mask.a[1] = *(temp64_ptr);
 
-        //for ( int i = 0; i < 8; i++ )
-        //    RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
+        for ( int i = 0; i < 8; i++ )
+            RTE_LOG(INFO, USER1, "Add addr_t_key[%d]: 0x%.16lX addr_t_mask[%d]: 0x%.16lX\n", i, addr_t_key.a[i], i, addr_t_mask.a[i]);
 
         //palmtrie_add_data(t->table, addr_t_key, addr_t_mask, priority, entry);
         palmtrie_add_data(t->table, addr_t_key, addr_t_mask, 1, entry);

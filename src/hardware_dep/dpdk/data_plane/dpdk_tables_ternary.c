@@ -19,7 +19,7 @@
 
         debug("ternary_create abv\n");
 
-        t->table = abv_init(&filtset);
+        //t->table = abv_init(&filtset);
     }
 #endif
 #ifdef T4P4S_RANGE

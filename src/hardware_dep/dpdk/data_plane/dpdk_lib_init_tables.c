@@ -15,17 +15,33 @@ void create_tables_on_socket(int socketid)
     for (int i = 0; i < NB_TABLES; i++) {
         lookup_table_t t = table_config[i];
 
+        debug("create_tables_on_socket 1\n");
+
         for (int j = 0; j < NB_REPLICA; j++) {
             state[socketid].tables[i][j] = malloc(sizeof(lookup_table_t));
+
+            debug("create_tables_on_socket 2\n");
+
             memcpy(state[socketid].tables[i][j], &t, sizeof(lookup_table_t));
+
+            debug("create_tables_on_socket 3\n");
+
             state[socketid].tables[i][j]->instance = j;
+
+            debug("create_tables_on_socket 4\n");
+
             create_table(state[socketid].tables[i][j], socketid);
+
+            debug("create_tables_on_socket 5\n");
+
             #ifdef T4P4S_DEBUG
                 state[socketid].tables[i][j]->init_entry_count = 0;
             #endif
         }
 
         state[socketid].active_replica[i] = 0;
+
+        debug("create_tables_on_socket 6\n");
     }
 }
 

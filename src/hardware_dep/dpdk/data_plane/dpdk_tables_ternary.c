@@ -17,11 +17,7 @@
     {
         struct FILTSET filtset;
 
-        debug("ternary_create 1\n");
-
         t->table = abv_init(&filtset);
-
-        debug("ternary_create 2\n");
     }
 #endif
 #ifdef T4P4S_RANGE
@@ -34,6 +30,7 @@
 #ifdef T4P4S_NAIVE
     void ternary_create(lookup_table_t* t, int socketid)
     {
+
         t->table = naive_ternary_create(t->entry.key_size, t->max_size);
     }
 #endif

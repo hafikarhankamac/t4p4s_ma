@@ -373,6 +373,15 @@ uint8_t* findMatch(struct FILTSET *filtset) {
 
 struct FILTSET * abv_init(struct FILTSET *filtset) {
 
+    /* Allocate for the data structure when the argument is not NULL, and then
+       clear all the variables */
+    filtset = malloc(sizeof(struct FILTSET));
+    if ( NULL == filtset ) {
+        /* Memory allocation error */
+        return NULL;
+    }
+    (void)memset(filtset, 0, sizeof(struct FILTSET));
+
     filtset->numFilters = 0;
 
     for (int i = 0; i < NUM_OF_PREFIX; i++)

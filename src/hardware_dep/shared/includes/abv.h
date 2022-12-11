@@ -101,9 +101,9 @@ struct FILTSET {
 
 typedef struct FILTSET* FiltSet;
 
-struct FILTSET * abv_init(struct FILTSET *filtset);
+struct FILTSET * abv_init(struct FILTSET *);
 void abv_release(struct FILTSET *filtset);
-void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value);
-uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key);
+void abv_add(struct FILTSET *, uint8_t*, uint8_t*, uint8_t*);
+uint8_t * abv_lookup(struct FILTSET *, uint8_t*);
 
 #endif

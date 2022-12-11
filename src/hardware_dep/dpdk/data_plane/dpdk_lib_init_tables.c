@@ -15,24 +15,14 @@ void create_tables_on_socket(int socketid)
     for (int i = 0; i < NB_TABLES; i++) {
         lookup_table_t t = table_config[i];
 
-        debug("create_tables_on_socket 1\n");
-
         for (int j = 0; j < NB_REPLICA; j++) {
             state[socketid].tables[i][j] = malloc(sizeof(lookup_table_t));
 
-            debug("create_tables_on_socket 2\n");
-
             memcpy(state[socketid].tables[i][j], &t, sizeof(lookup_table_t));
-
-            debug("create_tables_on_socket 3\n");
 
             state[socketid].tables[i][j]->instance = j;
 
-            debug("create_tables_on_socket 4\n");
-
             create_table(state[socketid].tables[i][j], socketid);
-
-            debug("create_tables_on_socket 5\n");
 
             #ifdef T4P4S_DEBUG
                 state[socketid].tables[i][j]->init_entry_count = 0;
@@ -40,8 +30,6 @@ void create_tables_on_socket(int socketid)
         }
 
         state[socketid].active_replica[i] = 0;
-
-        debug("create_tables_on_socket 6\n");
     }
 }
 
@@ -51,21 +39,15 @@ void create_tables_on_lcore(unsigned lcore_id)
 
     int socketid = get_socketid(lcore_id);
 
-    debug("create_tables_on_lcore 1\n");
-
     if (state[socketid].tables[0][0] == NULL) {
         create_tables_on_socket(socketid);
     }
-
-    debug("create_tables_on_lcore 2\n");
 
     // TODO is it necessary to store the table in two places?
     for (int i = 0; i < NB_TABLES; i++) {
         struct lcore_conf* qconf = &lcore_conf[lcore_id];
         qconf->state.tables[i] = state[socketid].tables[i][0];
     }
-
-    debug("create_tables_on_lcore 3\n");
 }
 
 #ifdef T4P4S_DEBUG
@@ -108,17 +90,11 @@ void init_tables()
     main_socket= get_socketid(rte_get_master_lcore());
 #endif
 
-    debug("init_tables 1\n");
-
     for (unsigned lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
         create_tables_on_lcore(lcore_id);
     }
 
-    debug("init_tables 2\n");
-
     init_table_const_entries();
-
-    debug("init_tables 3\n");
 }
 
 void flush_tables_on_socket(int socketid)

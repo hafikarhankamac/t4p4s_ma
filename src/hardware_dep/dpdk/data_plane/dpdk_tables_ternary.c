@@ -17,11 +17,11 @@
     {
         struct FILTSET filtset;
 
-        RTE_LOG(INFO, USER1, "ABV ternary_create enter");
+        debug("ternary_create 1\n");
 
         t->table = abv_init(&filtset);
 
-        RTE_LOG(INFO, USER1, "ABV ternary_create exit");
+        debug("ternary_create 2\n");
     }
 #endif
 #ifdef T4P4S_RANGE

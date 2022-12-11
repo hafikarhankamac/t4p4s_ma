@@ -327,6 +327,7 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     }
 }
 
+/*
 //unsint findMatch(struct FILTSET *filtset) {
 uint8_t* findMatch(struct FILTSET *filtset) {
     unsint nrCuv, i, j, temp, result; 
@@ -370,6 +371,7 @@ uint8_t* findMatch(struct FILTSET *filtset) {
 
     return NULL;
 }
+*/
 
 struct FILTSET * abv_init(struct FILTSET *filtset) {
 

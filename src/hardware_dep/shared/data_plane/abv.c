@@ -251,7 +251,7 @@ void insertFilter(int FiltNo, int nF, uchar *pref, uchar len, Trie *trie) {
         } else {
             if (curNode->zero == (Node *)0) {
                 flag = 1;
-                curNode->zero = (Node *)calloc(1,sizeof(Node));
+                curNode->zero = (Node *)calloc(1, sizeof(Node));
                 curNode->zero->pos = i + 1;
                 trie->noNodes++;
                 if (curNode->zero == (Node *)0) {
@@ -327,7 +327,6 @@ BitArray* searchIPTrie(uchar *pref, Trie *trie) {
     }
 }
 
-/*
 //unsint findMatch(struct FILTSET *filtset) {
 uint8_t* findMatch(struct FILTSET *filtset) {
     unsint nrCuv, i, j, temp, result; 
@@ -371,23 +370,22 @@ uint8_t* findMatch(struct FILTSET *filtset) {
 
     return NULL;
 }
-*/
 
 struct FILTSET * abv_init(struct FILTSET *filtset) {
 
     /* Allocate for the data structure when the argument is not NULL, and then
        clear all the variables */
-    filtset = malloc(sizeof(struct FILTSET));
-    //filtset = (struct FILTSET *)calloc(1, sizeof(struct FILTSET));
+    //filtset = malloc(sizeof(unsint) + sizeof(struct FILTER) * MAXFILTERS + sizeof(BitArray) * NUM_OF_PREFIX + sizeof(Trie) * NUM_OF_PREFIX);
+    filtset = (struct FILTSET *)calloc(1, sizeof(unsint) + sizeof(struct FILTER) * MAXFILTERS + sizeof(BitArray) * NUM_OF_PREFIX + sizeof(Trie) * NUM_OF_PREFIX);
     if (NULL == filtset) {
         /* Memory allocation error */
         return NULL;
     }
 
-    //filtset->numFilters = 0;
+    filtset->numFilters = 0;
 
-    //for (int i = 0; i < NUM_OF_PREFIX; i++)
-    //    filtset->trieArray[i] = InitTrie(0);
+    for (int i = 0; i < NUM_OF_PREFIX; i++)
+        filtset->trieArray[i] = InitTrie(0);
 
     return filtset;
 }
@@ -400,7 +398,6 @@ void abv_release(struct FILTSET *filtset) {
 void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* value) {
     struct FILTER tempfilt1, *tempfilt;
 
-    /*
     if (filtset->numFilters == MAXFILTERS) {
         if (DEBUG) printf("Out of memory: too many filters\n");
 
@@ -443,14 +440,11 @@ void abv_add(struct FILTSET *filtset, uint8_t* key, uint8_t* mask, uint8_t* valu
 
         filtset->numFilters++;
     }
-    */
 }
 
 uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
     struct PACKET tempPkt1, *tempPkt;
 
-    return NULL;
-    /*
     tempPkt = &tempPkt1;
 
     // Lookup like "0.0.0.0 10.0.1.0"
@@ -470,5 +464,4 @@ uint8_t * abv_lookup(struct FILTSET *filtset, uint8_t* key) {
 
     //return (uint64_t)findMatch(filtset);
     return (uint8_t *)findMatch(filtset);
-    */
 }
